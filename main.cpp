@@ -23,12 +23,10 @@ vector<vector<int> > vDir;
 
 int main() {
 
-
-
-    get_from_file_vvf("input_C3D6/input_points.csv",",");
-    get_from_file_vvn("input_C3D6/input_elements.csv",",");
-    get_from_file_vvf("input_C3D6/input_forces.csv",",");
-    get_from_file_vvn("input_C3D6/input_Dirichlet.csv",",");
+    vpts = get_from_file_vvf("input_C3D6/input_points.csv",",");
+    vElts = get_from_file_vvn("input_C3D6/input_elements.csv",",");
+    vvF = get_from_file_vvf("input_C3D6/input_forces.csv",",");
+    vDir = get_from_file_vvn("input_C3D6/input_Dirichlet.csv",",");
 
     // Node numbers in Abaqus start at 1, change to 0 for cpp
     for (unsigned int i=0; i<vElts.size(); i++){
@@ -57,12 +55,11 @@ int main() {
     vUt.push_back(vUti);
 
     vector<vector<float> > sE = feaC3D6.MultiplyMatricesEigen(vUt,feaC3D6.vF);
-    cout << "Strain Energy = " << sE[0][0] << " Jules" << endl;
+    cout << "Strain Energy C3D6 = " << sE[0][0] << " Jules" << endl;
 
     put_to_file_vvf("output_C3D6/vvK.csv",",",feaC3D6.K, false);
     put_to_file_vvf("output_C3D6/vvK1.csv",",",feaC3D6.K1,false);
     put_to_file_vvf("output_C3D6/vvU.csv",",",vvU,false);
-
 
 
 
@@ -92,27 +89,21 @@ int main() {
     fea.K1 = fea.InvertMatrixEigen(fea.K);
     fea.vU = fea.MultiplyMatricesEigen(fea.K1,fea.vF);
 
-    vvU.empty();
-    vvU = vector_resize_cols(fea.vU,3);
+    vector<vector<float> > vvU2 = vector_resize_cols(fea.vU,3);
 
-    vUt.empty();
-    vUti.empty();
+    vector<vector<float> > vUt2;
+    vector<float> vUti2;
     for (unsigned int i=0; i<fea.vU.size(); i++){
-        vUti.push_back(fea.vU[i][0]);
+        vUti2.push_back(fea.vU[i][0]);
     }
-    vUt.push_back(vUti);
+    vUt2.push_back(vUti2);
 
-    sE.empty();
-    sE = fea.MultiplyMatricesEigen(vUt,fea.vF);
-    cout << "Strain Energy = " << sE[0][0] << " Jules" << endl;
+    vector<vector<float> > sE2 = fea.MultiplyMatricesEigen(vUt2,fea.vF);
+    cout << "Strain Energy C3D8 = " << sE2[0][0] << " Jules" << endl;
 
     put_to_file_vvf("output_C3D8/vvK.csv",",",fea.K, false);
     put_to_file_vvf("output_C3D8/vvK1.csv",",",fea.K1,false);
-    put_to_file_vvf("output_C3D8/vvU.csv",",",vvU,false);
-
-
-
-
+    put_to_file_vvf("output_C3D8/vvU.csv",",",vvU2,false);
 
     return 0;
 }

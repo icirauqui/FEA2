@@ -403,7 +403,7 @@ vector<vector<float> > FEA2::InvertMatrixEigen(vector<vector<float> > m1) {
 
     float detA = A.determinant();
     Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic> A1 = A.inverse();
-
+    
     vector<vector<float> > Ainv;
     if (detA!=0.0){
         for (unsigned int i=0; i<m1.size(); i++){
