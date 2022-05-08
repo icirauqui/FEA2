@@ -20,7 +20,19 @@ vector<vector<int> > vDir;
 
 std::string data_path = "../data";
 
-int main() {
+int main(int argc, char** argv) {
+
+    // Process cmd input
+    if (argc < 2) {
+        std::cout << " No/Wrong arguments provided, please state the following when running the program from cmd" << std::endl
+                  << "   1. Relative path to work dir" << std::endl;
+        return 0;
+    }
+    else {
+        data_path = argv[1];
+    }
+
+
 
     vpts = get_from_file_vvf(data_path + "/input_C3D6/input_points.csv",",");
     vElts = get_from_file_vvn(data_path + "/input_C3D6/input_elements.csv",",");

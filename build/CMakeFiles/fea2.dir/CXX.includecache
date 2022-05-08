@@ -6,6 +6,10 @@
 
 #IncludeRegexTransform: 
 
+/home/icirauqui/workspace_tfm/FEA2/src/FEA2.cpp
+FEA2.h
+/home/icirauqui/workspace_tfm/FEA2/src/FEA2.h
+
 /home/icirauqui/workspace_tfm/FEA2/src/FEA2.h
 iostream
 -
@@ -45,6 +49,6 @@ math.h
 -
 aux.h
 /home/icirauqui/workspace_tfm/FEA2/src/aux.h
-FEA2.h
-/home/icirauqui/workspace_tfm/FEA2/src/FEA2.h
+FEA2.cpp
+/home/icirauqui/workspace_tfm/FEA2/src/FEA2.cpp
 
