@@ -1,3 +1,6 @@
+#ifndef FEA2_H
+#define FEA2_H
+
 #include <iostream>
 #include <vector>
 #include <math.h>
@@ -85,3 +88,4 @@ class FEA2{
 
 };
 
+#endif

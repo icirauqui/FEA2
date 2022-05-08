@@ -1,3 +1,6 @@
+#ifndef AUX_H
+#define AUX_H
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -98,3 +101,5 @@ vector<vector<float> > vector_resize_cols(vector<vector<float> > v1, int n){
     }
     return v2;
 }
+
+#endif
