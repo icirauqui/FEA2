@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include "aux.h"
-#include "FEA2.h"
+#include "FEA2.cpp"
 
 
 using namespace std;
@@ -18,15 +18,14 @@ vector<vector<int> > vElts;
 vector<vector<float> > vvF;
 vector<vector<int> > vDir;
 
-
-
+std::string data_path = "../data";
 
 int main() {
 
-    vpts = get_from_file_vvf("input_C3D6/input_points.csv",",");
-    vElts = get_from_file_vvn("input_C3D6/input_elements.csv",",");
-    vvF = get_from_file_vvf("input_C3D6/input_forces.csv",",");
-    vDir = get_from_file_vvn("input_C3D6/input_Dirichlet.csv",",");
+    vpts = get_from_file_vvf(data_path + "/input_C3D6/input_points.csv",",");
+    vElts = get_from_file_vvn(data_path + "/input_C3D6/input_elements.csv",",");
+    vvF = get_from_file_vvf(data_path + "/input_C3D6/input_forces.csv",",");
+    vDir = get_from_file_vvn(data_path + "/input_C3D6/input_Dirichlet.csv",",");
 
     // Node numbers in Abaqus start at 1, change to 0 for cpp
     for (unsigned int i=0; i<vElts.size(); i++){
@@ -57,19 +56,14 @@ int main() {
     vector<vector<float> > sE = feaC3D6.MultiplyMatricesEigen(vUt,feaC3D6.vF);
     cout << "Strain Energy C3D6 = " << sE[0][0] << " Jules" << endl;
 
-    put_to_file_vvf("output_C3D6/vvK.csv",",",feaC3D6.K, false);
-    put_to_file_vvf("output_C3D6/vvK1.csv",",",feaC3D6.K1,false);
-    put_to_file_vvf("output_C3D6/vvU.csv",",",vvU,false);
+    put_to_file_vvf(data_path + "/output_C3D6/vvK.csv",",",feaC3D6.K, false);
+    put_to_file_vvf(data_path + "/output_C3D6/vvK1.csv",",",feaC3D6.K1,false);
+    put_to_file_vvf(data_path + "/output_C3D6/vvU.csv",",",vvU,false);
 
-
-
-
-
-
-    vpts = get_from_file_vvf("input_C3D8/input_points.csv",",");
-    vElts = get_from_file_vvn("input_C3D8/input_elements.csv",",");
-    vvF = get_from_file_vvf("input_C3D8/input_forces.csv",",");
-    vDir = get_from_file_vvn("input_C3D8/input_Dirichlet.csv",",");
+    vpts = get_from_file_vvf(data_path + "/input_C3D8/input_points.csv",",");
+    vElts = get_from_file_vvn(data_path + "/input_C3D8/input_elements.csv",",");
+    vvF = get_from_file_vvf(data_path + "/input_C3D8/input_forces.csv",",");
+    vDir = get_from_file_vvn(data_path + "/input_C3D8/input_Dirichlet.csv",",");
 
     // Node numbers in Abaqus start at 1, change to 0 for cpp
     for (unsigned int i=0; i<vElts.size(); i++){
