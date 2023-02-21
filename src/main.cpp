@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include "aux.h"
-#include "FEA2.cpp"
+#include "fea/fea.hpp"
 
 
 using namespace std;

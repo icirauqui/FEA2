@@ -1,4 +1,4 @@
-# Finite Element Analysis 2
+# Finite Element Analysis
 
 Program builds a Finite Element Model from point clouds and computes the strain energy.
 
