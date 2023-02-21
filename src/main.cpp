@@ -2,10 +2,9 @@
 #include <vector>
 #include <math.h>
 
-#include "data/aux.hpp"
 #include "fea/fea.hpp"
-#include "data/data.hpp"
 #include "fea/fea2.hpp"
+#include "data/data.hpp"
 
 #include <chrono>
 
@@ -30,8 +29,7 @@ int main(int argc, char** argv) {
 
   // Test new class
   FEA fea(0, element, E, nu, depth, fg, false);
-  FEA2 fea2(1,E,nu,1,fg,false);
-
+  
   auto start1 = std::chrono::high_resolution_clock::now();
   fea.MatAssembly(vpts, vElts);
   fea.SetForces(vvF);
@@ -45,6 +43,8 @@ int main(int argc, char** argv) {
 
 
   // Test old class
+  FEA2 fea2(1, E, nu, 1, fg, false);
+
   auto start2 = std::chrono::high_resolution_clock::now();
   fea2.K = fea2.MatrixAssemblyC3D8(vpts,vElts);
   fea2.vF = vector_resize_cols(vvF,1);
@@ -63,7 +63,6 @@ int main(int argc, char** argv) {
 
   std::cout << " - Strain energy = " << sE2[0][0] << std::endl;
   std::cout << "   Time fea2 = " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
-
 
 
   return 0;

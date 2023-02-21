@@ -23,7 +23,6 @@ public:
   void MatAssembly(std::vector<std::vector<float> > &vpts, 
                    std::vector<std::vector<int> > &velts);
 
-
   void SetForces(std::vector<std::vector<float>> &vF);
 
   void ImposeDirichletEncastre(std::vector<std::vector<int>> &dir, float k_large = 1e8);
@@ -32,14 +31,11 @@ public:
 
   void ComputeStrainEnergy();
 
-
   // Accessors
   Eigen::MatrixXf K();
   Eigen::MatrixXf F();
   Eigen::MatrixXf U();
   float StrainEnergy();
-
-
 
 
 private:
@@ -77,23 +73,12 @@ private:
   float G_ = 0.0;
   int base_size_ = 0;
 
-  // Matrix operations: initialize in constructor for more efficient computation
   Eigen::MatrixXf dndgs_;
   Eigen::Matrix3f J_;
   Eigen::Matrix3f J1_;
   Eigen::MatrixXf B_;
 
   bool debug_mode_ = false;
-
-
-
-
 };
-
-
-
-
-
-
 
 #endif
