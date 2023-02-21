@@ -3,92 +3,97 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 #include <math.h>
 #include <chrono>
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
 #include <eigen3/Eigen/Dense>
 
 
+class FEA {
+
+public:
+
+  FEA(int frame_id, 
+      std::string element_type,
+      float young_modulus, float poisson_coefficient, float element_depth, 
+      float gauss_point, 
+      bool debug_mode);
+
+  void MatAssembly(std::vector<std::vector<float> > &vpts, 
+                   std::vector<std::vector<int> > &velts);
 
 
-using namespace std;
+  void SetForces(std::vector<std::vector<float>> &vF);
 
-class FEA2{
+  void ImposeDirichletEncastre(std::vector<std::vector<int>> &dir, float k_large = 1e8);
 
-    public:
-        
-        // Frame
-        int nFrameId;
+  void ComputeDisplacements();
 
-        // Young Modulus [Pa]
-        float E;
-
-        // Poisson Coefficient
-        float nu;
-
-        // Behaviour Matrix
-        vector<vector<float> > D;
-
-        // Lamé parameters
-        float lambda = 0.0;
-        float G = 0.0;
-
-        // Gauss Points
-        float fg = 0.0;
-        vector<vector<float> > gs;
-
-        // Element depth
-        float h = 0.0;
-
-        // Stiffness matrix size
-        int Ksize = 0;
-        
-        // Stiffness matrix
-        vector<vector<float> > K;
-        vector<vector<float> > K1;
-
-        // Displacements
-        vector<vector<float> > vU;
-
-        // Forces
-        vector<vector<float> > vF;
-
-        // Stiffness matrix determinant
-        float DetK = 0.0;
-
-        // Force vector
-        vector<vector<float> > f;
-
-        // Debug mode
-        bool bDebugMode = false;
+  void ComputeStrainEnergy();
 
 
-        // Constructor & Destructor
-        FEA2(unsigned int input_nFrameId, unsigned int input_E, float input_nu, float input_h, float input_fg1, bool bSetDebug);
-        ~FEA2();
-
-        // Compute elemental stiffness matrix
-        vector<vector<float> > ComputeKeiC3D6(vector<vector<float> > vfPts);
-        vector<vector<float> > ComputeKeiC3D8(vector<vector<float> > vfPts);
-
-        // Assembly stiffness matrix
-        vector<vector<float> > MatrixAssemblyC3D6(vector<vector<float> > vpts, vector<vector<int> > vElts);
-        vector<vector<float> > MatrixAssemblyC3D8(vector<vector<float> > vpts, vector<vector<int> > vElts); 
-
-        // Impose Dirichlet conditions (Encastre)
-        void ImposeDirichletEncastre(vector<vector<int> > vD, float Klarge);
-        
-        // Multiply matrices
-        vector<vector<float> > MultiplyMatricesEigen(vector<vector<float> > m1, vector<vector<float> > m2);
-        
-        // Invert matrix
-        vector<vector<float> > InvertMatrixEigen(vector<vector<float> > m1);
+  // Accessors
+  Eigen::MatrixXf K();
+  Eigen::MatrixXf F();
+  Eigen::MatrixXf U();
+  float StrainEnergy();
 
 
-        // Aux
-        void put_to_file_vvf (string outputPath, string delimiter, vector<vector<float> > vvoutput, bool append);
-        vector<vector<float> > vector_resize_cols(vector<vector<float> > v1, int n);
+
+
+private:
+
+  void InitC3D6();
+
+  void InitC3D8();
+
+  void InitGaussPoints(float fg);
+  
+  void ComputeKei(std::vector<std::vector<float>> &vfPts);
+  
+  void dNdgs(float xi, float eta, float zeta, int dim);
+
+  int frame_id_ = 0;
+  std::string element_;
+
+  Eigen::MatrixXf D_ = Eigen::MatrixXf::Zero(6, 6);
+  Eigen::Matrix<float, 8, 3> gs_;
+
+  Eigen::MatrixXf K_;
+  Eigen::MatrixXf K1_;
+  Eigen::MatrixXf Kei_;
+
+  Eigen::MatrixXf F_;
+  Eigen::MatrixXf U_;
+
+  float sE_ = 0.0;
+
+  float E_ = 1.0;
+  float nu_ = 0.499;
+  float h_ = 1.0;
+
+  float lambda_ = 0.0;
+  float G_ = 0.0;
+  int base_size_ = 0;
+
+  // Matrix operations: initialize in constructor for more efficient computation
+  Eigen::MatrixXf dndgs_;
+  Eigen::Matrix3f J_;
+  Eigen::Matrix3f J1_;
+  Eigen::MatrixXf B_;
+
+  bool debug_mode_ = false;
+
+
+
 
 };
+
+
+
+
+
+
 
 #endif

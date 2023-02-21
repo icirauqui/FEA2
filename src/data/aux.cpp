@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 
+#include "aux.hpp"
+
 using namespace std;
 
 

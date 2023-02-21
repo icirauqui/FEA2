@@ -2,114 +2,69 @@
 #include <vector>
 #include <math.h>
 
-#include "aux.h"
+#include "data/aux.hpp"
 #include "fea/fea.hpp"
+#include "data/data.hpp"
+#include "fea/fea2.hpp"
+
+#include <chrono>
 
 
-using namespace std;
-
+// Parameters
+int image_id = 0;
+std::string element = "C3D8";
 float E = 3500.0;
 float nu = 0.495;
+float depth = 1.0;
 float fg = 0.577350269;
 float Klarge = 100000000.0;
 
-vector<vector<float> > vpts;
-vector<vector<int> > vElts;
-vector<vector<float> > vvF;
-vector<vector<int> > vDir;
-
-std::string data_path = "../data";
 
 int main(int argc, char** argv) {
+  // Load data
+  Dataset ds("../data", element);
+  std::vector<std::vector<float>> vpts = ds.points();
+  std::vector<std::vector<int>>   vElts = ds.elements();
+  std::vector<std::vector<float>> vvF = ds.forces();
+  std::vector<std::vector<int>>   vDir = ds.dirichlet();
 
-    // Process cmd input
-    if (argc < 2) {
-        std::cout << " No/Wrong arguments provided, please state the following when running the program from cmd" << std::endl
-                  << "   1. Relative path to work dir" << std::endl;
-        return 0;
-    }
-    else {
-        data_path = argv[1];
-    }
+  // Test new class
+  FEA fea(0, element, E, nu, depth, fg, false);
+  FEA2 fea2(1,E,nu,1,fg,false);
+
+  auto start1 = std::chrono::high_resolution_clock::now();
+  fea.MatAssembly(vpts, vElts);
+  fea.SetForces(vvF);
+  fea.ImposeDirichletEncastre(vDir, Klarge);
+  fea.ComputeDisplacements();
+  fea.ComputeStrainEnergy();
+  auto stop1 = std::chrono::high_resolution_clock::now();
+
+  std::cout << " - Strain energy = " << fea.StrainEnergy() << std::endl;
+  std::cout << "   Time fea1 = " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
+
+
+  // Test old class
+  auto start2 = std::chrono::high_resolution_clock::now();
+  fea2.K = fea2.MatrixAssemblyC3D8(vpts,vElts);
+  fea2.vF = vector_resize_cols(vvF,1);
+  fea2.ImposeDirichletEncastre(vDir,Klarge);
+  fea2.K1 = fea2.InvertMatrixEigen(fea2.K);
+  fea2.vU = fea2.MultiplyMatricesEigen(fea2.K1,fea2.vF);
+  std::vector<std::vector<float> > vvU2 = vector_resize_cols(fea2.vU,3);
+  std::vector<std::vector<float> > vUt2;
+  std::vector<float> vUti2;
+  for (unsigned int i=0; i<fea2.vU.size(); i++){
+      vUti2.push_back(fea2.vU[i][0]);
+  }
+  vUt2.push_back(vUti2);
+  std::vector<std::vector<float> > sE2 = fea2.MultiplyMatricesEigen(vUt2,fea2.vF);
+  auto stop2 = std::chrono::high_resolution_clock::now();
+
+  std::cout << " - Strain energy = " << sE2[0][0] << std::endl;
+  std::cout << "   Time fea2 = " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
 
 
 
-    vpts = get_from_file_vvf(data_path + "/input_C3D6/input_points.csv",",");
-    vElts = get_from_file_vvn(data_path + "/input_C3D6/input_elements.csv",",");
-    vvF = get_from_file_vvf(data_path + "/input_C3D6/input_forces.csv",",");
-    vDir = get_from_file_vvn(data_path + "/input_C3D6/input_Dirichlet.csv",",");
-
-    // Node numbers in Abaqus start at 1, change to 0 for cpp
-    for (unsigned int i=0; i<vElts.size(); i++){
-        for (unsigned int j=0; j<vElts[i].size(); j++){
-            vElts[i][j] -= 1;
-        }
-    }
-
-    FEA2 feaC3D6(1,E,nu,1,fg,false);
-
-    feaC3D6.K = feaC3D6.MatrixAssemblyC3D6(vpts,vElts);
-    feaC3D6.vF = vector_resize_cols(vvF,1);
-    
-    feaC3D6.ImposeDirichletEncastre(vDir,Klarge);
-    
-    feaC3D6.K1 = feaC3D6.InvertMatrixEigen(feaC3D6.K);
-    feaC3D6.vU = feaC3D6.MultiplyMatricesEigen(feaC3D6.K1,feaC3D6.vF);
-
-    vector<vector<float> > vvU = vector_resize_cols(feaC3D6.vU,3);
-
-    vector<vector<float> > vUt;
-    vector<float> vUti;
-    for (unsigned int i=0; i<feaC3D6.vU.size(); i++){
-        vUti.push_back(feaC3D6.vU[i][0]);
-    }
-    vUt.push_back(vUti);
-
-    vector<vector<float> > sE = feaC3D6.MultiplyMatricesEigen(vUt,feaC3D6.vF);
-    cout << "Strain Energy C3D6 = " << sE[0][0] << " Jules" << endl;
-
-    put_to_file_vvf(data_path + "/output_C3D6/vvK.csv",",",feaC3D6.K, false);
-    put_to_file_vvf(data_path + "/output_C3D6/vvK1.csv",",",feaC3D6.K1,false);
-    put_to_file_vvf(data_path + "/output_C3D6/vvU.csv",",",vvU,false);
-
-    vpts = get_from_file_vvf(data_path + "/input_C3D8/input_points.csv",",");
-    vElts = get_from_file_vvn(data_path + "/input_C3D8/input_elements.csv",",");
-    vvF = get_from_file_vvf(data_path + "/input_C3D8/input_forces.csv",",");
-    vDir = get_from_file_vvn(data_path + "/input_C3D8/input_Dirichlet.csv",",");
-
-    // Node numbers in Abaqus start at 1, change to 0 for cpp
-    for (unsigned int i=0; i<vElts.size(); i++){
-        for (unsigned int j=0; j<vElts[i].size(); j++){
-            vElts[i][j] -= 1;
-        }
-    }
-
-    FEA2 fea(1,E,nu,1,fg,false);
-
-    //fea.MatrixAssembly(vpts,vElts);
-    fea.K = fea.MatrixAssemblyC3D8(vpts,vElts);
-    fea.vF = vector_resize_cols(vvF,1);
-    
-    fea.ImposeDirichletEncastre(vDir,Klarge);
-
-    fea.K1 = fea.InvertMatrixEigen(fea.K);
-    fea.vU = fea.MultiplyMatricesEigen(fea.K1,fea.vF);
-
-    vector<vector<float> > vvU2 = vector_resize_cols(fea.vU,3);
-
-    vector<vector<float> > vUt2;
-    vector<float> vUti2;
-    for (unsigned int i=0; i<fea.vU.size(); i++){
-        vUti2.push_back(fea.vU[i][0]);
-    }
-    vUt2.push_back(vUti2);
-
-    vector<vector<float> > sE2 = fea.MultiplyMatricesEigen(vUt2,fea.vF);
-    cout << "Strain Energy C3D8 = " << sE2[0][0] << " Jules" << endl;
-
-    put_to_file_vvf("output_C3D8/vvK.csv",",",fea.K, false);
-    put_to_file_vvf("output_C3D8/vvK1.csv",",",fea.K1,false);
-    put_to_file_vvf("output_C3D8/vvU.csv",",",vvU2,false);
-
-    return 0;
+  return 0;
 }
