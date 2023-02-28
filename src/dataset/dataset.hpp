@@ -5,7 +5,20 @@
 #include <vector>
 #include <string>
 
-#include "aux.hpp"
+#include <fstream>
+#include <iterator>
+#include <algorithm>
+#include <boost/algorithm/string.hpp>
+
+
+// Load data from csv file with custom delimiter.
+std::vector<std::vector<float> > get_from_file_vvf (std::string inputPath, std::string delimiter);
+
+std::vector<std::vector<int> > get_from_file_vvn (std::string inputPath, std::string delimiter);
+
+void put_to_file_vvf (std::string outputPath, std::string delimiter, std::vector<std::vector<float> > vvoutput, bool append);
+
+std::vector<std::vector<float> > vector_resize_cols(std::vector<std::vector<float> > v1, int n);
 
 
 class Dataset {
