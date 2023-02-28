@@ -86,6 +86,7 @@ void FEA::ImposeDirichletEncastre(std::vector<std::vector<int>> &dir, float k_la
     F_(mp1,0) = 0.0;
     F_(mp2,0) = 0.0;
   }
+
 }
 
 
@@ -96,7 +97,7 @@ void FEA::ComputeDisplacements() {
 
 
 void FEA::ComputeStrainEnergy() {
-  float Emat = (U_.transpose() * F_)(0,0);
+  sE_ = (U_.transpose() * F_)(0,0);
 }
 
 

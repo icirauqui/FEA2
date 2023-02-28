@@ -236,7 +236,7 @@ vector<vector<float> > FEA2::MatrixAssemblyC3D8(vector<vector<float> > vpts, vec
             }
         }
     }
-    
+
     return Kt;
 }
 
