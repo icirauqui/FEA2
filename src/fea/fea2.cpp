@@ -86,7 +86,7 @@ vector<vector<float> > FEA2::ComputeKeiC3D6(vector<vector<float> > vfPts){
                             0.0  , dN1dz , dN1dy ,  0.0  , dN2dz , dN2dy ,  0.0  , dN3dz , dN3dy ,  0.0  , dN4dz , dN4dy ,  0.0  , dN5dz , dN5dy ,  0.0  , dN6dz , dN6dy  };
 
         float BtD[18][6] = {0.0};
-
+        
         for (unsigned int i=0; i<18; i++)
             for (unsigned int j=0; j<6; j++)
                 BtD[i][j] = B[0][i]*D[0][j] + B[1][i]*D[1][j] + B[2][i]*D[2][j] + B[3][i]*D[3][j] + B[4][i]*D[4][j] + B[5][i]*D[5][j];
@@ -202,7 +202,7 @@ vector<vector<float> > FEA2::MatrixAssemblyC3D6(vector<vector<float> > vpts, vec
             }
         }
     }
-    
+
     return Kt;
 }
 

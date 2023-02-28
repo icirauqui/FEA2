@@ -11,7 +11,7 @@
 
 // Parameters
 int image_id = 0;
-std::string element = "C3D8";
+std::string element = "C3D6";
 float E = 3500.0;
 float nu = 0.495;
 float depth = 1.0;
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
   FEA2 fea2(1, E, nu, 1, fg, false);
 
   auto start2 = std::chrono::high_resolution_clock::now();
-  fea2.K = fea2.MatrixAssemblyC3D8(vpts,vElts);
+  fea2.K = fea2.MatrixAssemblyC3D6(vpts,vElts);
   fea2.vF = vector_resize_cols(vvF,1);
   fea2.ImposeDirichletEncastre(vDir,Klarge);
   fea2.K1 = fea2.InvertMatrixEigen(fea2.K);

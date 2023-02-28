@@ -50,7 +50,6 @@ void FEA::MatAssembly(std::vector<std::vector<float> > &vpts,
     
     for (unsigned int ni = 0; ni < mn.size(); ni++) {
       for (unsigned int nj = 0; nj < mn.size(); nj++) {
-        //K_(mn[ni], mn[nj]) += Kei[ni][nj];
         for (unsigned int m = 0; m < 3; m++) {
           for (unsigned int n = 0; n < 3; n++) {
             K_(mn[ni]+m, mn[nj]+n) += Kei_(ni*3+m, nj*3+n);
@@ -122,7 +121,12 @@ float FEA::StrainEnergy() {
 
 
 void FEA::InitC3D6() {
-  std::cout << "C3D6" << std::endl;
+  D_ <<  lambda_+2*G_ ,   lambda_    ,   lambda_    ,     0.0     ,     0.0     ,     0.0     ,
+            lambda_   , lambda_+2*G_ ,   lambda_    ,     0.0     ,     0.0     ,     0.0     ,
+            lambda_   ,   lambda_    , lambda_+2*G_ ,     0.0     ,     0.0     ,     0.0     ,
+              0.0     ,     0.0      ,     0.0      ,      G_     ,     0.0     ,     0.0     ,
+              0.0     ,     0.0      ,     0.0      ,     0.0     ,      G_     ,     0.0     ,
+              0.0     ,     0.0      ,     0.0      ,     0.0     ,     0.0     ,      G_     ;
   Kei_ = Eigen::MatrixXf::Zero(18, 18);
   dndgs_ = Eigen::MatrixXf::Zero(6, 3);
   B_ = Eigen::MatrixXf::Zero(6, 18);
