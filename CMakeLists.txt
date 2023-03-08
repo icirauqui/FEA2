@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 project(fem_analysis LANGUAGES CXX)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/fea)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/fe)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/dataset)
 
 
@@ -12,5 +13,6 @@ add_executable(fem_analysis
 
 target_link_libraries(fem_analysis PRIVATE 
     fea
+    fe
     dataset
 )
