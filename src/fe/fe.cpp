@@ -5,28 +5,9 @@
 
 
 
-FE::FE() {
+FE::FE(std::string element): element_(element) {
   std::cout << "FE constructor" << std::endl;
 }
-
-
-
-
-bool FE::Compute(std::string element) {
-  std::cout << "FE Compute" << std::endl;
-
-  bool ok = true;
-
-  if (ok) 
-    ok = InitCloud();
-
-  if (ok)
-    ok = Trianglate();
-
-  return ok;
-}
-
-
 
 void FE::AddPoint(Eigen::Vector3d point) {
   points_.push_back(point);
@@ -45,6 +26,11 @@ bool FE::InitCloud() {
   }
 
   return pc0.width > 0;
+}
+
+
+bool FE::MovingLeastSquares() {
+  std::cout << "MovingLeastSquares" << std::endl;
 }
 
 
@@ -147,3 +133,27 @@ bool FE::Triangulate() {
   else
     return false;
 }
+
+
+bool FE::Compute(bool moving_least_squares) {
+  std::cout << "FE Compute" << std::endl;
+
+  bool ok = true;
+
+  if (ok) 
+    ok = InitCloud();
+
+  if (ok && moving_least_squares) {
+    ok = MovingLeastSquares();
+  }
+
+  if (ok)
+    ok = Trianglate();
+
+  return ok;
+}
+
+
+
+
+

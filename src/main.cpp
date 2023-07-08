@@ -18,7 +18,7 @@ float fg = 0.577350269;
 float Klarge = 100000000.0;
 
 
-int main(int argc, char** argv) {
+void test_fea() {
   // Load data
   Dataset ds("../data", element);
   std::vector<std::vector<float>> vpts = ds.points();
@@ -39,7 +39,21 @@ int main(int argc, char** argv) {
 
   std::cout << " - Strain energy = " << fea.StrainEnergy() << std::endl;
   std::cout << "   Time fea1 = " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
+}
 
+
+void test_fe() {
+  std::cout << "fe" << std::endl;
+}
+
+
+void test_all() {
+  std::cout << "all" << std::endl;
+}
+
+int main(int argc, char** argv) {
+  test_fea();
+  test_fe();
 
   return 0;
 }

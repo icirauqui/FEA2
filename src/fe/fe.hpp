@@ -37,21 +37,32 @@ class FE {
 
 public:
 
-  FE();
-
-
-  bool Compute(std::string element);
+  FE(std::string element);
 
   void AddPoint(Eigen::Vector3d point);
 
   bool InitCloud();
 
+  bool MovingLeastSquares();
+  
   bool Triangulate();
 
+  bool Compute(bool moving_least_squares = true);
+
+/*
+  bool ComputePlanar();
+  bool ComputeTest();
+
+  void AddPoint(Eigen::Vector3d point);
+
+
+
+*/
 
 
 private:
 
+  std::string element_;
 
   std::vector<Eigen::Vector3d> points_;
 
