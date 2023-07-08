@@ -49,15 +49,6 @@ public:
 
   bool Compute(bool moving_least_squares = true);
 
-/*
-  bool ComputePlanar();
-  bool ComputeTest();
-
-  void AddPoint(Eigen::Vector3d point);
-
-
-
-*/
 
 
 private:
@@ -66,7 +57,9 @@ private:
 
   std::vector<Eigen::Vector3d> points_;
 
-  pcl::PointCloud<pcl::PointXYZ> pc0;
+  pcl::PointCloud<pcl::PointXYZ> pc0_;
+
+  std::vector<std::vector<int>> triangles_;
 
 
   // Interface 

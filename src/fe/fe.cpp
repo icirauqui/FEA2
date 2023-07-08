@@ -15,38 +15,39 @@ void FE::AddPoint(Eigen::Vector3d point) {
 
 
 bool FE::InitCloud() {
-  pc0.width = points_.size();
-  pc0.height = 1;
-  pc0.points.resize(pc0.width * pc0.height);
+  pc0_.width = points_.size();
+  pc0_.height = 1;
+  pc0_.points.resize(pc0_.width * pc0_.height);
 
-  for (size_t i = 0; i < pc0.points.size(); ++i) {
-    pc0.points[i].x = points_[i](0);
-    pc0.points[i].y = points_[i](1);
-    pc0.points[i].z = points_[i](2);
+  for (size_t i = 0; i < pc0_.points.size(); ++i) {
+    pc0_.points[i].x = points_[i](0);
+    pc0_.points[i].y = points_[i](1);
+    pc0_.points[i].z = points_[i](2);
   }
 
-  return pc0.width > 0;
+  return pc0_.width > 0;
 }
 
 
 bool FE::MovingLeastSquares() {
   std::cout << "MovingLeastSquares" << std::endl;
+  return true;
 }
 
 
 bool FE::Triangulate() {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(
-    new pcl::PointCloud<pcl::PointXYZ> (pc0));
+    new pcl::PointCloud<pcl::PointXYZ> (pc0_));
 
   // Normal estimation
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
-  pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
-  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
   tree->setInputCloud (cloud);
-  n.setInputCloud (cloud);
-  n.setSearchMethod (tree);
-  n.setKSearch (20);
-  n.compute (*normals);
+  n.setInputCloud(cloud);
+  n.setSearchMethod(tree);
+  n.setKSearch(20);
+  n.compute(*normals);
 
   // Concatenate the XYZ and normal fields*
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals (new pcl::PointCloud<pcl::PointNormal>);
@@ -104,8 +105,7 @@ bool FE::Triangulate() {
   }
 
   // Get triangles of largest part only
-  triangles_t.clear();
-  std::vector<std::vector<int>> triangles;
+  triangles_.clear();
   for (unsigned int i=0; i<mesh_out.polygons.size(); i++) {
     unsigned int nver0 = mesh_out.polygons[i].vertices[0];
     unsigned int nver1 = mesh_out.polygons[i].vertices[1];
@@ -116,22 +116,11 @@ bool FE::Triangulate() {
       triangle.push_back(nver0);
       triangle.push_back(nver1);
       triangle.push_back(nver2);
-      triangles_t.push_back(triangle);
-    } 
-    //else {
-    //  std::vector<int> triangle;
-    //  triangle.push_back(nver0);
-    //  triangle.push_back(nver1);
-    //  triangle.push_back(nver2);
-    //  triangles_t.push_back(triangle);
-    //}
+      triangles_.push_back(triangle);
+    }
   }
   
-
-  if (triangles_t.size() > 0)
-    return true;
-  else
-    return false;
+  return triangles_.size() > 0 ? true : false;
 }
 
 
@@ -148,7 +137,7 @@ bool FE::Compute(bool moving_least_squares) {
   }
 
   if (ok)
-    ok = Trianglate();
+    ok = Triangulate();
 
   return ok;
 }
