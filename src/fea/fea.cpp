@@ -33,6 +33,7 @@ FEA::FEA(int frame_id,
 }
 
 
+
 void FEA::MatAssembly(std::vector<std::vector<float> > &vpts, 
                       std::vector<std::vector<int> > &velts) {
   K_ = Eigen::MatrixXf::Zero(3*vpts.size(), 3*vpts.size());

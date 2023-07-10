@@ -87,6 +87,9 @@
         "valarray": "cpp",
         "variant": "cpp",
         "algorithm": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "strstream": "cpp",
+        "iterator": "cpp",
+        "random": "cpp"
     }
 }

@@ -2,6 +2,7 @@
 #include <vector>
 #include <math.h>
 
+#include "fea/fem.hpp"
 #include "fea/fea.hpp"
 #include "dataset/dataset.hpp"
 
@@ -41,19 +42,29 @@ void test_fea() {
   std::cout << "   Time fea1 = " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
 }
 
-
 void test_fe() {
-  std::cout << "fe" << std::endl;
+
+  // Load data
+  Dataset ds("../data", element);
+  std::vector<std::vector<float>> vpts = ds.points();
+
+  FE fe(element);
+
+  // Add points
+  for (int i = 0; i < vpts.size(); i++) {
+    Eigen::Vector3d pt(vpts[i][0], vpts[i][1], vpts[i][2]);
+    fe.AddPoint(pt);
+  }
+
+  fe.Compute(true);
+
+  fe.ViewMesh();
+
 }
 
-
-void test_all() {
-  std::cout << "all" << std::endl;
-}
 
 int main(int argc, char** argv) {
-  test_fea();
   test_fe();
-
+  
   return 0;
 }

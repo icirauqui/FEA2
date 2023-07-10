@@ -9,6 +9,29 @@
 #include <bits/stdc++.h>
 #include <eigen3/Eigen/Dense>
 
+#include <pcl/io/pcd_io.h>
+#include <pcl/io/vtk_io.h>
+#include <pcl/point_types.h>
+
+#include <pcl/common/common.h>
+#include <pcl/features/normal_3d_omp.h>
+#include <pcl/surface/mls.h>
+#include <pcl/surface/impl/mls.hpp>
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/visualization/cloud_viewer.h>
+
+#include <pcl/common/common_headers.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/console/parse.h>
+
+#include <pcl/surface/gp3.h>
+
+#include <pcl/visualization/vtk.h>
+
+#include <pcl/console/parse.h>
+#include <pcl/io/vtk_lib_io.h>
+
 
 class FEA {
 
@@ -19,6 +42,8 @@ public:
       float young_modulus, float poisson_coefficient, float element_depth, 
       float gauss_point, 
       bool debug_mode);
+    
+  // Finite Element Analysis
 
   void MatAssembly(std::vector<std::vector<float> > &vpts, 
                    std::vector<std::vector<int> > &velts);
@@ -39,6 +64,9 @@ public:
 
 
 private:
+
+
+  // Finite Element Analysis
 
   void InitC3D6();
 

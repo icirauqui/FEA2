@@ -31,6 +31,9 @@
 
 #include <pcl/visualization/vtk.h>
 
+#include <pcl/console/parse.h>
+#include <pcl/io/vtk_lib_io.h>
+
 
 
 class FE {
@@ -49,6 +52,7 @@ public:
 
   bool Compute(bool moving_least_squares = true);
 
+  void ViewMesh();
 
 
 private:
@@ -56,17 +60,21 @@ private:
   std::string element_;
 
   std::vector<Eigen::Vector3d> points_;
+  std::vector<bool> points_alive_;
 
   pcl::PointCloud<pcl::PointXYZ> pc0_;
 
   std::vector<std::vector<int>> triangles_;
 
+  std::vector<int> mls_indices_;
+
+  pcl::PolygonMesh mesh_;
 
   // Interface 
   float mls_search_radius_ = 1.0;
   int mls_polynomial_order_ = 3;
   float mesh_mu_ = 2.5;
-  float mesh_search_radius_ = 1.0;
+  float mesh_search_radius_ = 10.0;
   int mesh_max_neighbours_ = 25;
   int mesh_surf_angle_ = 150;
   int mesh_min_angle_ = 5;
