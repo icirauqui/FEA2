@@ -25,6 +25,8 @@ add_definitions(
 
 
 add_library(fea
+    pos.cpp
+    pos.hpp
     fem.cpp
     fem.hpp
     fea.cpp

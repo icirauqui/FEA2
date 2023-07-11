@@ -4,6 +4,7 @@
 
 #include "fea/fem.hpp"
 #include "fea/fea.hpp"
+#include "fea/pos.hpp"
 #include "dataset/dataset.hpp"
 
 #include <chrono>
@@ -48,17 +49,22 @@ void test_fe() {
   Dataset ds("../data", element);
   std::vector<std::vector<float>> vpts = ds.points();
 
-  FE fe(element);
+  FEM fem(element);
 
   // Add points
   for (int i = 0; i < vpts.size(); i++) {
     Eigen::Vector3d pt(vpts[i][0], vpts[i][1], vpts[i][2]);
-    fe.AddPoint(pt);
+    fem.AddPoint(pt);
   }
 
-  fe.Compute(true);
+  fem.Compute(true);
 
-  fe.ViewMesh();
+  fem.ViewMesh();
+  
+  FEA fea(0, element, E, nu, depth, fg, false);
+
+
+
 
 }
 

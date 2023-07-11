@@ -1,19 +1,14 @@
 #include "fem.hpp"
 
+FEM::FEM(std::string element): element_(element) {}
 
-
-
-
-
-FE::FE(std::string element): element_(element) {}
-
-void FE::AddPoint(Eigen::Vector3d point) {
+void FEM::AddPoint(Eigen::Vector3d point) {
   points_.push_back(point);
   points_alive_.push_back(true);
 }
 
 
-bool FE::InitCloud() {
+bool FEM::InitCloud() {
   pc0_.width = points_.size();
   pc0_.height = 1;
   pc0_.points.resize(pc0_.width * pc0_.height);
@@ -27,7 +22,7 @@ bool FE::InitCloud() {
   return pc0_.width > 0;
 }
 
-bool FE::MovingLeastSquares() {
+bool FEM::MovingLeastSquares() {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(
     new pcl::PointCloud<pcl::PointXYZ> (pc0_));
 
@@ -89,7 +84,7 @@ bool FE::MovingLeastSquares() {
 }
 
 
-bool FE::Triangulate() {
+bool FEM::Triangulate() {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(
     new pcl::PointCloud<pcl::PointXYZ> (pc0_));
 
@@ -178,7 +173,7 @@ bool FE::Triangulate() {
 
 
 
-bool FE::Compute(bool moving_least_squares) {
+bool FEM::Compute(bool moving_least_squares) {
   bool ok = InitCloud();
 
   if (ok && moving_least_squares) {
@@ -192,7 +187,7 @@ bool FE::Compute(bool moving_least_squares) {
 }
 
 
-void FE::ViewMesh() {
+void FEM::ViewMesh() {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> (pc0_));
 
   pcl::visualization::PCLVisualizer viewer;

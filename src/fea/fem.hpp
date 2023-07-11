@@ -36,11 +36,11 @@
 
 
 
-class FE {
+class FEM {
 
 public:
 
-  FE(std::string element);
+  FEM(std::string element);
 
   void AddPoint(Eigen::Vector3d point);
 
@@ -53,6 +53,8 @@ public:
   bool Compute(bool moving_least_squares = true);
 
   void ViewMesh();
+
+  
 
 
 private:
