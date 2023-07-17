@@ -52,16 +52,20 @@ public:
 
   bool Compute(bool moving_least_squares = true);
 
-  void ViewMesh();
+  bool ComputeExtrusion();
 
-  
+  void ViewMesh(bool extrusion = false);
+
+  std::vector<std::vector<float>> GetNodes();
+
+  std::vector<std::vector<int>> GetElements();
 
 
 private:
 
   std::string element_;
 
-  std::vector<Eigen::Vector3d> points_;
+  std::vector<Eigen::Vector3d> points_, points2_;
   std::vector<bool> points_alive_;
 
   pcl::PointCloud<pcl::PointXYZ> pc0_;
@@ -70,7 +74,11 @@ private:
 
   std::vector<int> mls_indices_;
 
+  std::vector<Eigen::Vector3d> normals_;
+
   pcl::PolygonMesh mesh_;
+
+  double element_height_ = 0.0;
 
   // Interface 
   float mls_search_radius_ = 1.0;

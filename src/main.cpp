@@ -60,8 +60,12 @@ void test_fe() {
   fem.Compute(true);
 
   fem.ViewMesh();
+
+  std::vector<std::vector<float>> nodes = fem.GetNodes();
+  std::vector<std::vector<int>> elements = fem.GetElements();
   
   FEA fea(0, element, E, nu, depth, fg, false);
+
 
 
 

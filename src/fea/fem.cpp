@@ -98,6 +98,16 @@ bool FEM::Triangulate() {
   n.setKSearch(20);
   n.compute(*normals);
 
+  // Store normals in normals_ as Eigen::Vector3d
+  normals_.clear();
+  for (unsigned int i = 0; i < normals->size(); i++) {
+    Eigen::Vector3d normal;
+    normal << normals->points[i].normal_x,
+              normals->points[i].normal_y,
+              normals->points[i].normal_z;
+    normals_.push_back(normal);
+  }
+
   // Concatenate the XYZ and normal fields*
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals (new pcl::PointCloud<pcl::PointNormal>);
   pcl::concatenateFields (*cloud, *normals, *cloud_with_normals);
@@ -186,8 +196,36 @@ bool FEM::Compute(bool moving_least_squares) {
   return ok;
 }
 
+bool FEM::ComputeExtrusion() {
+  std::vector<double> distances;
+  for (std::vector<int> triangle : triangles_) {
+    pcl::PointXYZ p0 = pc0_.points[triangle[0]];
+    pcl::PointXYZ p1 = pc0_.points[triangle[1]];
+    pcl::PointXYZ p2 = pc0_.points[triangle[2]];
 
-void FEM::ViewMesh() {
+    double d01 = pcl::euclideanDistance(p0, p1);
+    double d12 = pcl::euclideanDistance(p1, p2);
+    double d20 = pcl::euclideanDistance(p2, p0);
+
+    distances.push_back(d01);
+    distances.push_back(d12);
+    distances.push_back(d20);
+  }
+
+  // Get median
+  std::sort(distances.begin(), distances.end());
+  element_height_ = distances[distances.size()/2];
+
+  // Compute second layer at a distance of 1/2 element height and with the direction of the normal vector
+  points2_.clear();
+  for (unsigned int i=0; i<points_.size(); i++) {
+    Eigen::Vector3d point2 = points_[i] - element_height_/2 * normals_[i];
+    points2_.push_back(point2);
+  }
+}
+
+
+void FEM::ViewMesh(bool extrusion) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> (pc0_));
 
   pcl::visualization::PCLVisualizer viewer;
@@ -208,9 +246,30 @@ void FEM::ViewMesh() {
     viewer.addLine<pcl::PointXYZ>(p2, p0, 1, 0, 0, name + "c");
   }
 
+  if (extrusion) {
+    for (unsigned int i=0; i<triangles_.size(); i++) {
+      pcl::PointXYZ p0 = cloud->points[triangles_[i][0]];
+      pcl::PointXYZ p1 = cloud->points[triangles_[i][1]];
+      pcl::PointXYZ p2 = cloud->points[triangles_[i][2]];
+      std::string name = "triangle_extruded" + std::to_string(i);
+
+      // Add line
+      viewer.addLine<pcl::PointXYZ>(p0, p1, 1, 0, 0, name + "a");
+      viewer.addLine<pcl::PointXYZ>(p1, p2, 1, 0, 0, name + "b");
+      viewer.addLine<pcl::PointXYZ>(p2, p0, 1, 0, 0, name + "c");
+    }
+  }
+
   viewer.spin();
   viewer.close();
 }
 
+
+std::vector<std::vector<float>> FEM::GetNodes() {
+}
+
+
+std::vector<std::vector<int>> FEM::GetElements() {
+}
 
 

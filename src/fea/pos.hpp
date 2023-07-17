@@ -9,24 +9,30 @@ public:
 
   POS();
 
-  void Transform(Eigen::Matrix4d r, Eigen::Vector3d t, double s);
+  void Transform(Eigen::Vector4d r_im, 
+                 Eigen::Vector4d r_pt, 
+                 Eigen::Vector3d t, 
+                 double s);
 
   // Accessors
   // Return latest by default
   // User can request a specific set: 0, 1, 2, ...
   std::vector<Eigen::Vector3d> GetPoints(int idx = -1);
-  Eigen::Vector4d GetPose(int idx = -1);
+  std::pair<Eigen::Vector3d, Eigen::Vector4d> GetPose(int idx = -1);
   int LenHistory();
 
 private:
 
-  void Rotate();
+  Eigen::Vector4d ConcatenateQuaternions(const Eigen::Vector4d& qvec1,
+                                         const Eigen::Vector4d& qvec2);
 
-  void Translate();
+  Eigen::Vector4d NormalizeQuaternion(const Eigen::Vector4d& qvec);
 
-  void Scale();
+  Eigen::Vector3d QuaternionRotatePoint(const Eigen::Vector4d& qvec,
+                                        const Eigen::Vector3d& point);
 
   std::vector<std::vector<Eigen::Vector3d>> points_;
-  std::vector<Eigen::Matrix4d> pose_;
+  std::vector<std::pair<Eigen::Vector3d, Eigen::Vector4d>> pose_;
 
 };
+
