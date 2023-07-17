@@ -52,13 +52,16 @@ public:
 
   bool Compute(bool moving_least_squares = true);
 
-  bool ComputeExtrusion();
+  void ComputeExtrusion();
 
-  void ViewMesh(bool extrusion = false);
+  void ViewMesh(bool extrusion = false,
+                pcl::PointCloud<pcl::PointXYZ> cloud2 = pcl::PointCloud<pcl::PointXYZ>());
 
   std::vector<std::vector<float>> GetNodes();
 
   std::vector<std::vector<int>> GetElements();
+
+  pcl::PointCloud<pcl::PointXYZ> GetCloud();
 
 
 private:
@@ -68,7 +71,7 @@ private:
   std::vector<Eigen::Vector3d> points_, points2_;
   std::vector<bool> points_alive_;
 
-  pcl::PointCloud<pcl::PointXYZ> pc0_;
+  pcl::PointCloud<pcl::PointXYZ> pc_, pc2_;
 
   std::vector<std::vector<int>> triangles_;
 

@@ -59,17 +59,33 @@ void test_fe() {
 
   fem.Compute(true);
 
-  fem.ViewMesh();
+  //fem.ViewMesh();
 
   std::vector<std::vector<float>> nodes = fem.GetNodes();
   std::vector<std::vector<int>> elements = fem.GetElements();
   
   FEA fea(0, element, E, nu, depth, fg, false);
 
+  // Generate a random number between 0 and 1
+  for (int i = 0; i < nodes.size(); i++) {
+    for (unsigned int j = 0; j < nodes[i].size(); j++) {
+      nodes[i][j] += 0.5 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    }
+  }
 
 
+  FEM fem2(element);
+  for (int i = 0; i < nodes.size(); i++) {
+    Eigen::Vector3d pt(nodes[i][0], nodes[i][1], nodes[i][2]);
+    fem2.AddPoint(pt);
+  }
+  fem2.InitCloud();
 
 
+  //fem.ViewMesh(false, fem2.GetCloud());
+
+  fem.ComputeExtrusion();
+  fem.ViewMesh(true, fem2.GetCloud());
 }
 
 

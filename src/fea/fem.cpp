@@ -9,22 +9,22 @@ void FEM::AddPoint(Eigen::Vector3d point) {
 
 
 bool FEM::InitCloud() {
-  pc0_.width = points_.size();
-  pc0_.height = 1;
-  pc0_.points.resize(pc0_.width * pc0_.height);
+  pc_.width = points_.size();
+  pc_.height = 1;
+  pc_.points.resize(pc_.width * pc_.height);
 
-  for (size_t i = 0; i < pc0_.points.size(); ++i) {
-    pc0_.points[i].x = points_[i](0);
-    pc0_.points[i].y = points_[i](1);
-    pc0_.points[i].z = points_[i](2);
+  for (size_t i = 0; i < pc_.points.size(); ++i) {
+    pc_.points[i].x = points_[i](0);
+    pc_.points[i].y = points_[i](1);
+    pc_.points[i].z = points_[i](2);
   }
 
-  return pc0_.width > 0;
+  return pc_.width > 0;
 }
 
 bool FEM::MovingLeastSquares() {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(
-    new pcl::PointCloud<pcl::PointXYZ> (pc0_));
+    new pcl::PointCloud<pcl::PointXYZ> (pc_));
 
   // Create a KD-Tree
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
@@ -69,15 +69,15 @@ bool FEM::MovingLeastSquares() {
     }
   }
 
-  // Replace pc0_ with mls_points
-  pc0_.width = mls_points.size();
-  pc0_.height = 1;
-  pc0_.points.resize(pc0_.width * pc0_.height);
+  // Replace pc_ with mls_points
+  pc_.width = mls_points.size();
+  pc_.height = 1;
+  pc_.points.resize(pc_.width * pc_.height);
 
-  for (size_t i = 0; i < pc0_.points.size(); ++i) {
-    pc0_.points[i].x = mls_points[i].x;
-    pc0_.points[i].y = mls_points[i].y;
-    pc0_.points[i].z = mls_points[i].z;
+  for (size_t i = 0; i < pc_.points.size(); ++i) {
+    pc_.points[i].x = mls_points[i].x;
+    pc_.points[i].y = mls_points[i].y;
+    pc_.points[i].z = mls_points[i].z;
   }
 
   return true;
@@ -86,7 +86,7 @@ bool FEM::MovingLeastSquares() {
 
 bool FEM::Triangulate() {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(
-    new pcl::PointCloud<pcl::PointXYZ> (pc0_));
+    new pcl::PointCloud<pcl::PointXYZ> (pc_));
 
   // Normal estimation
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
@@ -196,12 +196,12 @@ bool FEM::Compute(bool moving_least_squares) {
   return ok;
 }
 
-bool FEM::ComputeExtrusion() {
+void FEM::ComputeExtrusion() {
   std::vector<double> distances;
   for (std::vector<int> triangle : triangles_) {
-    pcl::PointXYZ p0 = pc0_.points[triangle[0]];
-    pcl::PointXYZ p1 = pc0_.points[triangle[1]];
-    pcl::PointXYZ p2 = pc0_.points[triangle[2]];
+    pcl::PointXYZ p0 = pc_.points[triangle[0]];
+    pcl::PointXYZ p1 = pc_.points[triangle[1]];
+    pcl::PointXYZ p2 = pc_.points[triangle[2]];
 
     double d01 = pcl::euclideanDistance(p0, p1);
     double d12 = pcl::euclideanDistance(p1, p2);
@@ -215,48 +215,95 @@ bool FEM::ComputeExtrusion() {
   // Get median
   std::sort(distances.begin(), distances.end());
   element_height_ = distances[distances.size()/2];
-
+  
   // Compute second layer at a distance of 1/2 element height and with the direction of the normal vector
   points2_.clear();
+  pc2_.width = points_.size();
+  pc2_.height = 1;
+  pc2_.points.resize(pc2_.width * pc2_.height);
+
+  // Average normal
+  Eigen::Vector3d normal;
+  for (Eigen::Vector3d n : normals_) {
+    normal -= n;
+  }
+  normal /= normals_.size();
+  
   for (unsigned int i=0; i<points_.size(); i++) {
-    Eigen::Vector3d point2 = points_[i] - element_height_/2 * normals_[i];
+    Eigen::Vector3d point2 = points_[i] - element_height_/2 * normal;
     points2_.push_back(point2);
+
+    pc2_.points[i].x = point2(0);
+    pc2_.points[i].y = point2(1);
+    pc2_.points[i].z = point2(2);
   }
 }
 
 
-void FEM::ViewMesh(bool extrusion) {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> (pc0_));
+void FEM::ViewMesh(bool extrusion, 
+                   pcl::PointCloud<pcl::PointXYZ> cloud2) {
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> (pc_));
 
   pcl::visualization::PCLVisualizer viewer;
   viewer.setBackgroundColor(1, 1, 1);
   viewer.addPointCloud(cloud);
   viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2);
-  viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0, 0, 0);
+  viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0.0, 0.0, 0.0);
   
   for (unsigned int i=0; i<triangles_.size(); i++) {
     pcl::PointXYZ p0 = cloud->points[triangles_[i][0]];
     pcl::PointXYZ p1 = cloud->points[triangles_[i][1]];
     pcl::PointXYZ p2 = cloud->points[triangles_[i][2]];
-    std::string name = "triangle" + std::to_string(i);
+    std::string name = "triangle_1_" + std::to_string(i);
 
     // Add line
-    viewer.addLine<pcl::PointXYZ>(p0, p1, 1, 0, 0, name + "a");
-    viewer.addLine<pcl::PointXYZ>(p1, p2, 1, 0, 0, name + "b");
-    viewer.addLine<pcl::PointXYZ>(p2, p0, 1, 0, 0, name + "c");
+    viewer.addLine<pcl::PointXYZ>(p0, p1, 0.0, 0.8, 0.0, name + "a");
+    viewer.addLine<pcl::PointXYZ>(p1, p2, 0.0, 0.8, 0.0, name + "b");
+    viewer.addLine<pcl::PointXYZ>(p2, p0, 0.0, 0.8, 0.0, name + "c");
   }
 
   if (extrusion) {
     for (unsigned int i=0; i<triangles_.size(); i++) {
-      pcl::PointXYZ p0 = cloud->points[triangles_[i][0]];
-      pcl::PointXYZ p1 = cloud->points[triangles_[i][1]];
-      pcl::PointXYZ p2 = cloud->points[triangles_[i][2]];
-      std::string name = "triangle_extruded" + std::to_string(i);
+      Eigen::Vector3d p0e = points2_[triangles_[i][0]];
+      Eigen::Vector3d p1e = points2_[triangles_[i][1]];
+      Eigen::Vector3d p2e = points2_[triangles_[i][2]];
+
+      pcl::PointXYZ p0(p0e(0), p0e(1), p0e(2));
+      pcl::PointXYZ p1(p1e(0), p1e(1), p1e(2));
+      pcl::PointXYZ p2(p2e(0), p2e(1), p2e(2));
+      std::string name = "triangle_1_" + std::to_string(i) + "_extrusion";
 
       // Add line
-      viewer.addLine<pcl::PointXYZ>(p0, p1, 1, 0, 0, name + "a");
-      viewer.addLine<pcl::PointXYZ>(p1, p2, 1, 0, 0, name + "b");
-      viewer.addLine<pcl::PointXYZ>(p2, p0, 1, 0, 0, name + "c");
+      viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.7, 0.7, name + "_a");
+      viewer.addLine<pcl::PointXYZ>(p1, p2, 0.7, 0.7, 0.7, name + "_b");
+      viewer.addLine<pcl::PointXYZ>(p2, p0, 0.7, 0.7, 0.7, name + "_c");
+    }
+
+    for (unsigned int i=0; i<points2_.size(); i++) {
+      pcl::PointXYZ p0 = cloud->points[i];
+      pcl::PointXYZ p1(points2_[i](0), points2_[i](1), points2_[i](2));
+      std::string name = "line_" + std::to_string(i);
+
+      // Add line
+      viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.7, 0.7, name);
+    }
+  }
+
+  if (cloud2.points.size() > 0) {
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud2_color(cloud2.makeShared(), 0, 0, 255);
+    viewer.addPointCloud(cloud2.makeShared(), cloud2_color, "cloud2");
+    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud2");
+
+    for (unsigned int i=0; i<triangles_.size(); i++) {
+      pcl::PointXYZ p0 = cloud2.points[triangles_[i][0]];
+      pcl::PointXYZ p1 = cloud2.points[triangles_[i][1]];
+      pcl::PointXYZ p2 = cloud2.points[triangles_[i][2]];
+      std::string name = "triangle_2_" + std::to_string(i);
+
+      // Add line
+      viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.0, 0.0, name + "a");
+      viewer.addLine<pcl::PointXYZ>(p1, p2, 0.7, 0.0, 0.0, name + "b");
+      viewer.addLine<pcl::PointXYZ>(p2, p0, 0.7, 0.0, 0.0, name + "c");
     }
   }
 
@@ -266,10 +313,22 @@ void FEM::ViewMesh(bool extrusion) {
 
 
 std::vector<std::vector<float>> FEM::GetNodes() {
+  std::vector<std::vector<float>> points;
+  for (Eigen::Vector3d pt: points_) {
+    std::vector<float> point;
+    point.push_back(pt[0]);
+    point.push_back(pt[1]);
+    point.push_back(pt[2]);
+    points.push_back(point);
+  }
+  return points;
 }
 
 
 std::vector<std::vector<int>> FEM::GetElements() {
+  return triangles_;
 }
 
-
+pcl::PointCloud<pcl::PointXYZ> FEM::GetCloud() {
+  return pc_;
+}
