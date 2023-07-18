@@ -55,9 +55,12 @@ public:
   void ComputeExtrusion();
 
   void ViewMesh(bool extrusion = false,
-                pcl::PointCloud<pcl::PointXYZ> cloud2 = pcl::PointCloud<pcl::PointXYZ>());
+                pcl::PointCloud<pcl::PointXYZ> cloud2 = pcl::PointCloud<pcl::PointXYZ>(),
+                Eigen::Vector3d pose1 = Eigen::Vector3d(0.0, 0.0, 0.0),
+                Eigen::Vector3d pose2 = Eigen::Vector3d(0.0, 0.0, 0.0));
 
   std::vector<std::vector<float>> GetNodes();
+  std::vector<Eigen::Vector3d> GetEigenNodes();
 
   std::vector<std::vector<int>> GetElements();
 

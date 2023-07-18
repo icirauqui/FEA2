@@ -241,7 +241,9 @@ void FEM::ComputeExtrusion() {
 
 
 void FEM::ViewMesh(bool extrusion, 
-                   pcl::PointCloud<pcl::PointXYZ> cloud2) {
+                   pcl::PointCloud<pcl::PointXYZ> cloud2,
+                   Eigen::Vector3d pose1,
+                   Eigen::Vector3d pose2) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> (pc_));
 
   pcl::visualization::PCLVisualizer viewer;
@@ -257,9 +259,9 @@ void FEM::ViewMesh(bool extrusion,
     std::string name = "triangle_1_" + std::to_string(i);
 
     // Add line
-    viewer.addLine<pcl::PointXYZ>(p0, p1, 0.0, 0.8, 0.0, name + "a");
-    viewer.addLine<pcl::PointXYZ>(p1, p2, 0.0, 0.8, 0.0, name + "b");
-    viewer.addLine<pcl::PointXYZ>(p2, p0, 0.0, 0.8, 0.0, name + "c");
+    viewer.addLine<pcl::PointXYZ>(p0, p1, 0.0, 0.7, 0.0, name + "a");
+    viewer.addLine<pcl::PointXYZ>(p1, p2, 0.0, 0.7, 0.0, name + "b");
+    viewer.addLine<pcl::PointXYZ>(p2, p0, 0.0, 0.7, 0.0, name + "c");
   }
 
   if (extrusion) {
@@ -274,9 +276,9 @@ void FEM::ViewMesh(bool extrusion,
       std::string name = "triangle_1_" + std::to_string(i) + "_extrusion";
 
       // Add line
-      viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.7, 0.7, name + "_a");
-      viewer.addLine<pcl::PointXYZ>(p1, p2, 0.7, 0.7, 0.7, name + "_b");
-      viewer.addLine<pcl::PointXYZ>(p2, p0, 0.7, 0.7, 0.7, name + "_c");
+      viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.9, 0.7, name + "_a");
+      viewer.addLine<pcl::PointXYZ>(p1, p2, 0.7, 0.9, 0.7, name + "_b");
+      viewer.addLine<pcl::PointXYZ>(p2, p0, 0.7, 0.9, 0.7, name + "_c");
     }
 
     for (unsigned int i=0; i<points2_.size(); i++) {
@@ -285,8 +287,14 @@ void FEM::ViewMesh(bool extrusion,
       std::string name = "line_" + std::to_string(i);
 
       // Add line
-      viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.7, 0.7, name);
+      viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.9, 0.7, name);
     }
+  }
+
+  // If pose1 not zero, then add as a thick point
+  if (pose1.norm() > 0) {
+    pcl::PointXYZ p1(pose1(0), pose1(1), pose1(2));
+    viewer.addSphere(p1, 0.1, 0.0, 0.7, 0.0, "pose1");
   }
 
   if (cloud2.points.size() > 0) {
@@ -305,6 +313,12 @@ void FEM::ViewMesh(bool extrusion,
       viewer.addLine<pcl::PointXYZ>(p1, p2, 0.7, 0.0, 0.0, name + "b");
       viewer.addLine<pcl::PointXYZ>(p2, p0, 0.7, 0.0, 0.0, name + "c");
     }
+
+    // If pose2 not zero, then add as a thick point
+    if (pose2.norm() > 0) {
+      pcl::PointXYZ p2(pose2(0), pose2(1), pose2(2));
+      viewer.addSphere(p2, 0.1, 0.7, 0.0, 0.0, "pose2");
+    }
   }
 
   viewer.spin();
@@ -322,6 +336,11 @@ std::vector<std::vector<float>> FEM::GetNodes() {
     points.push_back(point);
   }
   return points;
+}
+
+
+std::vector<Eigen::Vector3d> FEM::GetEigenNodes() {
+  return points_;
 }
 
 

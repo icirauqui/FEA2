@@ -19,6 +19,21 @@ float depth = 1.0;
 float fg = 0.577350269;
 float Klarge = 100000000.0;
 
+float noise_multiplier = 0.3;
+Eigen::Vector3d model_offset(1.0, 2.0, 3.0); 
+
+Eigen::Vector3d ApproximatePose(std::vector<Eigen::Vector3d> pts) {
+  Eigen::Vector3d centroid(0.0, 0.0, 0.0);
+  for (int i = 0; i < pts.size(); i++) {
+    centroid += pts[i];
+  }
+  centroid /= pts.size();
+
+  double dist = sqrt(pow(centroid(0), 2) + pow(centroid(1), 2) + pow(centroid(2), 2));
+  centroid(2) += dist/2;
+
+  return centroid;
+}
 
 void test_fea() {
   // Load data
@@ -50,42 +65,30 @@ void test_fe() {
   std::vector<std::vector<float>> vpts = ds.points();
 
   FEM fem(element);
+  FEM fem2(element);
 
   // Add points
   for (int i = 0; i < vpts.size(); i++) {
     Eigen::Vector3d pt(vpts[i][0], vpts[i][1], vpts[i][2]);
+    Eigen::Vector3d pt2(vpts[i][0], vpts[i][1], vpts[i][2]);
+    for (unsigned int j=0; j<3; j++) {
+      pt2(j) += noise_multiplier * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    }
+    pt2 += model_offset;
     fem.AddPoint(pt);
+    fem2.AddPoint(pt2);
   }
 
   fem.Compute(true);
+  fem2.InitCloud();
+  fem.ComputeExtrusion();
 
-  //fem.ViewMesh();
-
-  std::vector<std::vector<float>> nodes = fem.GetNodes();
-  std::vector<std::vector<int>> elements = fem.GetElements();
   
   FEA fea(0, element, E, nu, depth, fg, false);
 
-  // Generate a random number between 0 and 1
-  for (int i = 0; i < nodes.size(); i++) {
-    for (unsigned int j = 0; j < nodes[i].size(); j++) {
-      nodes[i][j] += 0.5 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-    }
-  }
+  Eigen::Vector3d pose1 = ApproximatePose(fem.GetEigenNodes());
 
-
-  FEM fem2(element);
-  for (int i = 0; i < nodes.size(); i++) {
-    Eigen::Vector3d pt(nodes[i][0], nodes[i][1], nodes[i][2]);
-    fem2.AddPoint(pt);
-  }
-  fem2.InitCloud();
-
-
-  //fem.ViewMesh(false, fem2.GetCloud());
-
-  fem.ComputeExtrusion();
-  fem.ViewMesh(true, fem2.GetCloud());
+  fem.ViewMesh(true, fem2.GetCloud(), pose1);
 }
 
 
