@@ -62,6 +62,7 @@ public:
   std::vector<std::vector<float>> GetNodes();
   std::vector<Eigen::Vector3d> GetEigenNodes();
 
+  std::vector<std::vector<int>> GetTriangles();
   std::vector<std::vector<int>> GetElements();
 
   pcl::PointCloud<pcl::PointXYZ> GetCloud();
@@ -76,7 +77,7 @@ private:
 
   pcl::PointCloud<pcl::PointXYZ> pc_, pc2_;
 
-  std::vector<std::vector<int>> triangles_;
+  std::vector<std::vector<int>> triangles_, elements_;
 
   std::vector<int> mls_indices_;
 

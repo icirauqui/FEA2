@@ -46,7 +46,7 @@ void FEA::MatAssembly(std::vector<std::vector<float> > &vpts,
       xyzi.push_back(vpts[node]);
       mn.push_back(node*3);
     }
-      
+
     ComputeKei(xyzi);
     
     for (unsigned int ni = 0; ni < mn.size(); ni++) {

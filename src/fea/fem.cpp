@@ -237,6 +237,17 @@ void FEM::ComputeExtrusion() {
     pc2_.points[i].y = point2(1);
     pc2_.points[i].z = point2(2);
   }
+
+  for (std::vector<int> triangle : triangles_) {
+    std::vector<int> element;
+    element.push_back(triangle[0] + points_.size());
+    element.push_back(triangle[1] + points_.size());
+    element.push_back(triangle[2] + points_.size());
+    element.push_back(triangle[0]);
+    element.push_back(triangle[1]);
+    element.push_back(triangle[2]);
+    elements_.push_back(element);
+  }
 }
 
 
@@ -335,17 +346,26 @@ std::vector<std::vector<float>> FEM::GetNodes() {
     point.push_back(pt[2]);
     points.push_back(point);
   }
+  for (Eigen::Vector3d pt: points2_) {
+    std::vector<float> point;
+    point.push_back(pt[0]);
+    point.push_back(pt[1]);
+    point.push_back(pt[2]);
+    points.push_back(point);
+  }
   return points;
 }
-
 
 std::vector<Eigen::Vector3d> FEM::GetEigenNodes() {
   return points_;
 }
 
+std::vector<std::vector<int>> FEM::GetTriangles() {
+  return triangles_;
+}
 
 std::vector<std::vector<int>> FEM::GetElements() {
-  return triangles_;
+  return elements_;
 }
 
 pcl::PointCloud<pcl::PointXYZ> FEM::GetCloud() {

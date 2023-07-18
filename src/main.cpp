@@ -35,6 +35,15 @@ Eigen::Vector3d ApproximatePose(std::vector<Eigen::Vector3d> pts) {
   return centroid;
 }
 
+std::vector<Eigen::Vector3d> SimulateSteps(Eigen::Vector3d offset, int steps) {
+  std::vector<Eigen::Vector3d> poses;
+  Eigen::Vector3d step = offset / steps;
+  for (int i = 0; i < steps; i++) {
+    poses.push_back(offset - (step * i));
+  }
+  return poses;
+}
+
 void test_fea() {
   // Load data
   Dataset ds("../data", element);
@@ -83,16 +92,24 @@ void test_fe() {
   fem2.InitCloud();
   fem.ComputeExtrusion();
 
-  
-  FEA fea(0, element, E, nu, depth, fg, false);
-
   Eigen::Vector3d pose1 = ApproximatePose(fem.GetEigenNodes());
+  Eigen::Vector3d pose2 = ApproximatePose(fem2.GetEigenNodes());
+  fem.ViewMesh(true, fem2.GetCloud(), pose1, pose2);
 
-  fem.ViewMesh(true, fem2.GetCloud(), pose1);
+  FEA fea(0, element, E, nu, depth, fg, false);
+  std::vector<std::vector<float>> nodes = fem.GetNodes();
+  std::vector<std::vector<int>> elements = fem.GetElements();
+  fea.MatAssembly(nodes, elements);
+
+  std::vector<Eigen::Vector3d> steps = SimulateSteps(model_offset, 5);
+  for (auto step: steps) {
+    std::cout << "Step = " << step.transpose() << std::endl;
+  }
 }
 
 
 int main(int argc, char** argv) {
+  //test_fea();
   test_fe();
   
   return 0;
