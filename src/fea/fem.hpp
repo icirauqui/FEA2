@@ -56,19 +56,25 @@ public:
 
   void ViewMesh(bool extrusion = false,
                 pcl::PointCloud<pcl::PointXYZ> cloud2 = pcl::PointCloud<pcl::PointXYZ>(),
-                Eigen::Vector3d pose1 = Eigen::Vector3d(0.0, 0.0, 0.0),
-                Eigen::Vector3d pose2 = Eigen::Vector3d(0.0, 0.0, 0.0));
+                std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)),
+                std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)));
 
   std::vector<std::vector<float>> GetNodes();
   std::vector<Eigen::Vector3d> GetEigenNodes();
 
   std::vector<std::vector<int>> GetTriangles();
+  void SetTriangles(std::vector<std::vector<int>> triangles);
+
   std::vector<std::vector<int>> GetElements();
+  void SetElements(std::vector<std::vector<int>> elements);
 
   pcl::PointCloud<pcl::PointXYZ> GetCloud();
 
 
 private:
+
+  std::pair<Eigen::Vector3d, Eigen::Vector3d> QuaternionLine(
+    Eigen::Vector4d qvec, Eigen::Vector3d point, double radius = 1.0);
 
   std::string element_;
 

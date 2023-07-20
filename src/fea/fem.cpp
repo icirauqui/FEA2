@@ -253,8 +253,8 @@ void FEM::ComputeExtrusion() {
 
 void FEM::ViewMesh(bool extrusion, 
                    pcl::PointCloud<pcl::PointXYZ> cloud2,
-                   Eigen::Vector3d pose1,
-                   Eigen::Vector3d pose2) {
+                   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1,
+                   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> (pc_));
 
   pcl::visualization::PCLVisualizer viewer;
@@ -303,9 +303,15 @@ void FEM::ViewMesh(bool extrusion,
   }
 
   // If pose1 not zero, then add as a thick point
-  if (pose1.norm() > 0) {
-    pcl::PointXYZ p1(pose1(0), pose1(1), pose1(2));
+  if (pose1.second.norm() > 0) {
+    pcl::PointXYZ p1(pose1.second(0), pose1.second(1), pose1.second(2));
     viewer.addSphere(p1, 0.1, 0.0, 0.7, 0.0, "pose1");
+
+      // Add a line in the direction of the quaternion in pose2.first
+      std::pair<Eigen::Vector3d, Eigen::Vector3d> line_pts = QuaternionLine(pose1.first, pose1.second);
+      pcl::PointXYZ p1_a(line_pts.first(0), line_pts.first(1), line_pts.first(2));
+      pcl::PointXYZ p1_b(line_pts.second(0), line_pts.second(1), line_pts.second(2));
+      viewer.addLine<pcl::PointXYZ>(p1_a, p1_b, 0.0, 0.7, 0.0, "pose1_line");
   }
 
   if (cloud2.points.size() > 0) {
@@ -326,9 +332,16 @@ void FEM::ViewMesh(bool extrusion,
     }
 
     // If pose2 not zero, then add as a thick point
-    if (pose2.norm() > 0) {
-      pcl::PointXYZ p2(pose2(0), pose2(1), pose2(2));
+    if (pose2.second.norm() > 0) {
+      pcl::PointXYZ p2(pose2.second(0), pose2.second(1), pose2.second(2));
       viewer.addSphere(p2, 0.1, 0.7, 0.0, 0.0, "pose2");
+
+      // Add a line in the direction of the quaternion in pose2.first
+      std::pair<Eigen::Vector3d, Eigen::Vector3d> line_pts = QuaternionLine(pose2.first, pose2.second);
+      pcl::PointXYZ p2_a(line_pts.first(0), line_pts.first(1), line_pts.first(2));
+      pcl::PointXYZ p2_b(line_pts.second(0), line_pts.second(1), line_pts.second(2));
+      viewer.addLine<pcl::PointXYZ>(p2_a, p2_b, 0.7, 0.0, 0.0, "pose2_line");
+
     }
   }
 
@@ -364,10 +377,34 @@ std::vector<std::vector<int>> FEM::GetTriangles() {
   return triangles_;
 }
 
+void FEM::SetTriangles(std::vector<std::vector<int>> triangles) {
+  triangles_ = triangles;
+}
+
 std::vector<std::vector<int>> FEM::GetElements() {
   return elements_;
 }
 
+void FEM::SetElements(std::vector<std::vector<int>> elements) {
+  elements_ = elements;
+}
+
 pcl::PointCloud<pcl::PointXYZ> FEM::GetCloud() {
   return pc_;
+}
+
+std::pair<Eigen::Vector3d, Eigen::Vector3d> FEM::QuaternionLine(
+    Eigen::Vector4d qvec, Eigen::Vector3d point, double radius) {
+
+  // Step 1: Normalize the quaternion
+  Eigen::Quaterniond normalizedQuaternion(qvec.normalized());
+
+  // Step 2: Convert the quaternion to a rotation matrix
+  Eigen::Matrix3d rotationMatrix = normalizedQuaternion.toRotationMatrix();
+
+  // Step 3: Define the line endpoint
+  Eigen::Vector3d direction(radius, 0.0, 0.0); // Direction of the line
+  Eigen::Vector3d endpoint = point + rotationMatrix * direction;
+
+  return std::make_pair(point, endpoint);
 }

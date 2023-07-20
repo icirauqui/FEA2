@@ -22,7 +22,7 @@ float Klarge = 100000000.0;
 float noise_multiplier = 0.3;
 Eigen::Vector3d model_offset(1.0, 2.0, 3.0); 
 
-Eigen::Vector3d ApproximatePose(std::vector<Eigen::Vector3d> pts) {
+std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::Vector3d> pts) {
   Eigen::Vector3d centroid(0.0, 0.0, 0.0);
   for (int i = 0; i < pts.size(); i++) {
     centroid += pts[i];
@@ -30,9 +30,16 @@ Eigen::Vector3d ApproximatePose(std::vector<Eigen::Vector3d> pts) {
   centroid /= pts.size();
 
   double dist = sqrt(pow(centroid(0), 2) + pow(centroid(1), 2) + pow(centroid(2), 2));
-  centroid(2) += dist/2;
+  Eigen::Vector3d tvec = centroid + Eigen::Vector3d(0, 0, dist/2);
 
-  return centroid;
+  // Compute rotation, from t to centroid, as a quaternion
+  Eigen::Vector3d direction = centroid - tvec;
+  direction.normalize();
+  Eigen::Quaterniond quaternion;
+  quaternion.setFromTwoVectors(Eigen::Vector3d::UnitX(), direction);
+  Eigen::Vector4d qvec = quaternion.coeffs();
+
+  return std::make_pair(qvec, tvec);
 }
 
 std::vector<Eigen::Vector3d> SimulateSteps(Eigen::Vector3d offset, int steps) {
@@ -92,14 +99,18 @@ void test_fe() {
   fem2.InitCloud();
   fem.ComputeExtrusion();
 
-  Eigen::Vector3d pose1 = ApproximatePose(fem.GetEigenNodes());
-  Eigen::Vector3d pose2 = ApproximatePose(fem2.GetEigenNodes());
+  std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = ApproximatePose(fem.GetEigenNodes());
+  std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = ApproximatePose(fem2.GetEigenNodes());
   fem.ViewMesh(true, fem2.GetCloud(), pose1, pose2);
 
   FEA fea(0, element, E, nu, depth, fg, false);
   std::vector<std::vector<float>> nodes = fem.GetNodes();
   std::vector<std::vector<int>> elements = fem.GetElements();
   fea.MatAssembly(nodes, elements);
+
+
+  // Create POS object
+  //POS pos();
 
   std::vector<Eigen::Vector3d> steps = SimulateSteps(model_offset, 5);
   for (auto step: steps) {
