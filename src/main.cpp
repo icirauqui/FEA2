@@ -44,12 +44,13 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::V
 
 std::vector<Eigen::Vector3d> SimulateSteps(Eigen::Vector3d offset, int steps) {
   std::vector<Eigen::Vector3d> poses;
-  Eigen::Vector3d step = offset / steps;
-  for (int i = 1; i < steps; i++) {
-    poses.push_back(offset - (step * i));
+  Eigen::Vector3d delta = offset / steps;
+  for (int i = 0; i < steps; i++) {
+    poses.push_back(offset - (delta * i));
   }
   return poses;
 }
+
 
 void test_fea() {
   // Load data
@@ -102,6 +103,9 @@ void test_fe() {
 
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = ApproximatePose(fem.GetEigenNodes());
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = ApproximatePose(fem2.GetEigenNodes());
+  std::cout << "Pose1 = " << pose1.second.transpose() << std::endl;
+  std::cout << "Pose2 = " << pose2.second.transpose() << std::endl;
+
   fem.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2);
 
   FEA fea(0, element, E, nu, depth, fg, false);
@@ -113,16 +117,20 @@ void test_fe() {
   // Create POS object
   POS pos(fem2.GetNodes(), pose2);
 
-  std::vector<Eigen::Vector3d> steps = SimulateSteps(model_offset, 5);
+  std::vector<Eigen::Vector3d> steps = SimulateSteps(pose2.second-pose1.second, 5);
+  Eigen::Vector3d delta = (pose2.second-pose1.second) / 5;
+  
   for (auto step: steps) {
-    std::cout << "Step = " << step.transpose() << std::endl;
     Eigen::Vector4d identity_quaternion = Eigen::Quaterniond::Identity().coeffs();
     std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
-    Eigen::Vector3d t = step - latest_pose.second;
-    std::cout << "  Translation = " << t.transpose() << std::endl;
-    pos.Transform(identity_quaternion, identity_quaternion, t, 1.0);
+    std::cout << "  Translation = " << delta.transpose() << std::endl;
+
+    pos.Transform(identity_quaternion, identity_quaternion, -delta, 1.0);
 
     std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
+    std::cout << "  Pose = " << latest_pose.second.transpose() << " -> " << new_pose.second.transpose() << std::endl;
+
+
     std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
     std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
     for (unsigned int i=0; i<new_nodes.size(); i++) {
@@ -133,6 +141,7 @@ void test_fe() {
       }
     }
     fem.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose);
+    std::cout << std::endl;
   }
 }
 
