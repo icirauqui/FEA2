@@ -276,6 +276,25 @@ double FEM::GetElementHeight() {
 
 
 void FEM::ViewMesh(bool extrusion, 
+                   std::vector<Eigen::Vector3d> cloud2,
+                   std::vector<Eigen::Vector3d> cloud2extrusion,
+                   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1,
+                   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2) {
+                    
+  pcl::PointCloud<pcl::PointXYZ> pc;
+  pc.width = cloud2.size();
+  pc.height = 1;
+  pc.points.resize(pc_.width * pc_.height);
+  for (unsigned int i=0; i<cloud2.size(); i++) {
+    pc.points[i].x = cloud2[i](0);
+    pc.points[i].y = cloud2[i](1);
+    pc.points[i].z = cloud2[i](2);
+  }
+
+  ViewMesh(extrusion, pc, cloud2extrusion, pose1, pose2);
+}
+
+void FEM::ViewMesh(bool extrusion, 
                    pcl::PointCloud<pcl::PointXYZ> cloud2,
                    std::vector<Eigen::Vector3d> cloud2extrusion,
                    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1,

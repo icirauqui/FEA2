@@ -45,7 +45,7 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::V
 std::vector<Eigen::Vector3d> SimulateSteps(Eigen::Vector3d offset, int steps) {
   std::vector<Eigen::Vector3d> poses;
   Eigen::Vector3d step = offset / steps;
-  for (int i = 0; i < steps; i++) {
+  for (int i = 1; i < steps; i++) {
     poses.push_back(offset - (step * i));
   }
   return poses;
@@ -111,11 +111,28 @@ void test_fe() {
 
 
   // Create POS object
-  POS pos;
+  POS pos(fem2.GetNodes(), pose2);
 
   std::vector<Eigen::Vector3d> steps = SimulateSteps(model_offset, 5);
   for (auto step: steps) {
     std::cout << "Step = " << step.transpose() << std::endl;
+    Eigen::Vector4d identity_quaternion = Eigen::Quaterniond::Identity().coeffs();
+    std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
+    Eigen::Vector3d t = step - latest_pose.second;
+    std::cout << "  Translation = " << t.transpose() << std::endl;
+    pos.Transform(identity_quaternion, identity_quaternion, t, 1.0);
+
+    std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
+    std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
+    std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
+    for (unsigned int i=0; i<new_nodes.size(); i++) {
+      if (i < new_nodes.size()/2) {
+        new_nodes_front.push_back(new_nodes[i]);
+      } else {
+        new_nodes_back.push_back(new_nodes[i]);
+      }
+    }
+    fem.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose);
   }
 }
 

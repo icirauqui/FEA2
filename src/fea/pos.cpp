@@ -3,9 +3,18 @@
 POS::POS() {}
 
 POS::POS(std::vector<Eigen::Vector3d> points,
-         std::pair<Eigen::Vector4d, Eigen::Vector3d> pose)
-{
+         std::pair<Eigen::Vector4d, Eigen::Vector3d> pose){
   points_.push_back(points);
+  pose_.push_back(pose);
+}
+
+POS::POS(std::vector<std::vector<float>> points,
+         std::pair<Eigen::Vector4d, Eigen::Vector3d> pose){
+  std::vector<Eigen::Vector3d> eigen_points;
+  for (int i = 0; i < points.size(); i++) {
+    eigen_points.push_back(Eigen::Vector3d(points[i][0], points[i][1], points[i][2]));
+  }
+  points_.push_back(eigen_points);
   pose_.push_back(pose);
 }
 

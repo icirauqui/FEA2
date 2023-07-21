@@ -10,6 +10,8 @@ public:
   POS();
   POS(std::vector<Eigen::Vector3d> points,
       std::pair<Eigen::Vector4d, Eigen::Vector3d> pose);
+  POS(std::vector<std::vector<float>> points,
+      std::pair<Eigen::Vector4d, Eigen::Vector3d> pose);
 
   void Transform(Eigen::Vector4d r_im,
                  Eigen::Vector4d r_pt,
