@@ -250,9 +250,34 @@ void FEM::ComputeExtrusion() {
   }
 }
 
+std::vector<Eigen::Vector3d> FEM::GetExtrusionDelta() {
+  std::vector<Eigen::Vector3d> delta;
+  for (unsigned int i=0; i<points_.size(); i++) {
+    delta.push_back(points2_[i] - points_[i]);
+  }
+  return delta;
+}
+
+std::vector<Eigen::Vector3d> FEM::GetExtrusion() {
+  return points2_;
+}
+
+void FEM::SetExtrusion(std::vector<Eigen::Vector3d> extrusion_delta, double element_height) {
+  for (unsigned int i=0; i<points_.size(); i++) {
+    Eigen::Vector3d pt2 = points_[i] + extrusion_delta[i];
+    points2_.push_back(pt2);
+  }
+  element_height_ = element_height;
+}
+
+double FEM::GetElementHeight() {
+  return element_height_;
+}
+
 
 void FEM::ViewMesh(bool extrusion, 
                    pcl::PointCloud<pcl::PointXYZ> cloud2,
+                   std::vector<Eigen::Vector3d> cloud2extrusion,
                    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1,
                    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> (pc_));
@@ -295,7 +320,7 @@ void FEM::ViewMesh(bool extrusion,
     for (unsigned int i=0; i<points2_.size(); i++) {
       pcl::PointXYZ p0 = cloud->points[i];
       pcl::PointXYZ p1(points2_[i](0), points2_[i](1), points2_[i](2));
-      std::string name = "line_" + std::to_string(i);
+      std::string name = "line_1_" + std::to_string(i);
 
       // Add line
       viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.9, 0.7, name);
@@ -329,6 +354,34 @@ void FEM::ViewMesh(bool extrusion,
       viewer.addLine<pcl::PointXYZ>(p0, p1, 0.7, 0.0, 0.0, name + "a");
       viewer.addLine<pcl::PointXYZ>(p1, p2, 0.7, 0.0, 0.0, name + "b");
       viewer.addLine<pcl::PointXYZ>(p2, p0, 0.7, 0.0, 0.0, name + "c");
+    }
+
+    if (extrusion) {
+      for (unsigned int i=0; i<triangles_.size(); i++) {
+        Eigen::Vector3d p0e = cloud2extrusion[triangles_[i][0]];
+        Eigen::Vector3d p1e = cloud2extrusion[triangles_[i][1]];
+        Eigen::Vector3d p2e = cloud2extrusion[triangles_[i][2]];
+
+        pcl::PointXYZ p0(p0e(0), p0e(1), p0e(2));
+        pcl::PointXYZ p1(p1e(0), p1e(1), p1e(2));
+        pcl::PointXYZ p2(p2e(0), p2e(1), p2e(2));
+        std::string name = "triangle_2_" + std::to_string(i) + "_extrusion";
+
+        // Add line
+        viewer.addLine<pcl::PointXYZ>(p0, p1, 0.9, 0.7, 0.7, name + "_a");
+        viewer.addLine<pcl::PointXYZ>(p1, p2, 0.9, 0.7, 0.7, name + "_b");
+        viewer.addLine<pcl::PointXYZ>(p2, p0, 0.9, 0.7, 0.7, name + "_c");
+      }
+
+      for (unsigned int i=0; i<points2_.size(); i++) {
+        pcl::PointXYZ p0 = cloud2.points[i];
+        pcl::PointXYZ p1(cloud2extrusion[i](0), cloud2extrusion[i](1), cloud2extrusion[i](2));
+        std::string name = "line_2_" + std::to_string(i);
+
+        // Add line
+        viewer.addLine<pcl::PointXYZ>(p0, p1, 0.9, 0.7, 0.7, name);
+      }
+
     }
 
     // If pose2 not zero, then add as a thick point

@@ -98,10 +98,11 @@ void test_fe() {
   fem.Compute(true);
   fem2.InitCloud();
   fem.ComputeExtrusion();
+  fem2.SetExtrusion(fem.GetExtrusionDelta(), fem.GetElementHeight());
 
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = ApproximatePose(fem.GetEigenNodes());
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = ApproximatePose(fem2.GetEigenNodes());
-  fem.ViewMesh(true, fem2.GetCloud(), pose1, pose2);
+  fem.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2);
 
   FEA fea(0, element, E, nu, depth, fg, false);
   std::vector<std::vector<float>> nodes = fem.GetNodes();
@@ -110,7 +111,7 @@ void test_fe() {
 
 
   // Create POS object
-  //POS pos();
+  POS pos;
 
   std::vector<Eigen::Vector3d> steps = SimulateSteps(model_offset, 5);
   for (auto step: steps) {

@@ -53,9 +53,14 @@ public:
   bool Compute(bool moving_least_squares = true);
 
   void ComputeExtrusion();
+  std::vector<Eigen::Vector3d> GetExtrusionDelta();
+  std::vector<Eigen::Vector3d> GetExtrusion();
+  void SetExtrusion(std::vector<Eigen::Vector3d> extrusion_delta, double element_height);
+  double GetElementHeight();
 
   void ViewMesh(bool extrusion = false,
                 pcl::PointCloud<pcl::PointXYZ> cloud2 = pcl::PointCloud<pcl::PointXYZ>(),
+                std::vector<Eigen::Vector3d> cloud2extrusion = std::vector<Eigen::Vector3d>(),
                 std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)),
                 std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)));
 
