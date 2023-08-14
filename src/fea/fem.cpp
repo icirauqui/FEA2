@@ -417,6 +417,8 @@ void FEM::ViewMesh(bool extrusion,
     }
   }
 
+  viewer.addCoordinateSystem(0.5);
+
   viewer.spin();
   viewer.close();
 }

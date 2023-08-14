@@ -117,32 +117,68 @@ void test_fe() {
   // Create POS object
   POS pos(fem2.GetNodes(), pose2);
 
-  std::vector<Eigen::Vector3d> steps = SimulateSteps(pose2.second-pose1.second, 5);
-  Eigen::Vector3d delta = (pose2.second-pose1.second) / 5;
-  
-  for (auto step: steps) {
-    Eigen::Vector4d identity_quaternion = Eigen::Quaterniond::Identity().coeffs();
-    std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
-    std::cout << "  Translation = " << delta.transpose() << std::endl;
+  // Impose a rotation of x degrees around each axis
+  double imposed_angle = pos.DegToRad(30.0);
+  //Eigen::Vector3d imposed_angle_v(imposed_angle, imposed_angle, imposed_angle);
+  //Eigen::Vector3d imposed_angle_v(imposed_angle, 0.0, 0.0);
+  Eigen::Vector3d imposed_angle_v(0.0, imposed_angle, 0.0);
+  //Eigen::Vector3d imposed_angle_v(0.0, 0.0, imposed_angle);
+  //Eigen::Vector3d imposed_angle_v(imposed_angle, imposed_angle, imposed_angle);
+  Eigen::Vector4d imposed_angle_q = pos.EulerToQuaternion(imposed_angle_v);
 
-    pos.Transform(identity_quaternion, identity_quaternion, -delta, 1.0);
+  std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
 
-    std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
-    std::cout << "  Pose = " << latest_pose.second.transpose() << " -> " << new_pose.second.transpose() << std::endl;
+  pos.Transform(imposed_angle_q, -imposed_angle_q, Eigen::Vector3d(0, 0, 0), 1.0);
 
-
-    std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
-    std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
-    for (unsigned int i=0; i<new_nodes.size(); i++) {
-      if (i < new_nodes.size()/2) {
-        new_nodes_front.push_back(new_nodes[i]);
-      } else {
-        new_nodes_back.push_back(new_nodes[i]);
-      }
+  std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
+  std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
+  for (unsigned int i=0; i<new_nodes.size(); i++) {
+    if (i < new_nodes.size()/2) {
+      new_nodes_front.push_back(new_nodes[i]);
+    } else {
+      new_nodes_back.push_back(new_nodes[i]);
     }
-    fem.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose);
-    std::cout << std::endl;
   }
+  std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
+  fem.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose);
+
+  Eigen::Vector4d applied_rotation = pos.ComputeQuaternionRotation(latest_pose.first, new_pose.first);
+
+  std::cout << "Requested rotation = " << imposed_angle_q.transpose() << std::endl;
+  std::cout << "Applied rotation = " << applied_rotation.transpose() << std::endl;
+
+  int num_steps = 5;
+  std::vector<Eigen::Vector3d> steps = SimulateSteps(pose2.second-pose1.second, num_steps);
+  Eigen::Vector3d delta = (pose2.second-pose1.second) / num_steps;
+  double step_size = 1.0 / static_cast<double>(num_steps);
+
+  std::vector<Eigen::Vector4d> steps_rot;
+  
+  
+//  for (auto step: steps) {
+//    //Eigen::Vector4d identity_quaternion = Eigen::Quaterniond::Identity().coeffs();
+//    Eigen::Vector4d identity_quaternion(1.0, 0.0, 0.0, 0.0);
+//    std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
+//    std::cout << "  Translation = " << delta.transpose() << std::endl;
+//
+//    pos.Transform(identity_quaternion, identity_quaternion, -delta, 1.0);
+//
+//    std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
+//    std::cout << "  Pose = " << latest_pose.second.transpose() << " -> " << new_pose.second.transpose() << std::endl;
+//
+//
+//    std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
+//    std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
+//    for (unsigned int i=0; i<new_nodes.size(); i++) {
+//      if (i < new_nodes.size()/2) {
+//        new_nodes_front.push_back(new_nodes[i]);
+//      } else {
+//        new_nodes_back.push_back(new_nodes[i]);
+//      }
+//    }
+//    fem.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose);
+//    std::cout << std::endl;
+//  }
 }
 
 

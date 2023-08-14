@@ -23,21 +23,35 @@ void POS::Transform(Eigen::Vector4d r_im,
                     Eigen::Vector3d t,
                     double s)
 {
-  // Pose: Translate, Rotate, Scale
+  // Get latest
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose = GetPose();
-  pose.second += t;
-  pose.first = ConcatenateQuaternions(pose.first, r_im);
-  pose.second *= s;
-  pose_.push_back(pose);
-
-  // Points: Translate, Rotate, Scale
   std::vector<Eigen::Vector3d> points = GetPoints();
-  for (int i = 0; i < points.size(); i++)
-  {
+
+  // Translate
+  pose.second += t;
+  for (int i = 0; i < points.size(); i++) {
     points[i] += t;
-    points[i] = QuaternionRotatePoint(r_pt, points[i]);
-    points[i] *= s;
   }
+
+  // Rotate
+  pose.first = ConcatenateQuaternions(pose.first, r_im);
+  r_pt = InvertQuaternion(r_pt);
+  for (int i = 0; i < points.size(); i++) {
+    points[i] -= pose.second;
+    points[i] = QuaternionRotatePoint(r_pt, points[i]);
+    points[i] += pose.second;
+  }
+
+  // Scale
+  pose.second *= s;
+  for (int i = 0; i < points.size(); i++) {
+    points[i] -= pose.second;
+    points[i] *= s;
+    points[i] += pose.second;
+  }
+
+  // Store new
+  pose_.push_back(pose);
   points_.push_back(points);
 }
 
@@ -71,6 +85,45 @@ void POS::AddData(std::vector<Eigen::Vector3d> points,
   pose_.push_back(pose);
 }
 
+Eigen::Vector4d POS::ComputeQuaternionRotation(const Eigen::Vector4d& v1, 
+                                               const Eigen::Vector4d& v2) {
+
+    Eigen::Quaterniond q1(v1(0), v1(1), v1(2), v1(3));
+    Eigen::Quaterniond q2(v2(0), v2(1), v2(2), v2(3));
+    
+    // Compute the quaternion difference between q1 and q2
+    Eigen::Quaterniond rot = q2 * q1.inverse();
+
+    // Normalize the resulting quaternion to ensure it's a unit quaternion
+    rot.normalize();
+
+    return Eigen::Vector4d(rot.w(), rot.x(), rot.y(), rot.z());
+}
+
+
+Eigen::Vector4d POS::EulerToQuaternion(const Eigen::Vector3d& euler) {
+    // Convert Euler angles (roll, pitch, yaw) to quaternion
+    Eigen::Quaterniond quat = Eigen::AngleAxisd(euler(2), Eigen::Vector3d::UnitZ()) *
+                              Eigen::AngleAxisd(euler(1), Eigen::Vector3d::UnitY()) *
+                              Eigen::AngleAxisd(euler(0), Eigen::Vector3d::UnitX());
+    return Eigen::Vector4d(quat.w(), quat.x(), quat.y(), quat.z());
+}
+
+Eigen::Vector3d POS::QuaternionToEuler(const Eigen::Quaterniond& quat) {
+    // Convert quaternion to Euler angles (roll, pitch, yaw)
+    Eigen::Vector3d euler = quat.toRotationMatrix().eulerAngles(2, 1, 0);
+    return euler;
+}
+
+
+double POS::DegToRad(double deg) {
+    return deg * M_PI / 180.0;
+}
+
+double POS::RadToDeg(double rad) {
+    return rad * 180.0 / M_PI;
+}
+
 Eigen::Vector4d POS::ConcatenateQuaternions(const Eigen::Vector4d &qvec1,
                                             const Eigen::Vector4d &qvec2)
 {
@@ -83,6 +136,22 @@ Eigen::Vector4d POS::ConcatenateQuaternions(const Eigen::Vector4d &qvec1,
   const Eigen::Quaterniond cat_quat = quat2 * quat1;
   return NormalizeQuaternion(
       Eigen::Vector4d(cat_quat.w(), cat_quat.x(), cat_quat.y(), cat_quat.z()));
+}
+
+Eigen::Vector4d POS::RotateQuaternion(const Eigen::Vector4d &base,
+                                      const Eigen::Vector4d &rot)
+{
+  Eigen::Quaterniond base_quat(base(0), base(1), base(2), base(3));
+  Eigen::Quaterniond rot_quat(rot(0), rot(1), rot(2), rot(3));
+  Eigen::Vector4d rot_1 = InvertQuaternion(rot);
+  Eigen::Quaterniond rot_quat_1(rot_1(0), rot_1(1), rot_1(2), rot_1(3));
+  Eigen::Quaterniond rotated = rot_quat * base_quat * rot_quat_1;
+  return Eigen::Vector4d(rotated.w(), rotated.x(), rotated.y(), rotated.z());
+}
+
+Eigen::Vector4d POS::InvertQuaternion(const Eigen::Vector4d &qvec)
+{
+  return Eigen::Vector4d(qvec(0), -qvec(1), -qvec(2), -qvec(3));
 }
 
 Eigen::Vector4d POS::NormalizeQuaternion(const Eigen::Vector4d &qvec)
@@ -106,3 +175,12 @@ Eigen::Vector3d POS::QuaternionRotatePoint(const Eigen::Vector4d &qvec,
                                 normalized_qvec(2), normalized_qvec(3));
   return quat * point;
 }
+
+Eigen::Vector4d POS::VectorToQuaternion(const Eigen::Vector3d& euler_vector) {
+    // Convert the Euler vector to a quaternion
+    Eigen::Vector4d quaternion;
+    quaternion.head<3>() = euler_vector.normalized() * std::sin(euler_vector.norm() / 2.0);
+    quaternion(3) = std::cos(euler_vector.norm() / 2.0);
+    return quaternion;
+}
+
