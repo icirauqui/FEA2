@@ -419,6 +419,38 @@ void FEM::ViewMesh(bool extrusion,
 
   viewer.addCoordinateSystem(0.5);
 
+
+  Eigen::Vector3d p(0.0,0.0,1.0);
+  double ang = 30*M_PI/180;
+  Eigen::Vector3d asis(0,1,0);
+  Eigen::Vector4d q = Eigen::Vector4d(cos(ang/2), asis(0)*sin(ang/2), asis(1)*sin(ang/2), asis(2)*sin(ang/2));
+  
+  double norm = q.norm();
+  Eigen::Vector4d q_norm;
+  if (norm == 0) {
+    q_norm = Eigen::Vector4d(1.0, q(1), q(2), q(3));
+  }
+  else {
+    q_norm = q / norm;
+  }
+  Eigen::Quaterniond q1(q_norm(0), q_norm(1), q_norm(2), q_norm(3));
+  
+  Eigen::Quaternion p_quat = Eigen::Quaternion(0.0, p(0), p(1), p(2));
+  Eigen::Quaternion p1 = q1 * p_quat * q1.inverse();
+  //std::cout << "Original " << p_quat << std::endl;
+  //std::cout << "Rotated  " << p1 << " : " << p1.w() << " " << p1.x() << " " << p1.y() << " " << p1.z() << std::endl;
+  Eigen::Vector3d p1_vec(p1.x(), p1.y(), p1.z());
+
+  //std::cout << "Original " << p << std::endl;
+  //std::cout << "Rotated  " << p1_vec << std::endl;
+
+  pcl::PointXYZ p_a(p(0), p(1), p(2));
+  pcl::PointXYZ p_b(p1_vec(0), p1_vec(1), p1_vec(2));
+  // Add both points to viewer
+  viewer.addSphere(p_a, 0.1, 0.0, 0.0, 0.0, "p_a");
+  viewer.addSphere(p_b, 0.1, 0.0, 1.0, 0.0, "p_b");
+
+
   viewer.spin();
   viewer.close();
 }

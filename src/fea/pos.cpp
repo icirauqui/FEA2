@@ -19,10 +19,8 @@ POS::POS(std::vector<std::vector<float>> points,
 }
 
 void POS::Transform(Eigen::Vector4d r_im,
-                    Eigen::Vector4d r_pt,
                     Eigen::Vector3d t,
-                    double s)
-{
+                    double s) {
   // Get latest
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose = GetPose();
   std::vector<Eigen::Vector3d> points = GetPoints();
@@ -35,10 +33,10 @@ void POS::Transform(Eigen::Vector4d r_im,
 
   // Rotate
   pose.first = ConcatenateQuaternions(pose.first, r_im);
-  r_pt = InvertQuaternion(r_pt);
+  //Eigen::Vector4d r_pt = InvertQuaternion(r_im);
   for (int i = 0; i < points.size(); i++) {
     points[i] -= pose.second;
-    points[i] = QuaternionRotatePoint(r_pt, points[i]);
+    points[i] = QuaternionRotatePoint(r_im, points[i]);
     points[i] += pose.second;
   }
 
@@ -154,26 +152,55 @@ Eigen::Vector4d POS::InvertQuaternion(const Eigen::Vector4d &qvec)
   return Eigen::Vector4d(qvec(0), -qvec(1), -qvec(2), -qvec(3));
 }
 
-Eigen::Vector4d POS::NormalizeQuaternion(const Eigen::Vector4d &qvec)
-{
+Eigen::Vector4d POS::NormalizeQuaternion(const Eigen::Vector4d &qvec) {
   const double norm = qvec.norm();
-  if (norm == 0)
-  {
+  if (norm == 0) {
     return Eigen::Vector4d(1.0, qvec(1), qvec(2), qvec(3));
   }
-  else
-  {
+  else {
     return qvec / norm;
   }
 }
 
-Eigen::Vector3d POS::QuaternionRotatePoint(const Eigen::Vector4d &qvec,
-                                           const Eigen::Vector3d &point)
+//Eigen::Vector3d POS::QuaternionRotatePoint(const Eigen::Vector4d &qvec,
+//                                           const Eigen::Vector3d &point)
+//{
+//  const Eigen::Vector4d normalized_qvec = NormalizeQuaternion(qvec);
+//  const Eigen::Quaterniond quat(normalized_qvec(0), normalized_qvec(1),
+//                                normalized_qvec(2), normalized_qvec(3));
+//  return quat * point;
+//}
+
+Eigen::Vector3d POS::QuaternionRotatePoint(const Eigen::Vector4d &q,
+                                           const Eigen::Vector3d &p)
 {
-  const Eigen::Vector4d normalized_qvec = NormalizeQuaternion(qvec);
-  const Eigen::Quaterniond quat(normalized_qvec(0), normalized_qvec(1),
-                                normalized_qvec(2), normalized_qvec(3));
-  return quat * point;
+  const Eigen::Vector4d qn = NormalizeQuaternion(q);
+  const Eigen::Quaterniond quat(qn(0), qn(1), qn(2), qn(3));
+
+  Eigen::Quaternion p_quat = Eigen::Quaternion(0.0, p(0), p(1), p(2));
+
+  Eigen::Quaternion p_rot = quat * p_quat * quat.inverse();
+
+  Eigen::Vector3d p_rot_vec(p_rot.x(), p_rot.y(), p_rot.z());
+
+  return p_rot_vec;
+}
+
+
+Eigen::Vector3d POS::QuaternionRotatePointAngle(const Eigen::Vector3d &axis,
+                                             const Eigen::Vector3d &p,
+                                             const double angle) {
+  double ang = angle*M_PI/180;
+  Eigen::Vector4d q = Eigen::Vector4d(cos(ang/2), axis(0)*sin(ang/2), axis(1)*sin(ang/2), axis(2)*sin(ang/2));
+  
+  Eigen::Vector4d q_norm = NormalizeQuaternion(q);
+  Eigen::Quaterniond q1(q_norm(0), q_norm(1), q_norm(2), q_norm(3));
+  
+  Eigen::Quaternion p_quat = Eigen::Quaternion(0.0, p(0), p(1), p(2));
+  Eigen::Quaternion p1 = q1 * p_quat * q1.inverse();
+  Eigen::Vector3d p1_vec(p1.x(), p1.y(), p1.z());
+
+  return p1_vec;
 }
 
 Eigen::Vector4d POS::VectorToQuaternion(const Eigen::Vector3d& euler_vector) {

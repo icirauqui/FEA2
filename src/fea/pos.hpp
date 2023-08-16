@@ -14,7 +14,6 @@ public:
       std::pair<Eigen::Vector4d, Eigen::Vector3d> pose);
 
   void Transform(Eigen::Vector4d r_im,
-                 Eigen::Vector4d r_pt,
                  Eigen::Vector3d t,
                  double s);
 
@@ -52,6 +51,10 @@ private:
 
   Eigen::Vector3d QuaternionRotatePoint(const Eigen::Vector4d &qvec,
                                         const Eigen::Vector3d &point);
+
+  Eigen::Vector3d QuaternionRotatePointAngle(const Eigen::Vector3d &axis,
+                                             const Eigen::Vector3d &p,
+                                             const double angle);
 
   Eigen::Vector4d VectorToQuaternion(const Eigen::Vector3d& euler_vector);
 
