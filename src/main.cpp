@@ -117,6 +117,11 @@ void test_fe() {
   // Create POS object
   POS pos(fem2.GetNodes(), pose2);
 
+
+
+
+
+
   // Impose a rotation of x degrees around each axis
   double imposed_angle = pos.DegToRad(30.0);
   //Eigen::Vector3d imposed_angle_v(imposed_angle, imposed_angle, imposed_angle);
@@ -128,7 +133,7 @@ void test_fe() {
 
   std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
 
-  pos.Transform(imposed_angle_q, -imposed_angle_q, Eigen::Vector3d(0, 0, 0), 1.0);
+  pos.Transform(imposed_angle_q, Eigen::Vector3d(0, 0, 0), 1.0);
 
   std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
   std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
