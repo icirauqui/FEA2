@@ -420,10 +420,10 @@ void FEM::ViewMesh(bool extrusion,
   viewer.addCoordinateSystem(0.5);
 
 
-  Eigen::Vector3d p(0.0,0.0,1.0);
+  Eigen::Vector3d p(0.0,0.0,-1.0);
   double ang = 30*M_PI/180;
-  Eigen::Vector3d asis(0,1,0);
-  Eigen::Vector4d q = Eigen::Vector4d(cos(ang/2), asis(0)*sin(ang/2), asis(1)*sin(ang/2), asis(2)*sin(ang/2));
+  Eigen::Vector3d axis(1,0,0);
+  Eigen::Vector4d q = Eigen::Vector4d(cos(ang/2), axis(0)*sin(ang/2), axis(1)*sin(ang/2), axis(2)*sin(ang/2));
   
   double norm = q.norm();
   Eigen::Vector4d q_norm;
@@ -443,12 +443,14 @@ void FEM::ViewMesh(bool extrusion,
 
   //std::cout << "Original " << p << std::endl;
   //std::cout << "Rotated  " << p1_vec << std::endl;
-
+  pcl::PointXYZ p_o(0.0, 0.0, 0.0);
   pcl::PointXYZ p_a(p(0), p(1), p(2));
   pcl::PointXYZ p_b(p1_vec(0), p1_vec(1), p1_vec(2));
   // Add both points to viewer
   viewer.addSphere(p_a, 0.1, 0.0, 0.0, 0.0, "p_a");
   viewer.addSphere(p_b, 0.1, 0.0, 1.0, 0.0, "p_b");
+  viewer.addLine<pcl::PointXYZ>(p_o, p_a, 0.0, 0.0, 0.0, "p_line_oa");
+  viewer.addLine<pcl::PointXYZ>(p_o, p_b, 0.0, 0.0, 0.0, "p_line_ob");
 
 
   viewer.spin();
@@ -499,7 +501,7 @@ pcl::PointCloud<pcl::PointXYZ> FEM::GetCloud() {
   return pc_;
 }
 
-std::pair<Eigen::Vector3d, Eigen::Vector3d> FEM::QuaternionLine(
+std::pair<Eigen::Vector3d, Eigen::Vector3d> FEM::QuaternionLine2(
     Eigen::Vector4d qvec, Eigen::Vector3d point, double radius) {
 
   // Step 1: Normalize the quaternion
@@ -511,6 +513,22 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> FEM::QuaternionLine(
   // Step 3: Define the line endpoint
   Eigen::Vector3d direction(radius, 0.0, 0.0); // Direction of the line
   Eigen::Vector3d endpoint = point + rotationMatrix * direction;
+
+  return std::make_pair(point, endpoint);
+}
+
+std::pair<Eigen::Vector3d, Eigen::Vector3d> FEM::QuaternionLine(
+  Eigen::Vector4d qvec, Eigen::Vector3d point, double radius) {
+
+  Eigen::Quaterniond q(qvec(0), qvec(1), qvec(2), qvec(3));
+  Eigen::Matrix3d rotation_matrix = q.normalized().toRotationMatrix();
+
+  Eigen::Vector3d reference_vector(1.0, 0.0, 0.0);
+
+  Eigen::Vector3d direction = rotation_matrix * reference_vector;
+  direction.normalize();
+
+  Eigen::Vector3d endpoint = point + direction;
 
   return std::make_pair(point, endpoint);
 }

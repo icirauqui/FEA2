@@ -34,6 +34,9 @@ public:
 
   Eigen::Vector3d QuaternionToEuler(const Eigen::Quaterniond& quat);
 
+  Eigen::Vector4d QuaternionFromAngleAxis(const Eigen::Vector3d& axis,
+                                          const double ang);
+
   double DegToRad(double deg);
 
   double RadToDeg(double rad);

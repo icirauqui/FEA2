@@ -84,6 +84,8 @@ public:
 
 private:
 
+  std::pair<Eigen::Vector3d, Eigen::Vector3d> QuaternionLine2(
+    Eigen::Vector4d qvec, Eigen::Vector3d point, double radius = 1.0);
   std::pair<Eigen::Vector3d, Eigen::Vector3d> QuaternionLine(
     Eigen::Vector4d qvec, Eigen::Vector3d point, double radius = 1.0);
 

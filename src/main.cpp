@@ -119,17 +119,18 @@ void test_fe() {
 
 
 
-
-
-
   // Impose a rotation of x degrees around each axis
-  double imposed_angle = pos.DegToRad(30.0);
-  //Eigen::Vector3d imposed_angle_v(imposed_angle, imposed_angle, imposed_angle);
+  double ang = 30*M_PI/180;
+  Eigen::Vector3d axis(1,0,0);
+  //double imposed_angle = pos.DegToRad(30.0);
   //Eigen::Vector3d imposed_angle_v(imposed_angle, 0.0, 0.0);
-  Eigen::Vector3d imposed_angle_v(0.0, imposed_angle, 0.0);
+  //Eigen::Vector3d imposed_angle_v(0.0, imposed_angle, 0.0);
   //Eigen::Vector3d imposed_angle_v(0.0, 0.0, imposed_angle);
   //Eigen::Vector3d imposed_angle_v(imposed_angle, imposed_angle, imposed_angle);
-  Eigen::Vector4d imposed_angle_q = pos.EulerToQuaternion(imposed_angle_v);
+  //Eigen::Vector4d imposed_angle_q = pos.EulerToQuaternion(imposed_angle_v);
+  Eigen::Vector4d imposed_angle_q = pos.QuaternionFromAngleAxis(axis, ang);
+
+
 
   std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
 

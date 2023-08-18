@@ -113,6 +113,10 @@ Eigen::Vector3d POS::QuaternionToEuler(const Eigen::Quaterniond& quat) {
     return euler;
 }
 
+Eigen::Vector4d POS::QuaternionFromAngleAxis(const Eigen::Vector3d& axis,
+                                             const double ang) {
+  return Eigen::Vector4d(cos(ang/2), axis(0)*sin(ang/2), axis(1)*sin(ang/2), axis(2)*sin(ang/2));
+}
 
 double POS::DegToRad(double deg) {
     return deg * M_PI / 180.0;
