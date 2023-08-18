@@ -36,7 +36,7 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::V
   Eigen::Vector3d direction = centroid - tvec;
   direction.normalize();
   Eigen::Quaterniond quaternion;
-  quaternion.setFromTwoVectors(Eigen::Vector3d::UnitX(), direction);
+  quaternion.setFromTwoVectors(-Eigen::Vector3d::UnitX(), direction);
   Eigen::Vector4d qvec = quaternion.coeffs();
 
   return std::make_pair(qvec, tvec);
@@ -50,6 +50,7 @@ std::vector<Eigen::Vector3d> SimulateSteps(Eigen::Vector3d offset, int steps) {
   }
   return poses;
 }
+
 
 
 void test_fea() {
@@ -121,13 +122,7 @@ void test_fe() {
 
   // Impose a rotation of x degrees around each axis
   double ang = 30*M_PI/180;
-  Eigen::Vector3d axis(1,0,0);
-  //double imposed_angle = pos.DegToRad(30.0);
-  //Eigen::Vector3d imposed_angle_v(imposed_angle, 0.0, 0.0);
-  //Eigen::Vector3d imposed_angle_v(0.0, imposed_angle, 0.0);
-  //Eigen::Vector3d imposed_angle_v(0.0, 0.0, imposed_angle);
-  //Eigen::Vector3d imposed_angle_v(imposed_angle, imposed_angle, imposed_angle);
-  //Eigen::Vector4d imposed_angle_q = pos.EulerToQuaternion(imposed_angle_v);
+  Eigen::Vector3d axis(1,1,1);
   Eigen::Vector4d imposed_angle_q = pos.QuaternionFromAngleAxis(axis, ang);
 
 
