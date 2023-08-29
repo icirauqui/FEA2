@@ -48,6 +48,8 @@ public:
   void MatAssembly(std::vector<std::vector<float> > &vpts, 
                    std::vector<std::vector<int> > &velts);
 
+  void ComputeForces();
+
   void SetForces(std::vector<std::vector<float>> &vF);
 
   void ImposeDirichletEncastre(std::vector<std::vector<int>> &dir, float k_large = 1e8);
@@ -55,6 +57,8 @@ public:
   void ComputeDisplacements();
 
   void ComputeStrainEnergy();
+  double ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
+                             std::vector<Eigen::Vector3d> &u1);
 
   // Accessors
   Eigen::MatrixXf K();

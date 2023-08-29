@@ -62,6 +62,11 @@ void FEA::MatAssembly(std::vector<std::vector<float> > &vpts,
 }
 
 
+void FEA::ComputeForces() {
+  F_ = Eigen::MatrixXf::Zero(K_.rows(), 1);
+  F_ = K_ * U_;
+}
+
 void FEA::SetForces(std::vector<std::vector<float>> &vF) {
   F_ = Eigen::MatrixXf::Zero(3*vF.size(), 1);
   for (unsigned int i = 0; i < vF.size(); i++) {
@@ -100,6 +105,28 @@ void FEA::ComputeStrainEnergy() {
   sE_ = (U_.transpose() * F_)(0,0);
 }
 
+double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
+                                std::vector<Eigen::Vector3d> &u1) {
+  int dim_in = u0.size() * 3;
+  int dim_k = K_.rows();
+
+  if (dim_in != dim_k) {
+    std::cout << "Error: dim_in != dim_k" << std::endl;
+    return -1.0;
+  }
+
+  U_ = Eigen::MatrixXf::Zero(dim_in, 1);
+  for (unsigned int i = 0; i < u0.size(); i++) {
+    U_(i*3, 0) = u1[i][0] - u0[i][0];
+    U_(i*3+1, 0) = u1[i][1] - u0[i][1];
+    U_(i*3+2, 0) = u1[i][2] - u0[i][2];
+  }
+
+  ComputeForces();
+  ComputeStrainEnergy();
+
+  return sE_;
+}
 
 Eigen::MatrixXf FEA::K() {
   return K_;
