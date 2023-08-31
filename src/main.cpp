@@ -9,8 +9,6 @@
 
 #include <chrono>
 
-
-
 // Parameters
 int image_id = 0;
 std::string element = "C3D6";
@@ -43,40 +41,7 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::V
   return std::make_pair(qvec, tvec);
 }
 
-std::vector<Eigen::Vector3d> SimulateSteps(Eigen::Vector3d offset, int steps) {
-  std::vector<Eigen::Vector3d> poses;
-  Eigen::Vector3d delta = offset / steps;
-  for (int i = 0; i < steps; i++) {
-    poses.push_back(offset - (delta * i));
-  }
-  return poses;
-}
 
-std::vector<Eigen::Vector4d> divideQuaternionSteps(const Eigen::Vector4d &originalQuaternion, int numSteps) {
-  // Ensure that the quaternion is normalized
-  Eigen::Vector4d normalizedQuaternion = originalQuaternion.normalized();
-
-  // Calculate the angle of rotation from the quaternion
-  double angle = 2.0 * std::acos(normalizedQuaternion.w());
-
-  // Calculate the angle step for each of the steps
-  double stepAngle = angle / static_cast<double>(numSteps);
-
-  // Create quaternions for each step and store them in a vector
-  std::vector<Eigen::Vector4d> quaternionSteps;
-  for (int i = 0; i < numSteps; ++i)
-  {
-    double currentAngle = stepAngle * static_cast<double>(i);
-    Eigen::Quaterniond rotationStep(std::cos(currentAngle / 2.0),
-                                    std::sin(currentAngle / 2.0) * normalizedQuaternion.x(),
-                                    std::sin(currentAngle / 2.0) * normalizedQuaternion.y(),
-                                    std::sin(currentAngle / 2.0) * normalizedQuaternion.z());
-
-    quaternionSteps.emplace_back(rotationStep.coeffs());
-  }
-
-  return quaternionSteps;
-}
 
 void test_fea() {
   // Load data
@@ -103,14 +68,16 @@ void test_fea() {
 
 void test_fe() {
 
-  // Load data
+  // 1. Load data
   Dataset ds("../data", element);
   std::vector<std::vector<float>> vpts = ds.points();
 
+
+
+  // 2. Create FEM objects and add points
   FEM fem(element);
   FEM fem2(element);
 
-  // Add points
   for (int i = 0; i < vpts.size(); i++) {
     Eigen::Vector3d pt(vpts[i][0], vpts[i][1], vpts[i][2]);
     Eigen::Vector3d pt2(vpts[i][0], vpts[i][1], vpts[i][2]);
@@ -122,6 +89,9 @@ void test_fe() {
     fem2.AddPoint(pt2);
   }
 
+
+
+  // 3. Triangulate andcompute poses.
   fem.Compute(true);
   fem2.InitCloud();
   fem.ComputeExtrusion();
@@ -133,7 +103,8 @@ void test_fe() {
   fem.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2);
 
 
-  // Transform Pose 2 for simulation, impose a rotation of x degrees around each axis
+
+  // 4. Transform Pose 2 for simulation, impose a rotation of x degrees around each axis
   POS pos(fem2.GetNodes(), pose2);
   double ang = 30*M_PI/180;
   Eigen::Vector3d axis(1,1,1);
@@ -155,14 +126,9 @@ void test_fe() {
 
   Eigen::Vector4d applied_rotation = pos.ComputeQuaternionRotation(latest_pose.first, new_pose.first);
 
-  std::cout << "Requested rotation = " << imposed_angle_q.transpose() << std::endl;
-  std::cout << "Applied rotation = " << applied_rotation.transpose() << std::endl;
 
 
-
-
-
-
+  // 5. Initialize FEA object, use conectivity to compute stiffness matrix
   FEA fea(0, element, E, nu, depth, fg, false);
   std::vector<std::vector<float>> nodes = fem.GetNodes();
   std::vector<std::vector<int>> elements = fem.GetElements();
@@ -170,44 +136,38 @@ void test_fe() {
 
 
 
-
+  // 6. Simulate 5 steps of translation and rotation, model 2 will move towards model 1.
   int num_steps = 5;
   Eigen::Vector3d step = (pose2.second-pose1.second) / num_steps;
   Eigen::Vector4d step_rot = pos.QuaternionFromAngleAxis(axis, -ang/num_steps);
-
   
   for (unsigned int s=0; s<num_steps; s++) {
-    //Eigen::Vector4d identity_quaternion = Eigen::Quaterniond::Identity().coeffs();
-    Eigen::Vector4d identity_quaternion(1.0, 0.0, 0.0, 0.0);
-    std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
-    std::cout << "  Translation = " << step.transpose() << std::endl;
-
-    std::vector<Eigen::Vector3d> old_nodes = pos.GetPoints();
+    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k1 = pos.GetPose();
+    std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
 
     pos.Transform(step_rot, -step, 1.0);
 
-    std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
-    std::cout << "  Pose = " << latest_pose.second.transpose() << " -> " << new_pose.second.transpose() << std::endl;
+    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k = pos.GetPose();
 
-
-    std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
-    std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
-    for (unsigned int i=0; i<new_nodes.size(); i++) {
-      if (i < new_nodes.size()/2) {
-        new_nodes_front.push_back(new_nodes[i]);
+    std::vector<Eigen::Vector3d> nodes_k = pos.GetPoints();
+    std::vector<Eigen::Vector3d> nodes_k_front, nodes_k_back;
+    for (unsigned int i=0; i<nodes_k.size(); i++) {
+      if (i < nodes_k.size()/2) {
+        nodes_k_front.push_back(nodes_k[i]);
       } else {
-        new_nodes_back.push_back(new_nodes[i]);
+        nodes_k_back.push_back(nodes_k[i]);
       }
     }
 
+    double sE = fea.ComputeStrainEnergy(nodes_k1, nodes_k);
 
-    double sE = fea.ComputeStrainEnergy(old_nodes, new_nodes);
+    std::cout << std::endl;
+    std::cout << "Step " << s << std::endl;
+    std::cout << "  Translation = " << pose_k1.first.transpose() << " -> " << pose_k.first.transpose() << std::endl;
+    std::cout << "  Orientation = " << pose_k1.second.transpose() << " -> " << pose_k.second.transpose() << std::endl;
     std::cout << "  Strain energy = " << sE << std::endl;
 
-
-
-    fem.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose);
-    std::cout << std::endl;
+    fem.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k);
   }
 }
 
