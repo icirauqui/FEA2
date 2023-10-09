@@ -62,12 +62,20 @@ std::vector<Eigen::Vector3d> POS::GetPoints(int idx)
   return points_[idx];
 }
 
-std::pair<Eigen::Vector4d, Eigen::Vector3d> POS::GetPose(int idx)
+std::pair<Eigen::Vector4d, Eigen::Vector3d> POS::GetPose(int idx, bool pop)
 {
   if (idx == -1)
   {
     idx = pose_.size() - 1;
   }
+
+  if (pop) {
+    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose = pose_[idx];
+    pose_.erase(pose_.begin() + idx);
+    points_.erase(points_.begin() + idx);
+    return pose;
+  }
+
   return pose_[idx];
 }
 

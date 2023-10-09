@@ -24,6 +24,8 @@ add_definitions(
 )
 
 
+
+
 add_library(fea
     pos.cpp
     pos.hpp
@@ -33,6 +35,10 @@ add_library(fea
     fea.hpp
 )
 
+target_include_directories(fea 
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 target_link_libraries(fea
   ${VTK_LIBRARIES}

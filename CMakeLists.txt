@@ -7,6 +7,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/fea)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/dataset)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/nlo)
 
 
 add_executable(fem_analysis
@@ -16,4 +17,5 @@ add_executable(fem_analysis
 target_link_libraries(fem_analysis PRIVATE 
     fea
     dataset
+    nlo
 )

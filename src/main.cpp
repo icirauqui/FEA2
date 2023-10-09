@@ -6,6 +6,7 @@
 #include "fea/fea.hpp"
 #include "fea/pos.hpp"
 #include "dataset/dataset.hpp"
+#include "nlo/levenberg_marquardt.hpp"
 
 #include <chrono>
 

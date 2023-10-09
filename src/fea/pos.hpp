@@ -1,3 +1,7 @@
+#ifndef POS_HPP
+#define POS_HPP
+
+
 #include <iostream>
 #include <vector>
 
@@ -21,7 +25,7 @@ public:
   // Return latest by default
   // User can request a specific set: 0, 1, 2, ...
   std::vector<Eigen::Vector3d> GetPoints(int idx = -1);
-  std::pair<Eigen::Vector4d, Eigen::Vector3d> GetPose(int idx = -1);
+  std::pair<Eigen::Vector4d, Eigen::Vector3d> GetPose(int idx = -1, bool pop = false);
   int LenHistory();
 
   void AddData(std::vector<Eigen::Vector3d> points,
@@ -66,3 +70,6 @@ private:
   std::vector<std::vector<Eigen::Vector3d>> points_;
   std::vector<std::pair<Eigen::Vector4d, Eigen::Vector3d>> pose_;
 };
+
+
+#endif

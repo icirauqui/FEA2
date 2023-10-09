@@ -90,6 +90,7 @@
         "core": "cpp",
         "strstream": "cpp",
         "iterator": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "*.txx": "cpp"
     }
 }
