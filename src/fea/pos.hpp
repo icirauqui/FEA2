@@ -17,6 +17,9 @@ public:
   POS(std::vector<std::vector<float>> points,
       std::pair<Eigen::Vector4d, Eigen::Vector3d> pose);
 
+  void SetTarget(std::vector<Eigen::Vector3d> points);
+  void SetTarget(std::vector<std::vector<float>> points);
+
   void Transform(Eigen::Vector4d r_im,
                  Eigen::Vector3d t,
                  double s);
@@ -27,6 +30,8 @@ public:
   std::vector<Eigen::Vector3d> GetPoints(int idx = -1);
   std::pair<Eigen::Vector4d, Eigen::Vector3d> GetPose(int idx = -1, bool pop = false);
   int LenHistory();
+
+  std::vector<Eigen::Vector3d> GetTarget();
 
   void AddData(std::vector<Eigen::Vector3d> points,
                std::pair<Eigen::Vector4d, Eigen::Vector3d> pose);
@@ -69,6 +74,7 @@ private:
 
   std::vector<std::vector<Eigen::Vector3d>> points_;
   std::vector<std::pair<Eigen::Vector4d, Eigen::Vector3d>> pose_;
+  std::vector<Eigen::Vector3d> target_;
 };
 
 

@@ -14,9 +14,16 @@ class LevenbergMarquardt
 
 public:
 
+  //LevenbergMarquardt(
+  //  POS* pos, FEA* fea,
+  //  int maxIterations, double lambda, 
+  //  double tolerance, double dampingFactor);
+
   LevenbergMarquardt(
     POS* pos, FEA* fea,
-    int maxIterations, double lambda, double tolerance, double dampingFactor);
+    int maxIterations = 1000, double lambda = 0.001, 
+    double tolerance = 0.000001, double damping_factor = 2.0);
+
 
   std::pair<int, Eigen::MatrixXd> OptimizeStep(const Eigen::VectorXd& params0);
 

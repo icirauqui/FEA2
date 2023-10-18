@@ -2,7 +2,7 @@
 
 LevenbergMarquardt::LevenbergMarquardt(
   POS* pos, FEA* fea,
-  int maxIterations = 1000, double lambda = 0.001, double tolerance = 0.000001, double damping_factor = 2.0)
+  int maxIterations, double lambda, double tolerance, double damping_factor)
   : pos_(pos), fea_(fea),
     max_iterations_(maxIterations), lambda_(lambda), tolerance_(tolerance), damping_factor_(damping_factor) {}
 

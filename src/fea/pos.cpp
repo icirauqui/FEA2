@@ -18,6 +18,21 @@ POS::POS(std::vector<std::vector<float>> points,
   pose_.push_back(pose);
 }
 
+void POS::SetTarget(std::vector<Eigen::Vector3d> points) {
+  target_.clear();
+  for (int i = 0; i < points.size(); i++) {
+    target_.push_back(Eigen::Vector3d(points[i][0], points[i][1], points[i][2]));
+  }
+}
+
+void POS::SetTarget(std::vector<std::vector<float>> points) {
+  target_.clear();
+  for (int i = 0; i < points.size(); i++) {
+    target_.push_back(Eigen::Vector3d(points[i][0], points[i][1], points[i][2]));
+  }
+}
+
+
 void POS::Transform(Eigen::Vector4d r_im,
                     Eigen::Vector3d t,
                     double s) {
@@ -79,9 +94,12 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> POS::GetPose(int idx, bool pop)
   return pose_[idx];
 }
 
-int POS::LenHistory()
-{
+int POS::LenHistory() {
   return points_.size();
+}
+
+std::vector<Eigen::Vector3d> POS::GetTarget() {
+  return target_;
 }
 
 void POS::AddData(std::vector<Eigen::Vector3d> points,

@@ -67,7 +67,7 @@ void test_fea() {
   std::cout << "   Time fea1 = " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
 }
 
-void test_fe() {
+void test_fe(bool optimizer = false) {
 
   // 1. Load data
   Dataset ds("../data", element);
@@ -103,10 +103,14 @@ void test_fe() {
 
   fem.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2);
 
+  POS pos_tmp(fem.GetNodes(), pose1);
+  std::vector<Eigen::Vector3d> nodes_k0 = pos_tmp.GetPoints();
 
 
   // 4. Transform Pose 2 for simulation, impose a rotation of x degrees around each axis
   POS pos(fem2.GetNodes(), pose2);
+  pos.SetTarget(fem.GetNodes());
+
   double ang = 30*M_PI/180;
   Eigen::Vector3d axis(1,1,1);
   Eigen::Vector4d imposed_angle_q = pos.QuaternionFromAngleAxis(axis, ang);
@@ -136,46 +140,89 @@ void test_fe() {
   fea.MatAssembly(nodes, elements);
 
 
+  if (optimizer == false) {
+    // 6.1 Simulate 5 steps of translation and rotation, model 2 will move towards model 1.
+    int num_steps = 5;
+    Eigen::Vector3d step = (pose2.second-pose1.second) / num_steps;
+    Eigen::Vector4d step_rot = pos.QuaternionFromAngleAxis(axis, -ang/num_steps);
 
-  // 6. Simulate 5 steps of translation and rotation, model 2 will move towards model 1.
-  int num_steps = 5;
-  Eigen::Vector3d step = (pose2.second-pose1.second) / num_steps;
-  Eigen::Vector4d step_rot = pos.QuaternionFromAngleAxis(axis, -ang/num_steps);
-  
-  for (unsigned int s=0; s<num_steps; s++) {
-    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k1 = pos.GetPose();
-    std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
+    for (unsigned int s=0; s<num_steps; s++) {
+      std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k1 = pos.GetPose();
+      std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
+      std::vector<Eigen::Vector3d> nodes_k0 = pos.GetTarget();
 
-    pos.Transform(step_rot, -step, 1.0);
+      pos.Transform(step_rot, -step, 1.0);
 
-    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k = pos.GetPose();
+      std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k = pos.GetPose();
 
-    std::vector<Eigen::Vector3d> nodes_k = pos.GetPoints();
-    std::vector<Eigen::Vector3d> nodes_k_front, nodes_k_back;
-    for (unsigned int i=0; i<nodes_k.size(); i++) {
-      if (i < nodes_k.size()/2) {
-        nodes_k_front.push_back(nodes_k[i]);
-      } else {
-        nodes_k_back.push_back(nodes_k[i]);
+      std::vector<Eigen::Vector3d> nodes_k = pos.GetPoints();
+      std::vector<Eigen::Vector3d> nodes_k_front, nodes_k_back;
+      for (unsigned int i=0; i<nodes_k.size(); i++) {
+        if (i < nodes_k.size()/2) {
+          nodes_k_front.push_back(nodes_k[i]);
+        } else {
+          nodes_k_back.push_back(nodes_k[i]);
+        }
       }
+
+      double sE = fea.ComputeStrainEnergy(nodes_k0, nodes_k);
+
+      std::cout << std::endl;
+      std::cout << "Step " << s << std::endl;
+      std::cout << "  Translation = " << pose_k1.first.transpose() << " -> " << pose_k.first.transpose() << std::endl;
+      std::cout << "  Orientation = " << pose_k1.second.transpose() << " -> " << pose_k.second.transpose() << std::endl;
+      std::cout << "  Strain energy = " << sE << std::endl;
+
+      fem.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k);
     }
+  } else {
+    int num_steps = 3;
 
-    double sE = fea.ComputeStrainEnergy(nodes_k1, nodes_k);
+    // Initialize optimizer
+    LevenbergMarquardt lm(&pos, &fea);
 
-    std::cout << std::endl;
-    std::cout << "Step " << s << std::endl;
-    std::cout << "  Translation = " << pose_k1.first.transpose() << " -> " << pose_k.first.transpose() << std::endl;
-    std::cout << "  Orientation = " << pose_k1.second.transpose() << " -> " << pose_k.second.transpose() << std::endl;
-    std::cout << "  Strain energy = " << sE << std::endl;
+    for (unsigned int s=0; s<num_steps; s++) {
+      std::cout << std::endl << "Step " << s+1 << " / " << num_steps << std::endl;
 
-    fem.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k);
+      std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k1 = pos.GetPose();
+      std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
+      std::vector<Eigen::Vector3d> nodes_k0 = pos.GetTarget();
+
+      double sE0 = fea.ComputeStrainEnergy(nodes_k1, nodes_k0);
+
+      // Transform pose_k1 into a Eigen::VectorXd and Optimize
+      Eigen::VectorXd params0(8);
+      params0 << pose_k1.second(0), pose_k1.second(1), pose_k1.second(2), 
+                 pose_k1.first(0), pose_k1.first(1), pose_k1.first(2), pose_k1.first(3), 1.0;
+      std::pair<int, Eigen::MatrixXd> params1 = lm.OptimizeStep(params0);
+
+
+      double sE1 = 0.0;
+
+
+
+
+      std::cout << "  Result: " << params1.first << std::endl
+                << "  Prams0: " << params0.transpose() << std::endl
+                << "  Prams1: " << params1.second.transpose() << std::endl
+                << "  sE 0/1: " << sE0 << " / " << sE1 << std::endl;
+
+
+
+    }
   }
+
+
+
+
 }
+
+
 
 
 int main(int argc, char** argv) {
   //test_fea();
-  test_fe();
+  test_fe(false);
   
   return 0;
 }

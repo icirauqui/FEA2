@@ -92,5 +92,7 @@
         "iterator": "cpp",
         "random": "cpp",
         "*.txx": "cpp"
-    }
+    },
+    "cmake.automaticReconfigure": false,
+    "cmake.configureOnEdit": false
 }
