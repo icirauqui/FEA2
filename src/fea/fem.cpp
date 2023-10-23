@@ -279,7 +279,8 @@ void FEM::ViewMesh(bool extrusion,
                    std::vector<Eigen::Vector3d> cloud2,
                    std::vector<Eigen::Vector3d> cloud2extrusion,
                    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1,
-                   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2) {
+                   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2,
+                   int wait) {
                     
   pcl::PointCloud<pcl::PointXYZ> pc;
   pc.width = cloud2.size();
@@ -291,14 +292,15 @@ void FEM::ViewMesh(bool extrusion,
     pc.points[i].z = cloud2[i](2);
   }
 
-  ViewMesh(extrusion, pc, cloud2extrusion, pose1, pose2);
+  ViewMesh(extrusion, pc, cloud2extrusion, pose1, pose2, wait);
 }
 
 void FEM::ViewMesh(bool extrusion, 
                    pcl::PointCloud<pcl::PointXYZ> cloud2,
                    std::vector<Eigen::Vector3d> cloud2extrusion,
                    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1,
-                   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2) {
+                   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2,
+                   int wait) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> (pc_));
 
   pcl::visualization::PCLVisualizer viewer;
@@ -452,9 +454,12 @@ void FEM::ViewMesh(bool extrusion,
   viewer.addLine<pcl::PointXYZ>(p_o, p_a, 0.0, 0.0, 0.0, "p_line_oa");
   viewer.addLine<pcl::PointXYZ>(p_o, p_b, 0.0, 0.0, 0.0, "p_line_ob");
 
-
-  viewer.spin();
-  viewer.close();
+  if (wait > 0) {
+    viewer.spinOnce(wait*1000);
+  } else {
+    viewer.spin();
+    viewer.close();
+  }
 }
 
 

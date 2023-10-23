@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.5)
 project(fem_analysis LANGUAGES CXX)
 
 # Compile in debug mode
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
+
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/fea)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/dataset)

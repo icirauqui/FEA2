@@ -46,6 +46,14 @@ void POS::Transform(Eigen::Vector4d r_im,
     points[i] += t;
   }
 
+  // Scale
+  // pose.second *= s;
+  for (unsigned int i=0; i<points.size(); i++) {
+    points[i] -= pose.second;
+    points[i] *= s;
+    points[i] += pose.second;
+  }
+
   // Rotate
   pose.first = ConcatenateQuaternions(pose.first, r_im);
   //Eigen::Vector4d r_pt = InvertQuaternion(r_im);
@@ -56,12 +64,12 @@ void POS::Transform(Eigen::Vector4d r_im,
   }
 
   // Scale
-  pose.second *= s;
-  for (int i = 0; i < points.size(); i++) {
-    points[i] -= pose.second;
-    points[i] *= s;
-    points[i] += pose.second;
-  }
+  //pose.second *= s;
+  //for (int i = 0; i < points.size(); i++) {
+  //  points[i] -= pose.second;
+  //  points[i] *= s;
+  //  points[i] += pose.second;
+  //}
 
   // Store new
   pose_.push_back(pose);

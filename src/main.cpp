@@ -19,8 +19,8 @@ float depth = 1.0;
 float fg = 0.577350269;
 float Klarge = 100000000.0;
 
-float noise_multiplier = 0.3;
-Eigen::Vector3d model_offset(1.0, 2.0, 3.0); 
+float noise_multiplier = 0.1;
+Eigen::Vector3d model_offset(1.0, 1.5, 2.0); 
 
 std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::Vector3d> pts) {
   Eigen::Vector3d centroid(0.0, 0.0, 0.0);
@@ -67,6 +67,7 @@ void test_fea() {
   std::cout << "   Time fea1 = " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
 }
 
+
 void test_fe(bool optimizer = false) {
 
   // 1. Load data
@@ -76,46 +77,52 @@ void test_fe(bool optimizer = false) {
 
 
   // 2. Create FEM objects and add points
-  FEM fem(element);
+  FEM fem1(element);
   FEM fem2(element);
 
   for (int i = 0; i < vpts.size(); i++) {
-    Eigen::Vector3d pt(vpts[i][0], vpts[i][1], vpts[i][2]);
+    Eigen::Vector3d pt1(vpts[i][0], vpts[i][1], vpts[i][2]);
     Eigen::Vector3d pt2(vpts[i][0], vpts[i][1], vpts[i][2]);
     for (unsigned int j=0; j<3; j++) {
+      pt1(j) += noise_multiplier * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
       pt2(j) += noise_multiplier * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     }
-    pt2 += model_offset;
-    fem.AddPoint(pt);
+    //pt2 += model_offset;
+    fem1.AddPoint(pt1);
     fem2.AddPoint(pt2);
   }
 
 
 
   // 3. Triangulate andcompute poses.
-  fem.Compute(true);
+  fem1.Compute(true);
   fem2.InitCloud();
-  fem.ComputeExtrusion();
-  fem2.SetExtrusion(fem.GetExtrusionDelta(), fem.GetElementHeight());
+  fem1.ComputeExtrusion();
+  fem2.SetExtrusion(fem1.GetExtrusionDelta(), fem1.GetElementHeight());
 
-  std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = ApproximatePose(fem.GetEigenNodes());
+  std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = ApproximatePose(fem1.GetEigenNodes());
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = ApproximatePose(fem2.GetEigenNodes());
 
-  fem.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2);
+  //fem1.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2, 1);
 
-  POS pos_tmp(fem.GetNodes(), pose1);
+  POS pos_tmp(fem1.GetNodes(), pose1);
   std::vector<Eigen::Vector3d> nodes_k0 = pos_tmp.GetPoints();
+
+
+
+
+
 
 
   // 4. Transform Pose 2 for simulation, impose a rotation of x degrees around each axis
   POS pos(fem2.GetNodes(), pose2);
-  pos.SetTarget(fem.GetNodes());
+  pos.SetTarget(fem1.GetNodes());
 
   double ang = 30*M_PI/180;
   Eigen::Vector3d axis(1,1,1);
   Eigen::Vector4d imposed_angle_q = pos.QuaternionFromAngleAxis(axis, ang);
   std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
-  pos.Transform(imposed_angle_q, Eigen::Vector3d(0, 0, 0), 1.0);
+  pos.Transform(imposed_angle_q, model_offset, 0.5);
 
   std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
   std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
@@ -127,16 +134,22 @@ void test_fe(bool optimizer = false) {
     }
   }
   std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
-  fem.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose);
+  fem1.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose, 0);
 
   Eigen::Vector4d applied_rotation = pos.ComputeQuaternionRotation(latest_pose.first, new_pose.first);
+
+  return;
+
+
+
+
 
 
 
   // 5. Initialize FEA object, use conectivity to compute stiffness matrix
   FEA fea(0, element, E, nu, depth, fg, false);
-  std::vector<std::vector<float>> nodes = fem.GetNodes();
-  std::vector<std::vector<int>> elements = fem.GetElements();
+  std::vector<std::vector<float>> nodes = fem1.GetNodes();
+  std::vector<std::vector<int>> elements = fem1.GetElements();
   fea.MatAssembly(nodes, elements);
 
 
@@ -173,7 +186,7 @@ void test_fe(bool optimizer = false) {
       std::cout << "  Orientation = " << pose_k1.second.transpose() << " -> " << pose_k.second.transpose() << std::endl;
       std::cout << "  Strain energy = " << sE << std::endl;
 
-      fem.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k);
+      fem1.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k);
     }
   } else {
     int num_steps = 3;

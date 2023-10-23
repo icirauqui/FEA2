@@ -62,13 +62,15 @@ public:
                 std::vector<Eigen::Vector3d> cloud2 = std::vector<Eigen::Vector3d>(),
                 std::vector<Eigen::Vector3d> cloud2extrusion = std::vector<Eigen::Vector3d>(),
                 std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)),
-                std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)));
+                std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)),
+                int wait = 0);
 
   void ViewMesh(bool extrusion = false,
                 pcl::PointCloud<pcl::PointXYZ> cloud2 = pcl::PointCloud<pcl::PointXYZ>(),
                 std::vector<Eigen::Vector3d> cloud2extrusion = std::vector<Eigen::Vector3d>(),
                 std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)),
-                std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)));
+                std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = std::make_pair(Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), Eigen::Vector3d(0.0, 0.0, 0.0)),
+                int wait = 0);
 
   std::vector<std::vector<float>> GetNodes();
   std::vector<Eigen::Vector3d> GetEigenNodes();

@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.5)
 project(nlo LANGUAGES CXX)
 
 set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
+
 
 add_library(nlo
     levenberg_marquardt.cpp
