@@ -36,6 +36,14 @@ void POS::SetTarget(std::vector<std::vector<float>> points) {
 void POS::Transform(Eigen::Vector4d r_im,
                     Eigen::Vector3d t,
                     double s) {
+  std::pair<std::pair<Eigen::Vector4d, Eigen::Vector3d>, std::vector<Eigen::Vector3d>> sim = SimulateTransform(r_im, t, s);
+  pose_.push_back(sim.first);
+  points_.push_back(sim.second);
+}
+
+std::pair<std::pair<Eigen::Vector4d, Eigen::Vector3d>, std::vector<Eigen::Vector3d>> POS::SimulateTransform(Eigen::Vector4d r_im,
+                    Eigen::Vector3d t,
+                    double s) {
   // Get latest
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose = GetPose();
   std::vector<Eigen::Vector3d> points = GetPoints();
@@ -63,21 +71,59 @@ void POS::Transform(Eigen::Vector4d r_im,
     points[i] += pose.second;
   }
 
-  // Scale
-  //pose.second *= s;
-  //for (int i = 0; i < points.size(); i++) {
-  //  points[i] -= pose.second;
-  //  points[i] *= s;
-  //  points[i] += pose.second;
-  //}
-
-  // Store new
-  pose_.push_back(pose);
-  points_.push_back(points);
+  return std::make_pair(pose, points);
 }
 
-std::vector<Eigen::Vector3d> POS::GetPoints(int idx)
-{
+void POS::TransformToPose(std::pair<Eigen::Vector4d, Eigen::Vector3d> pose, double s) {
+  std::pair<std::pair<Eigen::Vector4d, Eigen::Vector3d>, std::vector<Eigen::Vector3d>> sim = SimulateTransformToPose(pose, s);
+  pose_.push_back(sim.first);
+  points_.push_back(sim.second);
+}
+
+std::pair<std::pair<Eigen::Vector4d, Eigen::Vector3d>, 
+          std::vector<Eigen::Vector3d>> POS::SimulateTransformToPose(std::pair<Eigen::Vector4d, Eigen::Vector3d> pose, double s) {
+
+  // Get latest
+  std::pair<Eigen::Vector4d, Eigen::Vector3d> pose0 = GetPose();
+  std::vector<Eigen::Vector3d> points = GetPoints();
+
+  // Required translation
+  Eigen::Vector3d t = pose.second - pose0.second;
+
+  // Required rotation
+  Eigen::Vector4d r_im = ComputeQuaternionRotation(pose0.first, pose.first);
+
+  // Translate
+  //pose.second += t;
+  for (int i = 0; i < points.size(); i++) {
+    points[i] += t;
+  }
+
+  // Scale
+  // pose.second *= s;
+  if (s != 1.0) {
+    for (unsigned int i=0; i<points.size(); i++) {
+      points[i] -= pose.second;
+      points[i] *= s;
+      points[i] += pose.second;
+    }
+  }
+
+  // Rotate
+  //pose.first = ConcatenateQuaternions(pose.first, r_im);
+  //Eigen::Vector4d r_pt = InvertQuaternion(r_im);
+  for (int i = 0; i < points.size(); i++) {
+    points[i] -= pose.second;
+    points[i] = QuaternionRotatePoint(r_im, points[i]);
+    points[i] += pose.second;
+  }
+
+  return std::make_pair(pose, points);
+}
+
+
+
+std::vector<Eigen::Vector3d> POS::GetPoints(int idx) {
   if (idx == -1)
   {
     idx = points_.size() - 1;
@@ -87,8 +133,7 @@ std::vector<Eigen::Vector3d> POS::GetPoints(int idx)
 
 std::pair<Eigen::Vector4d, Eigen::Vector3d> POS::GetPose(int idx, bool pop)
 {
-  if (idx == -1)
-  {
+  if (idx == -1) {
     idx = pose_.size() - 1;
   }
 

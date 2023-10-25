@@ -103,7 +103,7 @@ void test_fe(bool optimizer = false) {
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = ApproximatePose(fem1.GetEigenNodes());
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = ApproximatePose(fem2.GetEigenNodes());
 
-  //fem1.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2, 1);
+  //fem1.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2, 2);
 
   POS pos_tmp(fem1.GetNodes(), pose1);
   std::vector<Eigen::Vector3d> nodes_k0 = pos_tmp.GetPoints();
@@ -122,7 +122,7 @@ void test_fe(bool optimizer = false) {
   Eigen::Vector3d axis(1,1,1);
   Eigen::Vector4d imposed_angle_q = pos.QuaternionFromAngleAxis(axis, ang);
   std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
-  pos.Transform(imposed_angle_q, model_offset, 0.5);
+  pos.Transform(imposed_angle_q, model_offset, 1.0);
 
   std::vector<Eigen::Vector3d> new_nodes = pos.GetPoints();
   std::vector<Eigen::Vector3d> new_nodes_front, new_nodes_back;
@@ -134,13 +134,9 @@ void test_fe(bool optimizer = false) {
     }
   }
   std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
-  fem1.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose, 0);
+  //fem1.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose, 1);
 
   Eigen::Vector4d applied_rotation = pos.ComputeQuaternionRotation(latest_pose.first, new_pose.first);
-
-  return;
-
-
 
 
 
@@ -156,7 +152,7 @@ void test_fe(bool optimizer = false) {
   if (optimizer == false) {
     // 6.1 Simulate 5 steps of translation and rotation, model 2 will move towards model 1.
     int num_steps = 5;
-    Eigen::Vector3d step = (pose2.second-pose1.second) / num_steps;
+    Eigen::Vector3d step = (model_offset) / num_steps;
     Eigen::Vector4d step_rot = pos.QuaternionFromAngleAxis(axis, -ang/num_steps);
 
     for (unsigned int s=0; s<num_steps; s++) {
@@ -186,22 +182,22 @@ void test_fe(bool optimizer = false) {
       std::cout << "  Orientation = " << pose_k1.second.transpose() << " -> " << pose_k.second.transpose() << std::endl;
       std::cout << "  Strain energy = " << sE << std::endl;
 
-      fem1.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k);
+      fem1.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k, 2);
     }
   } else {
-    int num_steps = 3;
+    int num_steps = 10000;
+
 
     // Initialize optimizer
     LevenbergMarquardt lm(&pos, &fea);
+    std::vector<Eigen::Vector3d> nodes_k0 = pos.GetTarget();
 
     for (unsigned int s=0; s<num_steps; s++) {
-      std::cout << std::endl << "Step " << s+1 << " / " << num_steps << std::endl;
 
       std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k1 = pos.GetPose();
       std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
-      std::vector<Eigen::Vector3d> nodes_k0 = pos.GetTarget();
 
-      double sE0 = fea.ComputeStrainEnergy(nodes_k1, nodes_k0);
+      double sE0 = fea.ComputeStrainEnergy(nodes_k0, nodes_k1);
 
       // Transform pose_k1 into a Eigen::VectorXd and Optimize
       Eigen::VectorXd params0(8);
@@ -209,17 +205,38 @@ void test_fe(bool optimizer = false) {
                  pose_k1.first(0), pose_k1.first(1), pose_k1.first(2), pose_k1.first(3), 1.0;
       std::pair<int, Eigen::MatrixXd> params1 = lm.OptimizeStep(params0);
 
+      if (s == 0) {
+        std::cout << "  Prams0: " << params0.transpose() << std::endl;
+      }
 
-      double sE1 = 0.0;
+      std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k2 = pos.GetPose();
+      std::vector<Eigen::Vector3d> nodes_k2 = pos.GetPoints();
+      std::vector<Eigen::Vector3d> nodes_k_front, nodes_k_back;
+      for (unsigned int i=0; i<nodes_k2.size(); i++) {
+        if (i < nodes_k2.size()/2) {
+          nodes_k_front.push_back(nodes_k2[i]);
+        } else {
+          nodes_k_back.push_back(nodes_k2[i]);
+        }
+      }
 
+      double sE1 = fea.ComputeStrainEnergy(nodes_k0, nodes_k2);
 
+      if (params1.first == 0 || params1.first == 1) {
+        std::cout << "Step " << s+1 << " / " << num_steps << " : "
+                  << params1.first << " : "
+                  << params1.second.transpose() << " : "
+                  << sE0 << " -> " << sE1 << std::endl;
+        fem1.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k2, 1);
 
+        if (params1.first == 0) {
+          break;
+        } 
 
-      std::cout << "  Result: " << params1.first << std::endl
-                << "  Prams0: " << params0.transpose() << std::endl
-                << "  Prams1: " << params1.second.transpose() << std::endl
-                << "  sE 0/1: " << sE0 << " / " << sE1 << std::endl;
-
+      } else {
+        std::cout << "Step " << s+1 << " / " << num_steps << " : "
+                  << params1.first << " : " << " FAILED" << std::endl;
+      }
 
 
     }
@@ -235,7 +252,7 @@ void test_fe(bool optimizer = false) {
 
 int main(int argc, char** argv) {
   //test_fea();
-  test_fe(false);
+  test_fe(true);
   
   return 0;
 }

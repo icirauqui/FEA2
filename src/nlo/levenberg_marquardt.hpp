@@ -34,7 +34,7 @@ public:
 private:
 
   double ComputeResidual(const Eigen::VectorXd& params);
-  Eigen::MatrixXd ComputeJacobian(const Eigen::VectorXd& params, double residual_original);
+  Eigen::MatrixXd ComputeJacobian(const Eigen::VectorXd& params, double residual_original, double delta = 0.0000001);
 
   POS* pos_;
   FEA* fea_;

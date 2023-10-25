@@ -91,7 +91,8 @@
         "strstream": "cpp",
         "iterator": "cpp",
         "random": "cpp",
-        "*.txx": "cpp"
+        "*.txx": "cpp",
+        "dense": "cpp"
     },
     "cmake.automaticReconfigure": false,
     "cmake.configureOnEdit": false

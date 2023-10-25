@@ -24,6 +24,17 @@ public:
                  Eigen::Vector3d t,
                  double s);
 
+  std::pair<std::pair<Eigen::Vector4d, Eigen::Vector3d>, 
+            std::vector<Eigen::Vector3d>> SimulateTransform(Eigen::Vector4d r_im,
+                 Eigen::Vector3d t,
+                 double s);
+
+  void TransformToPose(std::pair<Eigen::Vector4d, Eigen::Vector3d> pose, double s=1.0);
+  std::pair<std::pair<Eigen::Vector4d, Eigen::Vector3d>, 
+            std::vector<Eigen::Vector3d>> SimulateTransformToPose(std::pair<Eigen::Vector4d, Eigen::Vector3d> pose, double s=1.0);
+
+  
+
   // Accessors
   // Return latest by default
   // User can request a specific set: 0, 1, 2, ...

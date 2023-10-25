@@ -456,10 +456,11 @@ void FEM::ViewMesh(bool extrusion,
 
   if (wait > 0) {
     viewer.spinOnce(wait*1000);
+    return;
   } else {
     viewer.spin();
-    viewer.close();
   }
+  viewer.close();
 }
 
 
