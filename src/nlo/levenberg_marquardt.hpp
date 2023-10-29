@@ -25,6 +25,7 @@ public:
     double tolerance = 0.000001, double damping_factor = 2.0);
 
 
+  std::pair<int, Eigen::MatrixXd> OptimizeStep1(const Eigen::VectorXd& params0);
   std::pair<int, Eigen::MatrixXd> OptimizeStep(const Eigen::VectorXd& params0);
 
 
@@ -34,7 +35,8 @@ public:
 private:
 
   double ComputeResidual(const Eigen::VectorXd& params);
-  Eigen::MatrixXd ComputeJacobian(const Eigen::VectorXd& params, double residual_original, double delta = 0.0000001);
+  Eigen::MatrixXd ComputeJacobian(const Eigen::VectorXd& params, double residual_original, 
+                                  double delta_t = 0.00001, double delta_q = 0.000001, double delta_s = 0.00001);
 
   POS* pos_;
   FEA* fea_;
