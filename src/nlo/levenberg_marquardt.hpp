@@ -24,11 +24,11 @@ public:
     int maxIterations = 1000, double lambda = 0.001, 
     double tolerance = 0.000001, double damping_factor = 2.0);
 
+  std::pair<int, Eigen::VectorXd> Optimize(int max_iters, const Eigen::VectorXd params0);
 
-  std::pair<int, Eigen::MatrixXd> OptimizeStep1(const Eigen::VectorXd& params0);
   std::pair<int, Eigen::MatrixXd> OptimizeStep(const Eigen::VectorXd& params0);
 
-
+  double GetResidual();
 
   //void Optimize();
 
@@ -40,6 +40,8 @@ private:
 
   POS* pos_;
   FEA* fea_;
+
+  double residual_;
 
   int max_iterations_;
   double lambda_;

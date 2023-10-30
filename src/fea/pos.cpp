@@ -131,6 +131,19 @@ std::vector<Eigen::Vector3d> POS::GetPoints(int idx) {
   return points_[idx];
 }
 
+std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> POS::GetPointLayers(int idx){
+  std::vector<Eigen::Vector3d> points = GetPoints(idx);
+  std::vector<Eigen::Vector3d> points_front, points_back;
+  for (unsigned int i=0; i<points.size(); i++) {
+    if (i < points.size()/2) {
+      points_front.push_back(points[i]);
+    } else {
+      points_back.push_back(points[i]);
+    }
+  }
+  return std::make_pair(points_front, points_back);
+}
+
 std::pair<Eigen::Vector4d, Eigen::Vector3d> POS::GetPose(int idx, bool pop)
 {
   if (idx == -1) {
@@ -145,6 +158,23 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> POS::GetPose(int idx, bool pop)
   }
 
   return pose_[idx];
+}
+
+Eigen::VectorXd POS::GetPoseVector(int idx, bool pop) {
+  if (idx == -1) {
+    idx = pose_.size() - 1;
+  }
+
+  Eigen::VectorXd pose_vec(8);
+  pose_vec << pose_[idx].second(0), pose_[idx].second(1), pose_[idx].second(2), 
+             pose_[idx].first(0), pose_[idx].first(1), pose_[idx].first(2), pose_[idx].first(3), 1.0;
+
+  if (pop) {
+    pose_.erase(pose_.begin() + idx);
+    points_.erase(points_.begin() + idx);
+  }
+
+  return pose_vec;
 }
 
 int POS::LenHistory() {

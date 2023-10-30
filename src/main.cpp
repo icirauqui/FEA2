@@ -185,79 +185,24 @@ void test_fe(bool optimizer = false) {
       fem1.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k, 2);
     }
   } else {
-    int num_steps = 100000;
 
 
     // Initialize optimizer
     LevenbergMarquardt lm(&pos, &fea);
     std::vector<Eigen::Vector3d> nodes_k0 = pos.GetTarget();
-    Eigen::VectorXd paramsf(8);
+    std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
+    double sE0 = fea.ComputeStrainEnergy(nodes_k0, nodes_k1);
 
-    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k2;
-    std::vector<Eigen::Vector3d> nodes_k_front, nodes_k_back;
-    
+    Eigen::VectorXd pose_k0 = pos.GetPoseVector();
+    std::pair<int, Eigen::VectorXd> res = lm.Optimize(10, pose_k0);
 
-    for (unsigned int s=0; s<num_steps; s++) {
+    double sE1 = lm.GetResidual();
+    std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> nodes_k2_layers = pos.GetPointLayers();
+    std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k2 = pos.GetPose();
 
-      //std::cout << std::endl;
-      //std::cout << " ================================================================ " << std::endl;
-      //std::cout << std::endl;
-
-      std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k1 = pos.GetPose();
-      std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
-
-      double sE0 = fea.ComputeStrainEnergy(nodes_k0, nodes_k1);
-
-      // Transform pose_k1 into a Eigen::VectorXd and Optimize
-      Eigen::VectorXd params0(8);
-      params0 << pose_k1.second(0), pose_k1.second(1), pose_k1.second(2), 
-                 pose_k1.first(0), pose_k1.first(1), pose_k1.first(2), pose_k1.first(3), 1.0;
-
-      if (s == 0) {
-        std::cout << "  Prams0: " << params0.transpose() << std::endl << std::endl;
-      }
-
-      std::pair<int, Eigen::MatrixXd> params1 = lm.OptimizeStep(params0);
-      paramsf = params1.second;
-
-      pose_k2 = pos.GetPose();
-      std::vector<Eigen::Vector3d> nodes_k2 = pos.GetPoints();
-      nodes_k_front.clear();
-      nodes_k_back.clear();
-      for (unsigned int i=0; i<nodes_k2.size(); i++) {
-        if (i < nodes_k2.size()/2) {
-          nodes_k_front.push_back(nodes_k2[i]);
-        } else {
-          nodes_k_back.push_back(nodes_k2[i]);
-        }
-      }
-
-      double sE1 = fea.ComputeStrainEnergy(nodes_k0, nodes_k2);
-
-      if (params1.first == 0 || params1.first == 1) {
-        std::cout << "Step " << s+1 << " / " << num_steps << " : "
-                  << params1.first << " : "
-                  //<< params1.second.transpose() << " : "
-                  << sE0 << " -> " << sE1 << std::endl;
-        if (s==num_steps-1) 
-          fem1.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k2, 10);
-
-        //if (params1.first == 0) {
-        //  break;
-        //} 
-
-      } 
-      //else {
-      //  std::cout << "Step " << s+1 << " / " << num_steps << " : "
-      //            << params1.first << " : FAILED : " 
-      //            << sE0 << " -> " << sE1 << std::endl;
-      //}
+    fem1.ViewMesh(true, nodes_k2_layers.first, nodes_k2_layers.second, pose1, pose_k2, 10);
 
 
-    }
-
-    std::cout << std::endl << "  Paramsf: " << paramsf.transpose() << std::endl;
-    fem1.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k2, 10);
   }
 
 

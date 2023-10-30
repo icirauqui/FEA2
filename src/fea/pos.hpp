@@ -39,7 +39,9 @@ public:
   // Return latest by default
   // User can request a specific set: 0, 1, 2, ...
   std::vector<Eigen::Vector3d> GetPoints(int idx = -1);
+  std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> GetPointLayers(int idx = -1);
   std::pair<Eigen::Vector4d, Eigen::Vector3d> GetPose(int idx = -1, bool pop = false);
+  Eigen::VectorXd GetPoseVector(int idx = -1, bool pop = false);
   int LenHistory();
 
   std::vector<Eigen::Vector3d> GetTarget();
