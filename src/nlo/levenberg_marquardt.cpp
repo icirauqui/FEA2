@@ -2,9 +2,9 @@
 
 LevenbergMarquardt::LevenbergMarquardt(
   POS* pos, FEA* fea,
-  int maxIterations, double lambda, double tolerance, double damping_factor)
+  int maxIterations, double lambda, double damping_factor, double tolerance)
   : pos_(pos), fea_(fea),
-    max_iterations_(maxIterations), lambda_(lambda), tolerance_(tolerance), damping_factor_(damping_factor) {}
+    max_iterations_(maxIterations), lambda_(lambda), damping_factor_(damping_factor), tolerance_(tolerance) {}
 
 double LevenbergMarquardt::ComputeResidual(const Eigen::VectorXd& params) {
   Eigen::Vector3d tvec(params(0), params(1), params(2));
@@ -35,27 +35,37 @@ double LevenbergMarquardt::ComputeResidual(const Eigen::VectorXd& params) {
 }
 
 
-std::pair<int, Eigen::VectorXd> LevenbergMarquardt::Optimize(int max_iters, const Eigen::VectorXd params0) {
+std::pair<int, Eigen::VectorXd> LevenbergMarquardt::Optimize(const Eigen::VectorXd params0) {
 
   Eigen::VectorXd params = params0;
 
-  for (int it = 0; it < max_iters; it++) {
+  for (int it = 0; it < max_iterations_; it++) {
     std::pair<int, Eigen::MatrixXd> params1 = OptimizeStep(params);
-    params = params1.second;
     if (params1.first == 0 || params1.first == 1) {
-      std::cout << "Step " << it+1 << " / " << max_iters << " : "
+      //params = params1.second;
+      params = pos_->GetPoseVector();
+      Eigen::VectorXd pose_i = pos_->GetPoseVector();
+      std::cout << "Step " << it+1 << " / " << max_iterations_ << " : "
                 << params1.first << " : "
                 //<< params1.second.transpose() << " : "
-                << ComputeResidual(params1.second) << std::endl;
+                << ComputeResidual(params) << std::endl
+                << "lambda = " << lambda_ << std::endl;
+
+      std::cout << "  " << ComputeResidual(params1.second) << " " << params1.second.transpose() << std::endl;
+      std::cout << "  " << ComputeResidual(params) << " " << params.transpose() << std::endl;
+      std::cout << "  " << ComputeResidual(pos_->GetPoseVector()) << " " << pos_->GetPoseVector().transpose() << std::endl;
+      std::cout << std::endl;
+
       if (params1.first == 0) {
         break;
       } 
-    } else {
-      std::cout << "Step " << it+1 << " / " << max_iters << " : "
-                << params1.first << " : "
-                //<< params1.second.transpose() << " : "
-                << ComputeResidual(params1.second) << std::endl;
-    }
+    } 
+    //else {
+    //  std::cout << "Step " << it+1 << " / " << max_iterations_ << " : "
+    //            << params1.first << " : "
+    //            //<< params1.second.transpose() << " : "
+    //            << ComputeResidual(params1.second) << std::endl;
+    //}
   }
 
   return std::make_pair(1, params);
@@ -90,18 +100,21 @@ std::pair<int, Eigen::MatrixXd> LevenbergMarquardt::OptimizeStep(const Eigen::Ve
 
   // Compute the new residual
   double residual1 = ComputeResidual(params);
-  std::cout << " residual = " << residual0 << " -> " << residual1 << std::endl;
-
+  
   // Compute delta norm
   double delta_norm = delta.norm();
 
   
   // If the new residual is smaller, accept the update, else reject it
   if (residual1 < residual0) {
+    std::cout << " residual = " << residual0 << " -> " << residual1 << std::endl;
+
     lambda_ /= damping_factor_;
     residual_ = residual1;
 
     pos_->TransformToPose(std::make_pair(params.segment(3,4), params.segment(0,3)), params(7));
+    
+    return std::make_pair(1, params);
     
     if (delta.norm() < tolerance_) {
       return std::make_pair(0, params); // Stop

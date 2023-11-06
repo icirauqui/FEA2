@@ -19,7 +19,10 @@ float depth = 1.0;
 float fg = 0.577350269;
 float Klarge = 100000000.0;
 
-float noise_multiplier = 0.1;
+int view_quick = 1;
+int view_slow = 2;
+
+float noise_multiplier = 0.00;
 Eigen::Vector3d model_offset(1.0, 1.5, 2.0); 
 
 std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::Vector3d> pts) {
@@ -84,7 +87,7 @@ void test_fe(bool optimizer = false) {
     Eigen::Vector3d pt1(vpts[i][0], vpts[i][1], vpts[i][2]);
     Eigen::Vector3d pt2(vpts[i][0], vpts[i][1], vpts[i][2]);
     for (unsigned int j=0; j<3; j++) {
-      pt1(j) += noise_multiplier * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+      //pt1(j) += noise_multiplier * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
       pt2(j) += noise_multiplier * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     }
     //pt2 += model_offset;
@@ -103,11 +106,10 @@ void test_fe(bool optimizer = false) {
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose1 = ApproximatePose(fem1.GetEigenNodes());
   std::pair<Eigen::Vector4d, Eigen::Vector3d> pose2 = ApproximatePose(fem2.GetEigenNodes());
 
-  //fem1.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2, 2);
+  fem1.ViewMesh(true, fem2.GetCloud(), fem2.GetExtrusion(), pose1, pose2, view_quick);
 
   POS pos_tmp(fem1.GetNodes(), pose1);
   std::vector<Eigen::Vector3d> nodes_k0 = pos_tmp.GetPoints();
-
 
 
 
@@ -134,7 +136,7 @@ void test_fe(bool optimizer = false) {
     }
   }
   std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
-  fem1.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose, 3);
+  fem1.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose, view_quick);
 
   Eigen::Vector4d applied_rotation = pos.ComputeQuaternionRotation(latest_pose.first, new_pose.first);
 
@@ -165,36 +167,29 @@ void test_fe(bool optimizer = false) {
       std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k = pos.GetPose();
 
       std::vector<Eigen::Vector3d> nodes_k = pos.GetPoints();
-      std::vector<Eigen::Vector3d> nodes_k_front, nodes_k_back;
-      for (unsigned int i=0; i<nodes_k.size(); i++) {
-        if (i < nodes_k.size()/2) {
-          nodes_k_front.push_back(nodes_k[i]);
-        } else {
-          nodes_k_back.push_back(nodes_k[i]);
-        }
-      }
+      std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> nodes_k_layers = pos.GetPointLayers();
 
       double sE = fea.ComputeStrainEnergy(nodes_k0, nodes_k);
 
-      std::cout << std::endl;
-      std::cout << "Step " << s << std::endl;
-      std::cout << "  Translation = " << pose_k1.first.transpose() << " -> " << pose_k.first.transpose() << std::endl;
-      std::cout << "  Orientation = " << pose_k1.second.transpose() << " -> " << pose_k.second.transpose() << std::endl;
+      //std::cout << std::endl;
+      //std::cout << "Step " << s << std::endl;
+      //std::cout << "  Translation = " << pose_k1.first.transpose() << " -> " << pose_k.first.transpose() << std::endl;
+      //std::cout << "  Orientation = " << pose_k1.second.transpose() << " -> " << pose_k.second.transpose() << std::endl;
       std::cout << "  Strain energy = " << sE << std::endl;
 
-      fem1.ViewMesh(true, nodes_k_front, nodes_k_back, pose1, pose_k, 2);
+      fem1.ViewMesh(true, nodes_k_layers.first, nodes_k_layers.second, pose1, pose_k, view_quick);
     }
   } else {
 
 
     // Initialize optimizer
-    LevenbergMarquardt lm(&pos, &fea);
+    LevenbergMarquardt lm(&pos, &fea, 1000, 1.0, 1.5);
     std::vector<Eigen::Vector3d> nodes_k0 = pos.GetTarget();
     std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
     double sE0 = fea.ComputeStrainEnergy(nodes_k0, nodes_k1);
 
     Eigen::VectorXd pose_k0 = pos.GetPoseVector();
-    std::pair<int, Eigen::VectorXd> res = lm.Optimize(10, pose_k0);
+    std::pair<int, Eigen::VectorXd> res = lm.Optimize(pose_k0);
 
     double sE1 = lm.GetResidual();
     std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> nodes_k2_layers = pos.GetPointLayers();

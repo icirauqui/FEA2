@@ -103,6 +103,7 @@ void FEA::ComputeDisplacements() {
 
 void FEA::ComputeStrainEnergy() {
   sE_ = (U_.transpose() * F_)(0,0);
+  sE_ = std::abs(sE_);
 }
 
 double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
@@ -115,14 +116,36 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
     return -1.0;
   }
 
+  //std::cout << std::endl;
   U_ = Eigen::MatrixXf::Zero(dim_in, 1);
   for (unsigned int i = 0; i < u0.size(); i++) {
     U_(i*3, 0) = u1[i][0] - u0[i][0];
     U_(i*3+1, 0) = u1[i][1] - u0[i][1];
     U_(i*3+2, 0) = u1[i][2] - u0[i][2];
+
+    //if (i == 15) {
+    //  std::cout << i << ": ";
+    //  std::cout << u0[i][0] << " " << u0[i][1] << " " << u0[i][2] << "\t->\t" << u1[i][0] << " " << u1[i][1] << " " << u1[i][2] << "\t=\t";
+    //  std::cout << U_(i*3, 0) << " " << U_(i*3+1, 0) << " " << U_(i*3+2, 0) << std::endl;
+    //}
   }
 
+
+  //std::cout << std::endl;
+  //for (unsigned int i = 0; i < dim_in; i++) {
+  //  std::cout << U_(i,0) << " ";
+  //  if ((i+1) % 3 == 0) {
+  //    std::cout << std::endl;
+  //  }
+  //}
+  //std::cout << std::endl;
+
   ComputeForces();
+  //std::cout << "F_ = " << std::endl;
+  //// Print possitions 45, 46, 47
+  //for (unsigned int i = 45; i < 48; i++) {
+  //  std::cout << F_(i,0) << " ";
+  //}
   ComputeStrainEnergy();
 
   return sE_;
