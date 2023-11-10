@@ -21,7 +21,7 @@ public:
 
   std::pair<int, Eigen::VectorXd> Optimize(const Eigen::VectorXd params0);
 
-  std::pair<int, Eigen::MatrixXd> OptimizeStep(const Eigen::VectorXd& params0);
+  std::pair<int, double> OptimizeStep(const Eigen::VectorXd& params0);
 
   double GetResidual();
 
@@ -42,6 +42,8 @@ private:
   double lambda_;
   double tolerance_;
   double damping_factor_;
+
+  bool verbose_ = false;
 
 
 

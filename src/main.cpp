@@ -112,15 +112,16 @@ void test_fe(bool optimizer = false) {
   std::vector<Eigen::Vector3d> nodes_k0 = pos_tmp.GetPoints();
 
 
-
+  std::cout << "Len History = " << pos_tmp.LenHistory() << std::endl;
 
 
 
   // 4. Transform Pose 2 for simulation, impose a rotation of x degrees around each axis
   POS pos(fem2.GetNodes(), pose2);
   pos.SetTarget(fem1.GetNodes());
+  std::cout << "Len History 1 = " << pos.LenHistory() << std::endl;
 
-  double ang = 30*M_PI/180;
+  double ang = 5*M_PI/180;
   Eigen::Vector3d axis(1,1,1);
   Eigen::Vector4d imposed_angle_q = pos.QuaternionFromAngleAxis(axis, ang);
   std::pair<Eigen::Vector4d, Eigen::Vector3d> latest_pose = pos.GetPose();
@@ -138,9 +139,12 @@ void test_fe(bool optimizer = false) {
   std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose = pos.GetPose();
   fem1.ViewMesh(true, new_nodes_front, new_nodes_back, pose1, new_pose, view_quick);
 
+
+
   Eigen::Vector4d applied_rotation = pos.ComputeQuaternionRotation(latest_pose.first, new_pose.first);
 
 
+  std::cout << "Len History 2 = " << pos.LenHistory() << std::endl;
 
 
 
@@ -177,13 +181,22 @@ void test_fe(bool optimizer = false) {
       //std::cout << "  Orientation = " << pose_k1.second.transpose() << " -> " << pose_k.second.transpose() << std::endl;
       std::cout << "  Strain energy = " << sE << std::endl;
 
+      std::cout << "A" << std::endl;
+      for (unsigned int i=0; i<20; i++) {
+        std::cout << new_nodes_front[i].transpose()
+                  << "\t | \t" 
+                  << nodes_k_layers.first[i].transpose()
+                  << "\t"
+                  << std::endl;
+      }
+
       fem1.ViewMesh(true, nodes_k_layers.first, nodes_k_layers.second, pose1, pose_k, view_quick);
     }
   } else {
 
 
     // Initialize optimizer
-    LevenbergMarquardt lm(&pos, &fea, 1000, 1.0, 1.5);
+    LevenbergMarquardt lm(&pos, &fea, 5, 10.0, 2.0, 0.01);
     std::vector<Eigen::Vector3d> nodes_k0 = pos.GetTarget();
     std::vector<Eigen::Vector3d> nodes_k1 = pos.GetPoints();
     double sE0 = fea.ComputeStrainEnergy(nodes_k0, nodes_k1);
@@ -191,11 +204,37 @@ void test_fe(bool optimizer = false) {
     Eigen::VectorXd pose_k0 = pos.GetPoseVector();
     std::pair<int, Eigen::VectorXd> res = lm.Optimize(pose_k0);
 
+    std::cout << "Len History 3 = " << pos.LenHistory() << std::endl;
+
     double sE1 = lm.GetResidual();
     std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> nodes_k2_layers = pos.GetPointLayers();
     std::pair<Eigen::Vector4d, Eigen::Vector3d> pose_k2 = pos.GetPose();
+    fem1.ViewMesh(true, nodes_k2_layers.first, nodes_k2_layers.second, pose1, pose_k2, 1);
 
-    fem1.ViewMesh(true, nodes_k2_layers.first, nodes_k2_layers.second, pose1, pose_k2, 10);
+
+    std::vector<Eigen::Vector3d> new_nodes_k2 = pos.GetPoints();
+    std::vector<Eigen::Vector3d> new_nodes_k2_front, new_nodes_k2_back;
+    for (unsigned int i=0; i<new_nodes_k2.size(); i++) {
+      if (i < new_nodes_k2.size()/2) {
+        new_nodes_k2_front.push_back(new_nodes_k2[i]);
+      } else {
+        new_nodes_k2_back.push_back(new_nodes_k2[i]);
+      }
+    }
+    std::pair<Eigen::Vector4d, Eigen::Vector3d> new_pose_k2 = pos.GetPose();
+
+    std::cout << "A" << std::endl;
+    for (unsigned int i=0; i<20; i++) {
+      std::cout << new_nodes_front[i].transpose()
+                << "\t | \t" 
+                << new_nodes_k2_front[i].transpose()
+                << "\t"
+                << std::endl;
+    }
+
+    fem1.ViewMesh(true, new_nodes_k2_front, new_nodes_k2_back, pose1, new_pose_k2, 10);
+
+
 
 
   }

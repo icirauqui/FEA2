@@ -35,65 +35,110 @@ double LevenbergMarquardt::ComputeResidual(const Eigen::VectorXd& params) {
 }
 
 
+//std::pair<int, Eigen::VectorXd> LevenbergMarquardt::Optimize(const Eigen::VectorXd params0) {
+//
+//  Eigen::VectorXd params = params0;
+//
+//  for (int it = 0; it < max_iterations_; it++) {
+//    std::pair<int, Eigen::MatrixXd> params1 = OptimizeStep(params);
+//    if (params1.first == 0 || params1.first == 1) {
+//      //params = params1.second;
+//      params = pos_->GetPoseVector();
+//      Eigen::VectorXd pose_i = pos_->GetPoseVector();
+//      std::cout << "Step " << it+1 << " / " << max_iterations_ << " : "
+//                << params1.first << " : "
+//                //<< params1.second.transpose() << " : "
+//                << ComputeResidual(params) << std::endl
+//                << "lambda = " << lambda_ << std::endl;
+//
+//      std::cout << "  " << ComputeResidual(params1.second) << " " << params1.second.transpose() << std::endl;
+//      std::cout << "  " << ComputeResidual(params) << " " << params.transpose() << std::endl;
+//      std::cout << "  " << ComputeResidual(pos_->GetPoseVector()) << " " << pos_->GetPoseVector().transpose() << std::endl;
+//      std::cout << std::endl;
+//
+//      if (params1.first == 0) {
+//        break;
+//      } 
+//    } 
+//    //else {
+//    //  std::cout << "Step " << it+1 << " / " << max_iterations_ << " : "
+//    //            << params1.first << " : "
+//    //            //<< params1.second.transpose() << " : "
+//    //            << ComputeResidual(params1.second) << std::endl;
+//    //}
+//  }
+//
+//  return std::make_pair(1, params);
+//}
+
+
+
+
 std::pair<int, Eigen::VectorXd> LevenbergMarquardt::Optimize(const Eigen::VectorXd params0) {
 
   Eigen::VectorXd params = params0;
 
-  for (int it = 0; it < max_iterations_; it++) {
-    std::pair<int, Eigen::MatrixXd> params1 = OptimizeStep(params);
-    if (params1.first == 0 || params1.first == 1) {
-      //params = params1.second;
+  double error = std::numeric_limits<double>::max();
+  int it = 0;
+
+  while (error > tolerance_ && it < max_iterations_) {
+    it++;
+
+    std::pair<int, double> params1 = OptimizeStep(params);
+    error = params1.second;
+
+    //if ( it == 3)
+    //  break;
+
+    if (params1.first == 1) {
       params = pos_->GetPoseVector();
-      Eigen::VectorXd pose_i = pos_->GetPoseVector();
+
       std::cout << "Step " << it+1 << " / " << max_iterations_ << " : "
                 << params1.first << " : "
-                //<< params1.second.transpose() << " : "
                 << ComputeResidual(params) << std::endl
                 << "lambda = " << lambda_ << std::endl;
-
-      std::cout << "  " << ComputeResidual(params1.second) << " " << params1.second.transpose() << std::endl;
-      std::cout << "  " << ComputeResidual(params) << " " << params.transpose() << std::endl;
-      std::cout << "  " << ComputeResidual(pos_->GetPoseVector()) << " " << pos_->GetPoseVector().transpose() << std::endl;
-      std::cout << std::endl;
-
-      if (params1.first == 0) {
-        break;
-      } 
     } 
-    //else {
-    //  std::cout << "Step " << it+1 << " / " << max_iterations_ << " : "
-    //            << params1.first << " : "
-    //            //<< params1.second.transpose() << " : "
-    //            << ComputeResidual(params1.second) << std::endl;
-    //}
   }
+
+  std::cout << "LM terminated at iteration " << it << " with error " << error << std::endl;
 
   return std::make_pair(1, params);
 }
 
 
-std::pair<int, Eigen::MatrixXd> LevenbergMarquardt::OptimizeStep(const Eigen::VectorXd& params0) {
+std::pair<int, double> LevenbergMarquardt::OptimizeStep(const Eigen::VectorXd& params0) {
 
-  bool verbose = false;
   //std::cout << " params0 = " << params0.transpose() << std::endl;
 
   double residual0 = ComputeResidual(params0);
 
-  Eigen::MatrixXd jacobian = ComputeJacobian(params0, residual0, 0.00001, 0.001, 0.0000001);
+  Eigen::MatrixXd jacobian = ComputeJacobian(params0, residual0, 0.0001, 0.001, 0.0001);
 
   // Compute the approximate Hessian
+  //Eigen::MatrixXd hessian = jacobian.transpose() * jacobian;
   Eigen::MatrixXd hessian = jacobian.transpose() * jacobian;
+  //std::cout << "hessian = " << std::endl << hessian << std::endl << std::endl;
+
   
-  // Compute the gradient
-  Eigen::VectorXd gradient = jacobian.transpose() * residual0;
+  //hessian += lambda_ * Eigen::MatrixXd::Identity(hessian.rows(), hessian.cols());  
+  //std::cout << "hessian = " << std::endl << hessian << std::endl << std::endl;
   
   // Update the diagonal of the Hessian with the damping factor
-  for (int i = 0; i < hessian.rows(); i++) {
-    hessian(i,i) += lambda_ * hessian(i,i);
-  }
+  //for (int i = 0; i < hessian.rows(); i++) {
+  //  hessian(i,i) += lambda_ * hessian(i,i);
+  //}
+  hessian += lambda_ * Eigen::MatrixXd::Identity(hessian.rows(), hessian.cols());
+
+
+  // Compute the gradient
+  Eigen::VectorXd gradient = jacobian.transpose() * residual0;
 
   // Solve for the update (delta)
-  Eigen::VectorXd delta = hessian.llt().solve(-gradient);
+  //Eigen::VectorXd delta = hessian.llt().solve(-gradient);
+  Eigen::VectorXd delta = hessian.ldlt().solve(-gradient);
+
+  std::cout << " parm0 = " << params0.transpose() << std::endl;
+  std::cout << " delta = " << delta.transpose() << std::endl;
 
   // Update the parameters
   Eigen::VectorXd params = params0 + delta;
@@ -114,17 +159,11 @@ std::pair<int, Eigen::MatrixXd> LevenbergMarquardt::OptimizeStep(const Eigen::Ve
 
     pos_->TransformToPose(std::make_pair(params.segment(3,4), params.segment(0,3)), params(7));
     
-    return std::make_pair(1, params);
-    
-    if (delta.norm() < tolerance_) {
-      return std::make_pair(0, params); // Stop
-    } else {
-      return std::make_pair(1, params); // Continue
-    }
+    return std::make_pair(1, residual1);
   }
   else {
     lambda_ *= damping_factor_;
-    return std::make_pair(-1, params0);
+    return std::make_pair(0, residual0);
   }
   
 }
@@ -137,13 +176,19 @@ Eigen::MatrixXd  LevenbergMarquardt::ComputeJacobian(const Eigen::VectorXd& para
                                                      double delta_t, double delta_q, double delta_s) {
   Eigen::MatrixXd jacobian(1, params.size());
 
-  Eigen::VectorXd deltas = params;
-  deltas.segment(0,3) *= delta_t;
-  deltas(3) = delta_q;
-  deltas(4) = delta_q;
-  deltas(5) = delta_q;
-  deltas(6) = delta_q;
-  deltas(7) = delta_s;
+  //Eigen::VectorXd deltas = params;
+  //deltas.segment(0,3) *= delta_t;
+  //deltas(0) = deltas(0) * delta_t;
+  //deltas(1) = deltas(1) * delta_t;
+  //deltas(2) = deltas(2) * delta_t;
+  //deltas(3) = delta_q;
+  //deltas(4) = delta_q;
+  //deltas(5) = delta_q;
+  //deltas(6) = delta_q;
+  //deltas(7) = delta_s;
+
+  // vector deltas equal to 0.0001
+  Eigen::VectorXd deltas = Eigen::VectorXd::Constant(params.size(), 0.0001);
 
   for (int i = 0; i < params.size(); i++) {
     Eigen::VectorXd params_delta = params;
@@ -152,5 +197,7 @@ Eigen::MatrixXd  LevenbergMarquardt::ComputeJacobian(const Eigen::VectorXd& para
     jacobian(0, i) = (residual_delta - residual_original) / deltas(i);
   }
 
+  //std::cout << "jacobian = " << std::endl << jacobian << std::endl << std::endl;
+  
   return jacobian;
 }
