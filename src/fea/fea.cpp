@@ -122,30 +122,32 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
     U_(i*3, 0) = u1[i][0] - u0[i][0];
     U_(i*3+1, 0) = u1[i][1] - u0[i][1];
     U_(i*3+2, 0) = u1[i][2] - u0[i][2];
+  }
 
-    //if (i == 15) {
-    //  std::cout << i << ": ";
-    //  std::cout << u0[i][0] << " " << u0[i][1] << " " << u0[i][2] << "\t->\t" << u1[i][0] << " " << u1[i][1] << " " << u1[i][2] << "\t=\t";
-    //  std::cout << U_(i*3, 0) << " " << U_(i*3+1, 0) << " " << U_(i*3+2, 0) << std::endl;
-    //}
+  for (unsigned int i=0; i<u0.size(); i++) {
+    std::cout << i << ": " << u0[i].transpose() << " -> " << u1[i].transpose() << " = ";
+    std::cout << U_(i*3, 0) << " " << U_(i*3+1, 0) << " " << U_(i*3+2, 0) << std::endl;
   }
 
 
-  //std::cout << std::endl;
-  //for (unsigned int i = 0; i < dim_in; i++) {
-  //  std::cout << U_(i,0) << " ";
-  //  if ((i+1) % 3 == 0) {
-  //    std::cout << std::endl;
-  //  }
-  //}
-  //std::cout << std::endl;
 
   ComputeForces();
-  //std::cout << "F_ = " << std::endl;
-  //// Print possitions 45, 46, 47
-  //for (unsigned int i = 45; i < 48; i++) {
-  //  std::cout << F_(i,0) << " ";
-  //}
+
+  std::cout << std::endl;
+  std::cout << "K_ = " << std::endl;
+  for (unsigned int i=0; i<K_.rows(); i++) {
+    for (unsigned int j=0; j<K_.cols(); j++) {
+      std::cout << K_(i,j) << " ";
+    }
+    std::cout << std::endl;
+  }
+  
+  std::cout << std::endl;
+  std::cout << "F_ = " << std::endl;
+  for (unsigned int i=0; i<u0.size(); i++) {
+    std::cout << i << ": " << F_(i*3, 0) << " " << F_(i*3+1, 0) << " " << F_(i*3+2, 0) << std::endl;
+  }
+
   ComputeStrainEnergy();
 
   return sE_;

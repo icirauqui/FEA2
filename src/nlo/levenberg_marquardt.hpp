@@ -8,6 +8,16 @@
 //#include "node.hpp"
 //#include "edge.hpp"
 
+#include <mrpt/math/CLevenbergMarquardt.h>
+#include <mrpt/system/CTicTac.h>
+
+#include <cmath>
+#include <iostream>
+
+//using namespace mrpt;
+//using namespace mrpt::math;
+//using namespace mrpt::system;
+
 
 class LevenbergMarquardt 
 {
@@ -19,17 +29,17 @@ public:
     int maxIterations = 1000, double lambda = 0.001, 
     double damping_factor = 2.0, double tolerance = 0.000001);
 
-  std::pair<int, Eigen::VectorXd> Optimize(const Eigen::VectorXd params0);
-
-  std::pair<int, double> OptimizeStep(const Eigen::VectorXd& params0);
+  std::pair<double, Eigen::VectorXd> Optimize(const Eigen::VectorXd params0);
 
   double GetResidual();
 
-  //void Optimize();
+  void ComputeResidual(const mrpt::math::CVectorDouble& x, 
+                       const mrpt::math::CVectorDouble& y, 
+                       mrpt::math::CVectorDouble& out_f);
 
 private:
 
-  double ComputeResidual(const Eigen::VectorXd& params);
+
   Eigen::MatrixXd ComputeJacobian(const Eigen::VectorXd& params, double residual_original, 
                                   double delta_t = 0.001, double delta_q = 0.0001, double delta_s = 0.00001);
 
