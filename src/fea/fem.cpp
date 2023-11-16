@@ -227,7 +227,15 @@ void FEM::ComputeExtrusion() {
   for (Eigen::Vector3d n : normals_) {
     normal -= n;
   }
-  normal /= normals_.size();
+  normal /= normals_.size();    
+
+  // truncate normals to 3 decimals
+  double scale = std::pow(10.0, 3);
+  for (unsigned int i=0; i<3; i++) {
+    normal(i) = std::round(normal(i) * scale) / scale;
+  }
+  
+  std::cout << "Element height: " << element_height_ << std::endl;
   
   for (unsigned int i=0; i<points_.size(); i++) {
     Eigen::Vector3d point2 = points_[i] - element_height_/2 * normal;
@@ -247,6 +255,34 @@ void FEM::ComputeExtrusion() {
     element.push_back(triangle[1]);
     element.push_back(triangle[2]);
     elements_.push_back(element);
+  }
+
+  for (unsigned int i=0; i<points_.size(); i++) {
+    std::cout << "Point1 " << i << ": " << points_[i].transpose() << std::endl;
+  }
+  for (unsigned int i=0; i<points2_.size(); i++) {
+    std::cout << "Point2 " << i << ": " << points2_[i].transpose() << std::endl;
+  }
+  std::cout << std::endl;
+
+  for (unsigned int i=0; i<elements_.size(); i++) {
+    std::cout << "Element " <<  i << ": ";
+    for (unsigned int j=0; j<elements_[i].size(); j++) {
+      std::cout << elements_[i][j] << " ";
+    }
+    std::cout << std::endl;
+    // print point coordinates
+    for (unsigned int j=0; j<elements_[i].size(); j++) {
+      if (elements_[i][j] >= points_.size()) {
+        std::cout << "  " << elements_[i][j] << " : " << points2_[elements_[i][j]-points_.size()].transpose() << std::endl;
+      } else {
+        std::cout << "  " << elements_[i][j] << " : " << points_[elements_[i][j]].transpose() << std::endl;
+      }
+      //std::cout << points_[elements_[i][j]].transpose() << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << std::endl;
   }
 }
 

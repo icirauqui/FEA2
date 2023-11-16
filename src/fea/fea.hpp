@@ -32,6 +32,7 @@
 #include <pcl/console/parse.h>
 #include <pcl/io/vtk_lib_io.h>
 
+#include <elements/c3d6.hpp>
 
 class FEA {
 
@@ -81,6 +82,13 @@ private:
   void ComputeKei(std::vector<std::vector<float>> &vfPts);
   
   void dNdgs(float xi, float eta, float zeta, int dim);
+
+
+
+
+
+
+
 
   int frame_id_ = 0;
   std::string element_;

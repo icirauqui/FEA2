@@ -300,10 +300,35 @@ void eval_fea() {
 }
 
 
+void test_c3d6() {
+  // Define material properties
+  double E = 3500; // Young's modulus (Pa)
+  double nu = 0.495;  // Poisson's ratio
+
+    // Define the nodes of the triangular prism
+    std::array<Eigen::Vector3d, 6> nodes = {
+        Eigen::Vector3d(0, 0, 0),
+        Eigen::Vector3d(1, 0, 0),
+        Eigen::Vector3d(0, 1, 0),
+        Eigen::Vector3d(0, 0, 0.5),
+        Eigen::Vector3d(1, 0, 0.5),
+        Eigen::Vector3d(0, 1, 0.5)
+    };
+
+    // Compute the stiffness matrix
+    Eigen::MatrixXd K = c3d6::computeStiffnessMatrix(nodes, E, nu);
+
+    // Output the stiffness matrix
+    std::cout << "Stiffness Matrix: \n" << K << std::endl;
+
+}
+
+
 int main(int argc, char** argv) {
   //test_fea();
   //test_fe(false);
   eval_fea();
+  //test_c3d6();
   
   return 0;
 }

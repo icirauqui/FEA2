@@ -39,15 +39,19 @@ void FEA::MatAssembly(std::vector<std::vector<float> > &vpts,
   K_ = Eigen::MatrixXf::Zero(3*vpts.size(), 3*vpts.size());
 
   for (auto elt : velts) {
-    std::vector<std::vector<float>> xyzi;
+    std::array<Eigen::Vector3d, 6> xyzi;
     std::vector<int> mn;
 
-    for (auto node : elt) {
-      xyzi.push_back(vpts[node]);
-      mn.push_back(node*3);
+    for (unsigned int i=0; i<elt.size(); i++) {
+      std::vector<float> coords = vpts[elt[i]];
+      xyzi[i] = Eigen::Vector3d(coords[0], coords[1], coords[2]);
+      mn.push_back(elt[i]*3);
     }
+    Eigen::MatrixXd Kei = c3d6::computeStiffnessMatrix(xyzi, E_, nu_);
 
-    ComputeKei(xyzi);
+    std::cout << std::endl
+              << "Kei = " << std::endl
+              << Kei << std::endl;
     
     for (unsigned int ni = 0; ni < mn.size(); ni++) {
       for (unsigned int nj = 0; nj < mn.size(); nj++) {
@@ -59,6 +63,10 @@ void FEA::MatAssembly(std::vector<std::vector<float> > &vpts,
       }
     }
   }
+
+  std::cout << std::endl
+            << "K_ = " << std::endl
+            << K_ << std::endl;
 }
 
 
@@ -124,29 +132,29 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
     U_(i*3+2, 0) = u1[i][2] - u0[i][2];
   }
 
-  for (unsigned int i=0; i<u0.size(); i++) {
-    std::cout << i << ": " << u0[i].transpose() << " -> " << u1[i].transpose() << " = ";
-    std::cout << U_(i*3, 0) << " " << U_(i*3+1, 0) << " " << U_(i*3+2, 0) << std::endl;
-  }
+  //for (unsigned int i=0; i<u0.size(); i++) {
+  //  std::cout << i << ": " << u0[i].transpose() << " -> " << u1[i].transpose() << " = ";
+  //  std::cout << U_(i*3, 0) << " " << U_(i*3+1, 0) << " " << U_(i*3+2, 0) << std::endl;
+  //}
 
 
 
   ComputeForces();
 
-  std::cout << std::endl;
-  std::cout << "K_ = " << std::endl;
-  for (unsigned int i=0; i<K_.rows(); i++) {
-    for (unsigned int j=0; j<K_.cols(); j++) {
-      std::cout << K_(i,j) << " ";
-    }
-    std::cout << std::endl;
-  }
+  //std::cout << std::endl;
+  //std::cout << "K_ = " << std::endl;
+  //for (unsigned int i=0; i<K_.rows(); i++) {
+  //  for (unsigned int j=0; j<K_.cols(); j++) {
+  //    std::cout << K_(i,j) << " ";
+  //  }
+  //  std::cout << std::endl;
+  //}
   
-  std::cout << std::endl;
-  std::cout << "F_ = " << std::endl;
-  for (unsigned int i=0; i<u0.size(); i++) {
-    std::cout << i << ": " << F_(i*3, 0) << " " << F_(i*3+1, 0) << " " << F_(i*3+2, 0) << std::endl;
-  }
+  //std::cout << std::endl;
+  //std::cout << "F_ = " << std::endl;
+  //for (unsigned int i=0; i<u0.size(); i++) {
+  //  std::cout << i << ": " << F_(i*3, 0) << " " << F_(i*3+1, 0) << " " << F_(i*3+2, 0) << std::endl;
+  //}
 
   ComputeStrainEnergy();
 
@@ -213,6 +221,9 @@ void FEA::InitGaussPoints(float fg) {
 }
 
 
+
+
+
 void FEA::ComputeKei(std::vector<std::vector<float>> &vfPts) {
   // vFpts to Eigen::MatrixXf
   Eigen::MatrixXf vFpts(base_size_,3);
@@ -221,6 +232,9 @@ void FEA::ComputeKei(std::vector<std::vector<float>> &vfPts) {
     vFpts(i,1) = vfPts[i][1];
     vFpts(i,2) = vfPts[i][2];
   }
+
+  std::cout << "Element node coordinates:" << std::endl
+            << vFpts << std::endl;
 
   for (unsigned int ops=0; ops<gs_.rows(); ops++) {
     float xi   = gs_(ops, 0);
@@ -258,6 +272,9 @@ void FEA::ComputeKei(std::vector<std::vector<float>> &vfPts) {
       Kei_ += B_.transpose() * D_ * B_ * Jdet;
     }
   }
+
+  std::cout << "Kei = " << std::endl
+            << Kei_ << std::endl;
 }
 
 
