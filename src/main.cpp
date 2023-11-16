@@ -250,7 +250,7 @@ void test_fe(bool optimizer = false) {
 
 
 void eval_fea() {
-  Dataset ds("../data_test_single", element);
+  Dataset ds("../data_test_1", element);
   std::vector<std::vector<float>> vpts = ds.points();
 
   FEM fem1(element);
