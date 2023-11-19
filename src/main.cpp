@@ -291,6 +291,8 @@ void eval_fea() {
   std::vector<std::vector<float>> nodes = fem1.GetNodes();
   std::vector<std::vector<int>> elements = fem1.GetElements();
   fea.MatAssembly(nodes, elements);
+  fea.EncastreBackLayer();
+  fea.Eigenvalues_K();
 
   double sE = fea.ComputeStrainEnergy(nodes_k0, nodes_k1);
   std::cout << "Strain energy = " << sE << std::endl;
@@ -324,11 +326,40 @@ void test_c3d6() {
 }
 
 
+
+void test_c3d8() {
+  // Define material properties
+  double E = 3500; // Young's modulus (Pa)
+  double nu = 0.495;  // Poisson's ratio
+
+    // Define the nodes of the triangular prism
+    std::array<Eigen::Vector3d, 8> nodes = {
+        Eigen::Vector3d(0, 0, 0),
+        Eigen::Vector3d(1, 0, 0),
+        Eigen::Vector3d(0, 1, 0),
+        Eigen::Vector3d(1, 1, 0),
+        Eigen::Vector3d(0, 0, 1),
+        Eigen::Vector3d(1, 0, 1),
+        Eigen::Vector3d(0, 1, 1),
+        Eigen::Vector3d(1, 1, 1)
+    };
+
+    // Compute the stiffness matrix
+    Eigen::MatrixXd K = c3d8::computeStiffnessMatrix(nodes, E, nu);
+
+    // Output the stiffness matrix
+    std::cout << "Stiffness Matrix: \n" << K << std::endl;
+
+}
+
+
 int main(int argc, char** argv) {
   //test_fea();
   //test_fe(false);
-  eval_fea();
+  
+  //eval_fea();
   //test_c3d6();
+  test_c3d8();
   
   return 0;
 }

@@ -152,3 +152,37 @@ Eigen::MatrixXd c3d6::computeStiffnessMatrix(const std::array<Eigen::Vector3d, 6
 
     return K;
 }
+
+
+
+
+Eigen::MatrixXd c3d6::matAssembly(std::vector<std::vector<float> > &vpts, 
+                                  std::vector<std::vector<int> > &velts, 
+                                  float E, float nu) {
+  Eigen::MatrixXd K = Eigen::MatrixXd::Zero(3*vpts.size(), 3*vpts.size());
+
+  for (auto elt : velts) {
+    std::array<Eigen::Vector3d, 6> xyzi;
+    std::vector<int> mn;
+
+    for (unsigned int i=0; i<elt.size(); i++) {
+      std::vector<float> coords = vpts[elt[i]];
+      xyzi[i] = Eigen::Vector3d(coords[0], coords[1], coords[2]);
+      mn.push_back(elt[i]*3);
+    }
+
+    Eigen::MatrixXd Kei = c3d6::computeStiffnessMatrix(xyzi, E, nu);
+
+    for (unsigned int ni = 0; ni < mn.size(); ni++) {
+      for (unsigned int nj = 0; nj < mn.size(); nj++) {
+        for (unsigned int m = 0; m < 3; m++) {
+          for (unsigned int n = 0; n < 3; n++) {
+            K(mn[ni]+m, mn[nj]+n) += Kei(ni*3+m, nj*3+n);
+          }
+        }
+      }
+    }
+  }
+
+  return K;
+}

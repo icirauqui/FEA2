@@ -29,6 +29,8 @@ add_definitions(
 
 
 add_library(fea
+    elements/c3d8.cpp
+    elements/c3d8.hpp
     elements/c3d6.cpp
     elements/c3d6.hpp
     pos.cpp

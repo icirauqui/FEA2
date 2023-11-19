@@ -33,6 +33,8 @@
 #include <pcl/io/vtk_lib_io.h>
 
 #include <elements/c3d6.hpp>
+#include <elements/c3d8.hpp>
+
 
 class FEA {
 
@@ -49,10 +51,16 @@ public:
   void MatAssembly(std::vector<std::vector<float> > &vpts, 
                    std::vector<std::vector<int> > &velts);
 
+  void Print_K();
+  void Eigenvalues_K();
+
   void ComputeForces();
 
   void SetForces(std::vector<std::vector<float>> &vF);
 
+
+  void EncastreBackLayer(float k_large = 1e8);
+  void ImposeDirichletEncastre(std::vector<int> &dir, float k_large = 1e8);
   void ImposeDirichletEncastre(std::vector<std::vector<int>> &dir, float k_large = 1e8);
 
   void ComputeDisplacements();
@@ -62,9 +70,9 @@ public:
                              std::vector<Eigen::Vector3d> &u1);
 
   // Accessors
-  Eigen::MatrixXf K();
-  Eigen::MatrixXf F();
-  Eigen::MatrixXf U();
+  Eigen::MatrixXd K();
+  Eigen::MatrixXd F();
+  Eigen::MatrixXd U();
   float StrainEnergy();
 
 
@@ -79,7 +87,7 @@ private:
 
   void InitGaussPoints(float fg);
   
-  void ComputeKei(std::vector<std::vector<float>> &vfPts);
+  //void ComputeKei(std::vector<std::vector<float>> &vfPts);
   
   void dNdgs(float xi, float eta, float zeta, int dim);
 
@@ -93,15 +101,15 @@ private:
   int frame_id_ = 0;
   std::string element_;
 
-  Eigen::MatrixXf D_ = Eigen::MatrixXf::Zero(6, 6);
+  Eigen::MatrixXd D_ = Eigen::MatrixXd::Zero(6, 6);
   Eigen::Matrix<float, 8, 3> gs_;
 
-  Eigen::MatrixXf K_;
-  Eigen::MatrixXf K1_;
-  Eigen::MatrixXf Kei_;
+  Eigen::MatrixXd K_;
+  Eigen::MatrixXd K1_;
+  Eigen::MatrixXd Kei_;
 
-  Eigen::MatrixXf F_;
-  Eigen::MatrixXf U_;
+  Eigen::MatrixXd F_;
+  Eigen::MatrixXd U_;
 
   float sE_ = 0.0;
 
@@ -113,10 +121,10 @@ private:
   float G_ = 0.0;
   int base_size_ = 0;
 
-  Eigen::MatrixXf dndgs_;
-  Eigen::Matrix3f J_;
-  Eigen::Matrix3f J1_;
-  Eigen::MatrixXf B_;
+  Eigen::MatrixXd dndgs_;
+  Eigen::Matrix3d J_;
+  Eigen::Matrix3d J1_;
+  Eigen::MatrixXd B_;
 
   bool debug_mode_ = false;
 };
