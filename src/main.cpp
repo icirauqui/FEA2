@@ -356,7 +356,7 @@ int main(int argc, char** argv) {
   //test_c3d6();
   //test_c3d8();
 
-  std::vector<Eigen::Vector3d> nodes = build_abaqus_c3d8_1();
+  AbaqusC3D8_1 model;
   
   return 0;
 }
