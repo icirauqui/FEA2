@@ -8,12 +8,14 @@
 #include "dataset/dataset.hpp"
 #include "nlo/levenberg_marquardt.hpp"
 
+#include "test_models.cpp"
+
 #include <chrono>
 
 // Parameters
 int image_id = 0;
-std::string element = "C3D6";
-float E = 3500.0;
+std::string element = "C3D8";
+float E = 10000.0;
 float nu = 0.495;
 float depth = 1.0;
 float fg = 0.577350269;
@@ -45,8 +47,6 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::V
   return std::make_pair(qvec, tvec);
 }
 
-
-
 void test_fea() {
   // Load data
   Dataset ds("../data", element);
@@ -69,7 +69,6 @@ void test_fea() {
   std::cout << " - Strain energy = " << fea.StrainEnergy() << std::endl;
   std::cout << "   Time fea1 = " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
 }
-
 
 void test_fe(bool optimizer = false) {
 
@@ -248,7 +247,6 @@ void test_fe(bool optimizer = false) {
 
 }
 
-
 void eval_fea() {
   Dataset ds("../data_test_1", element);
   std::vector<std::vector<float>> vpts = ds.points();
@@ -301,7 +299,6 @@ void eval_fea() {
 
 }
 
-
 void test_c3d6() {
   // Define material properties
   double E = 3500; // Young's modulus (Pa)
@@ -325,8 +322,6 @@ void test_c3d6() {
 
 }
 
-
-
 void test_c3d8() {
   // Define material properties
   double E = 3500; // Young's modulus (Pa)
@@ -349,8 +344,8 @@ void test_c3d8() {
 
     // Output the stiffness matrix
     std::cout << "Stiffness Matrix: \n" << K << std::endl;
-
 }
+
 
 
 int main(int argc, char** argv) {
@@ -359,7 +354,9 @@ int main(int argc, char** argv) {
   
   //eval_fea();
   //test_c3d6();
-  test_c3d8();
+  //test_c3d8();
+
+  std::vector<Eigen::Vector3d> nodes = build_abaqus_c3d8_1();
   
   return 0;
 }
