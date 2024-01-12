@@ -4,7 +4,13 @@
 #include <iostream>
 #include <eigen3/Eigen/Dense>
 
-namespace c3d8 {
+#include "element3d.hpp"
+
+class C3D8 : public Element3D<8> {
+
+public:
+
+    C3D8(double E, double nu);
 
     // Function to compute shape functions for a triangular prism
     Eigen::VectorXd computeShapeFunctions(double xi, double eta, double zeta);
@@ -21,25 +27,13 @@ namespace c3d8 {
     // Function to compute the Strain-Displacement Matrix (B)
     Eigen::MatrixXd computeStrainDisplacementMatrix(const std::array<Eigen::Vector3d, 8>& nodes, double xi, double eta, double zeta);
 
-    // Function to compute the elasticity matrix
-    Eigen::MatrixXd computeElasticityMatrix(double E, double nu);
-
     // Function to compute the stiffness matrix for a triangular prism
-    Eigen::MatrixXd computeStiffnessMatrix(const std::array<Eigen::Vector3d, 8>& nodes, double E, double nu);
-
-    // Function to compute the stiffness matrix for a triangular prism
-    Eigen::MatrixXd computeStiffnessMatrix(const std::array<Eigen::Vector3d, 8>& nodes, Eigen::MatrixXd &D);
-
-    // Function to assemble the global stiffness matrix
-    Eigen::MatrixXd matAssembly(std::vector<std::vector<float> > &vpts, 
-                                std::vector<std::vector<int> > &velts, 
-                                float E, float nu);
+    Eigen::MatrixXd computeStiffnessMatrix(const std::array<Eigen::Vector3d, 8>& nodes);
 
     // Function to assemble the global stiffness matrix
     Eigen::MatrixXd matAssembly(std::vector<Eigen::Vector3d> &vpts, 
-                                std::vector<std::array<unsigned int, 8>> &velts, 
-                                float E, float nu);
+                                std::vector<std::array<unsigned int, 8>> &velts);
 
-} // namespace c3d8
+}; // class c3d8
 
 #endif // C3D8_HPP

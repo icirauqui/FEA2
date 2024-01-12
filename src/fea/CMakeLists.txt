@@ -29,10 +29,12 @@ add_definitions(
 
 
 add_library(fea
-    elements/c3d8.cpp
-    elements/c3d8.hpp
-    elements/c3d6.cpp
-    elements/c3d6.hpp
+    elts/element.hpp
+    elts/element3d.hpp
+    elts/c3d6.hpp
+    elts/c3d8.hpp
+    elts/c3d6.cpp
+    elts/c3d8.cpp
     pos.cpp
     pos.hpp
     fem.cpp

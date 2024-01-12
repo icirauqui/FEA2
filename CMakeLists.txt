@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(fem_analysis LANGUAGES CXX)
+project(cppfea LANGUAGES CXX)
 
 find_package(MRPT 2.0 COMPONENTS poses gui OPTIONAL_COMPONENTS vision)
 
@@ -14,11 +14,11 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/dataset)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/nlo)
 
 
-add_executable(fem_analysis
+add_executable(cppfea
     src/main.cpp
 )
 
-target_link_libraries(fem_analysis PRIVATE 
+target_link_libraries(cppfea PRIVATE 
     fea
     dataset
     nlo

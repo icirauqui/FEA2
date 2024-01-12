@@ -1,8 +1,11 @@
 #include "c3d8.hpp"
 
 
+C3D8::C3D8(double E, double nu) : Element3D<8>(E, nu) {
+  _element_name = "C3D8";
+}
 
-Eigen::VectorXd c3d8::computeShapeFunctions(double xi, double eta, double zeta) {
+Eigen::VectorXd C3D8::computeShapeFunctions(double xi, double eta, double zeta) {
     // Initialize a vector to store the shape functions
     Eigen::VectorXd N(8);
 
@@ -19,7 +22,7 @@ Eigen::VectorXd c3d8::computeShapeFunctions(double xi, double eta, double zeta) 
     return N;
 }
 
-Eigen::MatrixXd c3d8::computeShapeFunctionDerivatives(double xi, double eta, double zeta) {
+Eigen::MatrixXd C3D8::computeShapeFunctionDerivatives(double xi, double eta, double zeta) {
     Eigen::MatrixXd dN(8, 3); // 6 nodes, 3 natural coordinates (xi, eta, zeta)
 
     // Derivatives of shape functions with respect to xi, eta, zeta
@@ -58,9 +61,9 @@ Eigen::MatrixXd c3d8::computeShapeFunctionDerivatives(double xi, double eta, dou
     return dN;
 }
 
-Eigen::MatrixXd c3d8::computeJacobian(const std::array<Eigen::Vector3d, 8>& nodes, double xi, double eta, double zeta) {
+Eigen::MatrixXd C3D8::computeJacobian(const std::array<Eigen::Vector3d, 8>& nodes, double xi, double eta, double zeta) {
     // Compute the derivatives of the shape functions
-    Eigen::MatrixXd dN = c3d8::computeShapeFunctionDerivatives(xi, eta, zeta);
+    Eigen::MatrixXd dN = C3D8::computeShapeFunctionDerivatives(xi, eta, zeta);
 
     // Initialize the Jacobian matrix
     Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3, 3);
@@ -76,20 +79,20 @@ Eigen::MatrixXd c3d8::computeJacobian(const std::array<Eigen::Vector3d, 8>& node
 }
 
 // Function to compute the inverse of the Jacobian matrix and its determinant
-std::pair<Eigen::MatrixXd, double> c3d8::computeInverseJacobianAndDet(const Eigen::MatrixXd& J) {
+std::pair<Eigen::MatrixXd, double> C3D8::computeInverseJacobianAndDet(const Eigen::MatrixXd& J) {
     double detJ = J.determinant();
     Eigen::MatrixXd invJ = J.inverse();
     return {invJ, detJ};
 }
 
 // Function to compute the Strain-Displacement Matrix (B)
-Eigen::MatrixXd c3d8::computeStrainDisplacementMatrix(const std::array<Eigen::Vector3d, 8>& nodes, double xi, double eta, double zeta) {
+Eigen::MatrixXd C3D8::computeStrainDisplacementMatrix(const std::array<Eigen::Vector3d, 8>& nodes, double xi, double eta, double zeta) {
     // Compute the derivatives of the shape functions
-    Eigen::MatrixXd dN = c3d8::computeShapeFunctionDerivatives(xi, eta, zeta);
+    Eigen::MatrixXd dN = C3D8::computeShapeFunctionDerivatives(xi, eta, zeta);
 
     // Compute the Jacobian matrix and its inverse
-    Eigen::MatrixXd J = c3d8::computeJacobian(nodes, xi, eta, zeta);
-    auto [invJ, detJ] = c3d8::computeInverseJacobianAndDet(J);
+    Eigen::MatrixXd J = C3D8::computeJacobian(nodes, xi, eta, zeta);
+    auto [invJ, detJ] = C3D8::computeInverseJacobianAndDet(J);
 
     // Compute the derivatives of shape functions w.r.t. global coordinates
     Eigen::MatrixXd dNdXYZ = invJ * dN.transpose();
@@ -117,24 +120,8 @@ Eigen::MatrixXd c3d8::computeStrainDisplacementMatrix(const std::array<Eigen::Ve
 }
 
 
-Eigen::MatrixXd c3d8::computeElasticityMatrix(double E, double nu) {
-    double lambda = E * nu / ((1 + nu) * (1 - 2 * nu));
-    double mu = E / (2 * (1 + nu));
-
-    Eigen::MatrixXd D = Eigen::MatrixXd::Zero(6, 6);
-    D(0, 0) = D(1, 1) = D(2, 2) = lambda + 2 * mu;
-    D(0, 1) = D(0, 2) = D(1, 0) = D(1, 2) = D(2, 0) = D(2, 1) = lambda;
-    D(3, 3) = D(4, 4) = D(5, 5) = mu;
-
-    return D;
-}
-
-
 // Function to compute the stiffness matrix for a triangular prism
-Eigen::MatrixXd c3d8::computeStiffnessMatrix(const std::array<Eigen::Vector3d, 8>& nodes, double E, double nu) {
-    // Define material properties
-    Eigen::MatrixXd D = c3d8::computeElasticityMatrix(E, nu);
-
+Eigen::MatrixXd C3D8::computeStiffnessMatrix(const std::array<Eigen::Vector3d, 8>& nodes) {
     // Initialize the stiffness matrix
     Eigen::MatrixXd K = Eigen::MatrixXd::Zero(24, 24); // 24x24 for 8 nodes, 3 DOF each
 
@@ -150,15 +137,15 @@ Eigen::MatrixXd c3d8::computeStiffnessMatrix(const std::array<Eigen::Vector3d, 8
                 double eta = gaussPoints[j];
                 double zeta = gaussPoints[k];
 
-                Eigen::MatrixXd J = c3d8::computeJacobian(nodes, xi, eta, zeta);
-                auto [invJ, detJ] = c3d8::computeInverseJacobianAndDet(J);
-                Eigen::MatrixXd B = c3d8::computeStrainDisplacementMatrix(nodes, xi, eta, zeta);
+                Eigen::MatrixXd J = C3D8::computeJacobian(nodes, xi, eta, zeta);
+                auto [invJ, detJ] = C3D8::computeInverseJacobianAndDet(J);
+                Eigen::MatrixXd B = C3D8::computeStrainDisplacementMatrix(nodes, xi, eta, zeta);
 
                 // Weight calculation considering different weights
                 double weight = gaussWeights[i] * gaussWeights[j] * gaussWeights[k];
 
                 // K += B^T * D * B * detJ
-                K += B.transpose() * D * B * detJ;
+                K += B.transpose() * _D * B * detJ;
             }
         }
     }
@@ -168,80 +155,9 @@ Eigen::MatrixXd c3d8::computeStiffnessMatrix(const std::array<Eigen::Vector3d, 8
 
 
 
-
-// Function to compute the stiffness matrix for a triangular prism
-Eigen::MatrixXd c3d8::computeStiffnessMatrix(const std::array<Eigen::Vector3d, 8>& nodes, Eigen::MatrixXd &D) {
-    // Initialize the stiffness matrix
-    Eigen::MatrixXd K = Eigen::MatrixXd::Zero(24, 24); // 24x24 for 8 nodes, 3 DOF each
-
-    // Gauss quadrature points and weights (2-point quadrature)
-    std::array<double, 2> gaussPoints = {-1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0)};
-    std::array<double, 2> gaussWeights = {1.0, 1.0};
-
-    // Integration (simplified example, replace with appropriate Gauss quadrature in real applications)
-    for (int i = 0; i < gaussPoints.size(); ++i) {
-        for (int j = 0; j < gaussPoints.size(); ++j) {
-            for (int k = 0; k < gaussPoints.size(); ++k) {
-                double xi = gaussPoints[i];
-                double eta = gaussPoints[j];
-                double zeta = gaussPoints[k];
-
-                Eigen::MatrixXd J = c3d8::computeJacobian(nodes, xi, eta, zeta);
-                auto [invJ, detJ] = c3d8::computeInverseJacobianAndDet(J);
-                Eigen::MatrixXd B = c3d8::computeStrainDisplacementMatrix(nodes, xi, eta, zeta);
-
-                // Weight calculation considering different weights
-                double weight = gaussWeights[i] * gaussWeights[j] * gaussWeights[k];
-
-                // K += B^T * D * B * detJ
-                K += B.transpose() * D * B * detJ;
-            }
-        }
-    }
-
-    return K;
-}
-
-
-
-Eigen::MatrixXd c3d8::matAssembly(std::vector<std::vector<float> > &vpts, 
-                                  std::vector<std::vector<int> > &velts, 
-                                  float E, float nu) {
+Eigen::MatrixXd C3D8::matAssembly(std::vector<Eigen::Vector3d> &vpts, 
+                                  std::vector<std::array<unsigned int, 8>> &velts) {
   Eigen::MatrixXd K = Eigen::MatrixXd::Zero(3*vpts.size(), 3*vpts.size());
-
-  for (auto elt : velts) {
-    std::array<Eigen::Vector3d, 8> xyzi;
-    std::vector<int> mn;
-
-    for (unsigned int i=0; i<elt.size(); i++) {
-      std::vector<float> coords = vpts[elt[i]];
-      xyzi[i] = Eigen::Vector3d(coords[0], coords[1], coords[2]);
-      mn.push_back(elt[i]*3);
-    }
-
-    Eigen::MatrixXd Kei = c3d8::computeStiffnessMatrix(xyzi, E, nu);
-
-    for (unsigned int ni = 0; ni < mn.size(); ni++) {
-      for (unsigned int nj = 0; nj < mn.size(); nj++) {
-        for (unsigned int m = 0; m < 3; m++) {
-          for (unsigned int n = 0; n < 3; n++) {
-            K(mn[ni]+m, mn[nj]+n) += Kei(ni*3+m, nj*3+n);
-          }
-        }
-      }
-    }
-  }
-
-  return K;
-}
-
-
-
-Eigen::MatrixXd c3d8::matAssembly(std::vector<Eigen::Vector3d> &vpts, 
-                                  std::vector<std::array<unsigned int, 8>> &velts, 
-                                  float E, float nu) {
-  Eigen::MatrixXd K = Eigen::MatrixXd::Zero(3*vpts.size(), 3*vpts.size());
-  Eigen::MatrixXd D = c3d8::computeElasticityMatrix(E, nu);
 
   for (auto elt : velts) {
     std::array<Eigen::Vector3d, 8> xyzi;
@@ -252,7 +168,7 @@ Eigen::MatrixXd c3d8::matAssembly(std::vector<Eigen::Vector3d> &vpts,
       mn.push_back(elt[i]*3);
     }
 
-    Eigen::MatrixXd Kei = c3d8::computeStiffnessMatrix(xyzi, D);
+    Eigen::MatrixXd Kei = C3D8::computeStiffnessMatrix(xyzi);
 
     for (unsigned int ni = 0; ni < mn.size(); ni++) {
       for (unsigned int nj = 0; nj < mn.size(); nj++) {

@@ -32,20 +32,26 @@
 #include <pcl/console/parse.h>
 #include <pcl/io/vtk_lib_io.h>
 
-#include <elements/c3d6.hpp>
-#include <elements/c3d8.hpp>
+//#include <elements/c3d6.hpp>
+//#include <elements/c3d8.hpp>
+
+#include <elts/element.hpp>
+#include <elts/c3d6.hpp>
+#include <elts/c3d8.hpp>
 
 
 class FEA {
 
 public:
 
-  FEA(int frame_id, 
-      std::string element_type,
+  FEA(std::string element_type,
       float young_modulus, float poisson_coefficient, float element_depth, 
       float gauss_point, 
       bool debug_mode);
     
+  template<size_t N>
+  void setElement(Element<N>* element);
+
   // Finite Element Analysis
 
   void MatAssembly(std::vector<std::vector<float> > &vpts, 
@@ -70,36 +76,16 @@ public:
                              std::vector<Eigen::Vector3d> &u1);
 
   // Accessors
-  Eigen::MatrixXd K();
-  Eigen::MatrixXd F();
-  Eigen::MatrixXd U();
-  float StrainEnergy();
+  Eigen::MatrixXd K() { return K_; }
+  Eigen::MatrixXd F() { return F_; }
+  Eigen::MatrixXd U() { return U_; }
+  float StrainEnergy() { return sE_; }
 
 
 private:
 
+  void* element_;
 
-  // Finite Element Analysis
-
-  void InitC3D6();
-
-  void InitC3D8();
-
-  void InitGaussPoints(float fg);
-  
-  //void ComputeKei(std::vector<std::vector<float>> &vfPts);
-  
-  void dNdgs(float xi, float eta, float zeta, int dim);
-
-
-
-
-
-
-
-
-  int frame_id_ = 0;
-  std::string element_;
 
   Eigen::MatrixXd D_ = Eigen::MatrixXd::Zero(6, 6);
   Eigen::Matrix<float, 8, 3> gs_;

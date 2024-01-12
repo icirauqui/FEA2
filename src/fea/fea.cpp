@@ -1,30 +1,23 @@
 #include "fea.hpp"
 
 
-FEA::FEA(int frame_id, 
-         std::string element_type, 
+FEA::FEA(std::string element_type, 
          float young_modulus, float poisson_coefficient, float element_depth, 
          float gauss_point,
-         bool debug_mode) {
-  frame_id_ = frame_id;
-  element_ = element_type;
+         bool debug_mode) : element_(nullptr) {
   E_ = young_modulus;
   nu_ = poisson_coefficient;
   h_ = element_depth;
   debug_mode_ = debug_mode;
 
-  lambda_ = ( nu_*E_ ) / ( (1+nu_) * (1-2*nu_) );
-  G_ = E_ / ( 2 * (1+nu_) );
-
-  if (element_ == "C3D6") {
-    InitC3D6();
-  } else if (element_ == "C3D8") {
-    InitC3D8();
+  if (element_type == "C3D6") {
+    setElement(new C3D6(young_modulus, poisson_coefficient));
+  } else if (element_type == "C3D8") {
+    setElement(new C3D8(young_modulus, poisson_coefficient));
   } else {
     std::cout << "Element not supported" << std::endl;
   }
 
-  InitGaussPoints(gauss_point);
 
   if (debug_mode_){
     std::cout << "D_ = " << std::endl << D_ << std::endl;
@@ -32,21 +25,24 @@ FEA::FEA(int frame_id,
   }
 }
 
-
+template<size_t N>
+void FEA::setElement(Element<N>* element) {
+    element_ = static_cast<void*>(element);
+}
 
 void FEA::MatAssembly(std::vector<std::vector<float> > &vpts, 
                       std::vector<std::vector<int> > &velts) {
 
-  if (element_ == "C3D6") {
-    K_ = c3d6::matAssembly(vpts, velts, E_, nu_);
-  } else if (element_ == "C3D8") {
-    K_ = c3d8::matAssembly(vpts, velts, E_, nu_);
-  } else {
-    std::cout << "Element not supported" << std::endl;
-  }
+  //if (element_type == "C3D6") {
+  //  K_ = c3d6::matAssembly(vpts, velts, E_, nu_);
+  //} else if (element_type == "C3D8") {
+  //  K_ = c3d8::matAssembly(vpts, velts, E_, nu_);
+  //} else {
+  //  std::cout << "Element not supported" << std::endl;
+  //}
 
   Print_K();
-  Eigenvalues_K();
+  //Eigenvalues_K();
 }
 
 void FEA::Eigenvalues_K() {
@@ -186,143 +182,19 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
   return sE_;
 }
 
-Eigen::MatrixXd FEA::K() {
-  return K_;
-}
 
 
-Eigen::MatrixXd FEA::F() {
-  return F_;
-}
-
-
-Eigen::MatrixXd FEA::U() {
-  return U_;
-}
-
-
-float FEA::StrainEnergy() {
-  return sE_;
-}
-
-
-void FEA::InitC3D6() {
-  D_ <<  lambda_+2*G_ ,   lambda_    ,   lambda_    ,     0.0     ,     0.0     ,     0.0     ,
-            lambda_   , lambda_+2*G_ ,   lambda_    ,     0.0     ,     0.0     ,     0.0     ,
-            lambda_   ,   lambda_    , lambda_+2*G_ ,     0.0     ,     0.0     ,     0.0     ,
-              0.0     ,     0.0      ,     0.0      ,      G_     ,     0.0     ,     0.0     ,
-              0.0     ,     0.0      ,     0.0      ,     0.0     ,      G_     ,     0.0     ,
-              0.0     ,     0.0      ,     0.0      ,     0.0     ,     0.0     ,      G_     ;
-  Kei_ = Eigen::MatrixXd::Zero(18, 18);
-  dndgs_ = Eigen::MatrixXd::Zero(6, 3);
-  B_ = Eigen::MatrixXd::Zero(6, 18);
-  base_size_ = 6;
-}
-
-
-void FEA::InitC3D8() {
-  D_ <<  lambda_+2*G_ ,   lambda_    ,   lambda_    ,     0.0     ,     0.0     ,     0.0     ,
-            lambda_   , lambda_+2*G_ ,   lambda_    ,     0.0     ,     0.0     ,     0.0     ,
-            lambda_   ,   lambda_    , lambda_+2*G_ ,     0.0     ,     0.0     ,     0.0     ,
-              0.0     ,     0.0      ,     0.0      ,      G_     ,     0.0     ,     0.0     ,
-              0.0     ,     0.0      ,     0.0      ,     0.0     ,      G_     ,     0.0     ,
-              0.0     ,     0.0      ,     0.0      ,     0.0     ,     0.0     ,      G_     ;
-  Kei_ = Eigen::MatrixXd::Zero(24, 24);
-  dndgs_ = Eigen::MatrixXd::Zero(8, 3);
-  B_ = Eigen::MatrixXd::Zero(6, 24);
-  base_size_ = 8;
-}
-
-
-void FEA::InitGaussPoints(float fg) {
-  gs_ << -fg, -fg, -fg,
-         +fg, -fg, -fg,
-         +fg, +fg, -fg,
-         -fg, +fg, -fg,
-         -fg, -fg, +fg,
-         +fg, -fg, +fg,
-         +fg, +fg, +fg,
-         -fg, +fg, +fg;
-}
-
-
-
-
-
-//void FEA::ComputeKei(std::vector<std::vector<float>> &vfPts) {
-//  // vFpts to Eigen::MatrixXd
-//  Eigen::MatrixXd vFpts(base_size_,3);
-//  for (unsigned int i=0; i<base_size_; i++) {
-//    vFpts(i,0) = vfPts[i][0];
-//    vFpts(i,1) = vfPts[i][1];
-//    vFpts(i,2) = vfPts[i][2];
-//  }
-//
-//  std::cout << "Element node coordinates:" << std::endl
-//            << vFpts << std::endl;
-//
-//  for (unsigned int ops=0; ops<gs_.rows(); ops++) {
-//    float xi   = gs_(ops, 0);
-//    float eta  = gs_(ops, 1);
-//    float zeta = gs_(ops, 2);
-//
-//    dNdgs(xi, eta, zeta, base_size_);
-//
-//    // Compute Jacobian
-//    J_ = dndgs_.transpose() * vFpts;
-//
-//    // Compute Jacobian determinant
-//    float Jdet = J_.determinant();
-//
-//    // Compute inverse of Jacobian
-//    J1_ = J_.inverse();
-//
-//    // Compute dNdxyz
-//    Eigen::MatrixXd dNdxyz = (J1_ * dndgs_.transpose()).transpose();
-//
-//    // Compute B matrix
-//    for (unsigned int i=0; i<base_size_; i++) {
-//      B_(0,3*i+0) = dNdxyz(i,0); B_(0,3*i+1) = 0;           B_(0,3*i+2) = 0;
-//      B_(1,3*i+0) = 0;           B_(1,3*i+1) = dNdxyz(i,1); B_(1,3*i+2) = 0;
-//      B_(2,3*i+0) = 0;           B_(2,3*i+1) = 0;           B_(2,3*i+2) = dNdxyz(i,2);
-//      B_(3,3*i+0) = dNdxyz(i,1); B_(3,3*i+1) = dNdxyz(i,0); B_(3,3*i+2) = 0;
-//      B_(4,3*i+0) = 0;           B_(4,3*i+1) = dNdxyz(i,2); B_(4,3*i+2) = dNdxyz(i,1);
-//      B_(5,3*i+0) = dNdxyz(i,2); B_(5,3*i+1) = 0;           B_(5,3*i+2) = dNdxyz(i,0);
-//    }
-//
-//    // Compute Bt * D * B * Jdet and accumulate to vBtDB
-//    if (ops == 0) {
-//      Kei_ = B_.transpose() * D_ * B_ * Jdet;
-//    } else {
-//      Kei_ += B_.transpose() * D_ * B_ * Jdet;
-//    }
-//  }
-//
-//  std::cout << "Kei = " << std::endl
-//            << Kei_ << std::endl;
+//void FEA::InitGaussPoints(float fg) {
+//  gs_ << -fg, -fg, -fg,
+//         +fg, -fg, -fg,
+//         +fg, +fg, -fg,
+//         -fg, +fg, -fg,
+//         -fg, -fg, +fg,
+//         +fg, -fg, +fg,
+//         +fg, +fg, +fg,
+//         -fg, +fg, +fg;
 //}
 
 
-void FEA::dNdgs(float xi, float eta, float zeta, int dim) {
-  // Col 0 = dN/dgs(0,0), Col 1 = dN/dgs(0,1), Col 2 = dN/dgs(0,2)
 
-  float fact = 1.0 / dim;
 
-  if (element_ == "C3D6") {
-    dndgs_(0,0) = -(1 + zeta)/2;    dndgs_(0,1) = -(1 + zeta)/2;    dndgs_(0,2) =  (1-xi-eta)/2;
-    dndgs_(1,0) =  (1 + zeta)/2;    dndgs_(1,1) =   0.0;            dndgs_(1,2) =  xi/2;
-    dndgs_(2,0) =  0.0;             dndgs_(2,1) =  (1 + zeta)/2;    dndgs_(2,2) =  eta/2;
-    dndgs_(3,0) = -(1 - zeta)/2;    dndgs_(3,1) = -(1 - zeta)/2;    dndgs_(3,2) = -(1-xi-eta)/2;
-    dndgs_(4,0) =  (1 - zeta)/2;    dndgs_(4,1) =   0.0;            dndgs_(4,2) = -xi/2;
-    dndgs_(5,0) =  0.0;             dndgs_(5,1) =  (1 - zeta)/2;    dndgs_(5,2) = -eta/2;
-  } else if (element_ == "C3D8") {
-    dndgs_(0,0) = -0.125 * ( (1-eta) * (1-zeta) );     dndgs_(0,1) = -0.125 * ( (1-xi) * (1-zeta) );     dndgs_(0,2) = -0.125 * ( (1-xi) * (1-eta) ); 
-    dndgs_(1,0) = +0.125 * ( (1-eta) * (1-zeta) );     dndgs_(1,1) = -0.125 * ( (1+xi) * (1-zeta) );     dndgs_(1,2) = -0.125 * ( (1+xi) * (1-eta) ); 
-    dndgs_(2,0) = +0.125 * ( (1+eta) * (1-zeta) );     dndgs_(2,1) = +0.125 * ( (1+xi) * (1-zeta) );     dndgs_(2,2) = -0.125 * ( (1+xi) * (1+eta) ); 
-    dndgs_(3,0) = -0.125 * ( (1+eta) * (1-zeta) );     dndgs_(3,1) = +0.125 * ( (1-xi) * (1-zeta) );     dndgs_(3,2) = -0.125 * ( (1-xi) * (1+eta) ); 
-    dndgs_(4,0) = -0.125 * ( (1-eta) * (1+zeta) );     dndgs_(4,1) = -0.125 * ( (1-xi) * (1+zeta) );     dndgs_(4,2) = +0.125 * ( (1-xi) * (1-eta) ); 
-    dndgs_(5,0) = +0.125 * ( (1-eta) * (1+zeta) );     dndgs_(5,1) = -0.125 * ( (1+xi) * (1+zeta) );     dndgs_(5,2) = +0.125 * ( (1+xi) * (1-eta) ); 
-    dndgs_(6,0) = +0.125 * ( (1+eta) * (1+zeta) );     dndgs_(6,1) = +0.125 * ( (1+xi) * (1+zeta) );     dndgs_(6,2) = +0.125 * ( (1+xi) * (1+eta) ); 
-    dndgs_(7,0) = -0.125 * ( (1+eta) * (1+zeta) );     dndgs_(7,1) = +0.125 * ( (1-xi) * (1+zeta) );     dndgs_(7,2) = +0.125 * ( (1-xi) * (1+eta) ); 
-  }
-}
