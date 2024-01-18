@@ -51,13 +51,16 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::V
 
 int main(int argc, char** argv) {
   AbaqusC3D8_1 model;
+  std::cout << "A" << std::endl;
 
   //Eigen::MatrixXd K = fea_obj.matAssembly(model._nodes, model._elements);
   //std::cout << "Stiffness Matrix: \n" << K << std::endl;
 
-  FEA fea("C3D8", E, nu, false);
+  std::cout << "Build FEA" << std::endl;
+  FEA fea("C3D8", E, nu, true);
   BoundaryConditions bc(fea.NumDof(), &model._nodes);
 
+  std::cout << "Build BoundaryConditions" << std::endl;
   Eigen::Vector3d coords(-1.0, -1.0, 0.0);
   std::vector<double> values = {0.0, 0.0, 0.0};
   bc.AddNodal(coords, values);
@@ -68,9 +71,12 @@ int main(int argc, char** argv) {
   //  std::cout << "node: " << node << std::endl;
   //}
 
+  std::cout << "MatAssembly" << std::endl;
   fea.MatAssembly(model._nodes, model._elements);
+
+  std::cout << "ApplyBoundaryConditions" << std::endl;
   fea.ApplyBoundaryConditions(bc);
-  
+
   // Save to csv
   //std::ofstream file;
   //file.open("stiffness_matrix.csv");
