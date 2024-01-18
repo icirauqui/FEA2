@@ -1,48 +1,39 @@
 #include "fea.hpp"
 
-
-FEA::FEA(std::string element_type, 
-         float young_modulus, float poisson_coefficient, float element_depth, 
-         float gauss_point,
-         bool debug_mode) : element_(nullptr) {
-  E_ = young_modulus;
-  nu_ = poisson_coefficient;
-  h_ = element_depth;
-  debug_mode_ = debug_mode;
+FEA::FEA(std::string element_type,
+         float young_modulus, float poisson_coefficient, 
+         bool debug_mode) : E_(young_modulus), nu_(poisson_coefficient), debug_mode_(debug_mode) {
+  //E_ = young_modulus;
+  //nu_ = poisson_coefficient;
+  //debug_mode_ = debug_mode;
 
   if (element_type == "C3D6") {
-    setElement(new C3D6(young_modulus, poisson_coefficient));
+    //setElement(new C3D6(young_modulus, poisson_coefficient));
+    element_ = new C3D6(young_modulus, poisson_coefficient);
   } else if (element_type == "C3D8") {
-    setElement(new C3D8(young_modulus, poisson_coefficient));
+    //setElement(new C3D8(young_modulus, poisson_coefficient));
+    element_ = new C3D8(young_modulus, poisson_coefficient);
   } else {
     std::cout << "Element not supported" << std::endl;
   }
 
-
-  if (debug_mode_){
-    std::cout << "D_ = " << std::endl << D_ << std::endl;
-    std::cout << "gs_ = " << std::endl << gs_ << std::endl;
+  if (debug_mode_) {
+    std::cout << std::endl;
+    std::cout << "FEA: " << element_type << std::endl;
+    std::cout << "element pointer address: " << element_ << std::endl;
+    std::cout << "element name: " << element_->getElementName() << std::endl;
+    std::cout << "element dim: " << element_->getNumNodes() << std::endl;
+    std::cout << "element dof: " << element_->getDofPerNode() << std::endl;
+    std::cout << "element D: " << element_->getD() << std::endl;
   }
 }
 
-template<size_t N>
-void FEA::setElement(Element<N>* element) {
-    element_ = static_cast<void*>(element);
-}
 
-void FEA::MatAssembly(std::vector<std::vector<float> > &vpts, 
-                      std::vector<std::vector<int> > &velts) {
-
-  //if (element_type == "C3D6") {
-  //  K_ = c3d6::matAssembly(vpts, velts, E_, nu_);
-  //} else if (element_type == "C3D8") {
-  //  K_ = c3d8::matAssembly(vpts, velts, E_, nu_);
-  //} else {
-  //  std::cout << "Element not supported" << std::endl;
-  //}
-
+void FEA::MatAssembly(std::vector<Eigen::Vector3d> &vpts, 
+                      std::vector<std::vector<unsigned int>> &velts) {
+  K_ = element_->matAssembly(vpts, velts);
+  
   Print_K();
-  //Eigenvalues_K();
 }
 
 void FEA::Eigenvalues_K() {
@@ -153,29 +144,7 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
     U_(i*3+2, 0) = u1[i][2] - u0[i][2];
   }
 
-  //for (unsigned int i=0; i<u0.size(); i++) {
-  //  std::cout << i << ": " << u0[i].transpose() << " -> " << u1[i].transpose() << " = ";
-  //  std::cout << U_(i*3, 0) << " " << U_(i*3+1, 0) << " " << U_(i*3+2, 0) << std::endl;
-  //}
-
-
-
   ComputeForces();
-
-  //std::cout << std::endl;
-  //std::cout << "K_ = " << std::endl;
-  //for (unsigned int i=0; i<K_.rows(); i++) {
-  //  for (unsigned int j=0; j<K_.cols(); j++) {
-  //    std::cout << K_(i,j) << " ";
-  //  }
-  //  std::cout << std::endl;
-  //}
-  
-  //std::cout << std::endl;
-  //std::cout << "F_ = " << std::endl;
-  //for (unsigned int i=0; i<u0.size(); i++) {
-  //  std::cout << i << ": " << F_(i*3, 0) << " " << F_(i*3+1, 0) << " " << F_(i*3+2, 0) << std::endl;
-  //}
 
   ComputeStrainEnergy();
 
@@ -183,18 +152,12 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
 }
 
 
-
-//void FEA::InitGaussPoints(float fg) {
-//  gs_ << -fg, -fg, -fg,
-//         +fg, -fg, -fg,
-//         +fg, +fg, -fg,
-//         -fg, +fg, -fg,
-//         -fg, -fg, +fg,
-//         +fg, -fg, +fg,
-//         +fg, +fg, +fg,
-//         -fg, +fg, +fg;
-//}
-
-
-
-
+int FEA::initializeElementDim(const std::string& value) {
+    if (value == "C3D6") {
+        return 6;
+    } else if (value == "C3D8") {
+        return 8;
+    } else {
+        return 1;
+    }
+}

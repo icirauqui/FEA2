@@ -6,14 +6,10 @@
 
 #include "element.hpp"
 
-template<size_t N>
-class Element3D : public Element<N> {
-public:
-  using Element<N>::_E;
-  using Element<N>::_nu;
-  using Element<N>::_D;
 
-  Element3D(double E, double nu) : Element<N>(E, nu) {
+class Element3D : public Element {
+public:
+  Element3D(double E, double nu) : Element(E, nu) {
     computeElasticityMatrix();
   }
 

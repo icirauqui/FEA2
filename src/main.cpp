@@ -11,6 +11,7 @@
 
 #include "test_models.cpp"
 
+#include "fea/fea.hpp"
 #include "fea/elts/c3d6.hpp"
 #include "fea/elts/c3d8.hpp"
 
@@ -50,7 +51,7 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::V
 
 int main(int argc, char** argv) {
   AbaqusC3D8_1 model;
-  C3D6 fea_obj = C3D6(E, nu);
+  C3D8 fea_obj = C3D8(E, nu);
   Eigen::MatrixXd D = fea_obj.getD();
   std::cout << "Elasticity Matrix: \n" << D << std::endl;
   std::cout << "E: " << fea_obj.getE() << std::endl;
@@ -58,6 +59,8 @@ int main(int argc, char** argv) {
 
   //Eigen::MatrixXd K = fea_obj.matAssembly(model._nodes, model._elements);
   //std::cout << "Stiffness Matrix: \n" << K << std::endl;
+
+  FEA fea("C3D8", E, nu, false);
 
   // Save to csv
   //std::ofstream file;

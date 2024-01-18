@@ -2,7 +2,7 @@
 
 
 
-C3D6::C3D6(double E, double nu) : Element3D<6>(E, nu) {
+C3D6::C3D6(double E, double nu) : Element3D(E, nu) {
   _element_name = "C3D6";
 }
 
@@ -53,7 +53,7 @@ Eigen::MatrixXd C3D6::computeShapeFunctionDerivatives(double xi, double eta, dou
     return dN;
 }
 
-Eigen::MatrixXd C3D6::computeJacobian(const std::array<Eigen::Vector3d, 6>& nodes, double xi, double eta, double zeta) {
+Eigen::MatrixXd C3D6::computeJacobian(const std::vector<Eigen::Vector3d>& nodes, double xi, double eta, double zeta) {
     // Compute the derivatives of the shape functions
     Eigen::MatrixXd dN = C3D6::computeShapeFunctionDerivatives(xi, eta, zeta);
 
@@ -78,7 +78,7 @@ std::pair<Eigen::MatrixXd, double> C3D6::computeInverseJacobianAndDet(const Eige
 }
 
 // Function to compute the Strain-Displacement Matrix (B)
-Eigen::MatrixXd C3D6::computeStrainDisplacementMatrix(const std::array<Eigen::Vector3d, 6>& nodes, double xi, double eta, double zeta) {
+Eigen::MatrixXd C3D6::computeStrainDisplacementMatrix(const std::vector<Eigen::Vector3d>& nodes, double xi, double eta, double zeta) {
     // Compute the derivatives of the shape functions
     Eigen::MatrixXd dN = C3D6::computeShapeFunctionDerivatives(xi, eta, zeta);
 
@@ -110,7 +110,7 @@ Eigen::MatrixXd C3D6::computeStrainDisplacementMatrix(const std::array<Eigen::Ve
 
 
 // Function to compute the stiffness matrix for a triangular prism
-Eigen::MatrixXd C3D6::computeStiffnessMatrix(const std::array<Eigen::Vector3d, 6>& nodes) {
+Eigen::MatrixXd C3D6::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>& nodes) {
     // Initialize the stiffness matrix
     Eigen::MatrixXd K = Eigen::MatrixXd::Zero(18, 18); // 18x18 for 6 nodes, 3 DOF each
 
@@ -146,16 +146,16 @@ Eigen::MatrixXd C3D6::computeStiffnessMatrix(const std::array<Eigen::Vector3d, 6
 
 
 Eigen::MatrixXd C3D6::matAssembly(std::vector<Eigen::Vector3d> &vpts, 
-                                std::vector<std::array<unsigned int, 6>> &velts) {
+                                std::vector<std::vector<unsigned int>> &velts) {
   Eigen::MatrixXd K = Eigen::MatrixXd::Zero(3*vpts.size(), 3*vpts.size());
 
   for (auto elt : velts) {
-    std::array<Eigen::Vector3d, 6> xyzi;
-    std::vector<int> mn;
+    std::vector<Eigen::Vector3d> xyzi(6);
+    std::vector<int> mn(6);
 
     for (unsigned int i=0; i<elt.size(); i++) {
       xyzi[i] = vpts[elt[i]];
-      mn.push_back(elt[i]*3);
+      mn[i] = elt[i]*3;
     }
 
     Eigen::MatrixXd Kei = C3D6::computeStiffnessMatrix(xyzi);

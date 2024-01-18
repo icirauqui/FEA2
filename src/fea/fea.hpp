@@ -32,10 +32,8 @@
 #include <pcl/console/parse.h>
 #include <pcl/io/vtk_lib_io.h>
 
-//#include <elements/c3d6.hpp>
-//#include <elements/c3d8.hpp>
-
 #include <elts/element.hpp>
+#include <elts/element3d.hpp>
 #include <elts/c3d6.hpp>
 #include <elts/c3d8.hpp>
 
@@ -44,18 +42,15 @@ class FEA {
 
 public:
 
+
   FEA(std::string element_type,
-      float young_modulus, float poisson_coefficient, float element_depth, 
-      float gauss_point, 
+      float young_modulus, float poisson_coefficient,
       bool debug_mode);
     
-  template<size_t N>
-  void setElement(Element<N>* element);
-
   // Finite Element Analysis
 
-  void MatAssembly(std::vector<std::vector<float> > &vpts, 
-                   std::vector<std::vector<int> > &velts);
+  void MatAssembly(std::vector<Eigen::Vector3d> &vpts, 
+                   std::vector<std::vector<unsigned int>> &velts);
 
   void Print_K();
   void Eigenvalues_K();
@@ -82,13 +77,12 @@ public:
   float StrainEnergy() { return sE_; }
 
 
+
 private:
 
-  void* element_;
+  static int initializeElementDim(const std::string& value);
 
-
-  Eigen::MatrixXd D_ = Eigen::MatrixXd::Zero(6, 6);
-  Eigen::Matrix<float, 8, 3> gs_;
+  Element* element_;
 
   Eigen::MatrixXd K_;
   Eigen::MatrixXd K1_;
@@ -96,6 +90,8 @@ private:
 
   Eigen::MatrixXd F_;
   Eigen::MatrixXd U_;
+
+  float k_large_ = 1e8;
 
   float sE_ = 0.0;
 
