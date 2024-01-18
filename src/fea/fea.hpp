@@ -37,6 +37,8 @@
 #include <elts/c3d6.hpp>
 #include <elts/c3d8.hpp>
 
+#include <boundary_conditions.hpp>
+
 
 class FEA {
 
@@ -52,6 +54,8 @@ public:
   void MatAssembly(std::vector<Eigen::Vector3d> &vpts, 
                    std::vector<std::vector<unsigned int>> &velts);
 
+  void ApplyBoundaryConditions(BoundaryConditions &bc);
+
   void Print_K();
   void Eigenvalues_K();
 
@@ -60,9 +64,9 @@ public:
   void SetForces(std::vector<std::vector<float>> &vF);
 
 
-  void EncastreBackLayer(float k_large = 1e8);
-  void ImposeDirichletEncastre(std::vector<int> &dir, float k_large = 1e8);
-  void ImposeDirichletEncastre(std::vector<std::vector<int>> &dir, float k_large = 1e8);
+  void EncastreBackLayer();
+  void ImposeDirichletEncastre(std::vector<int> &dir);
+  void ImposeDirichletEncastre(std::vector<std::vector<int>> &dir);
 
   void ComputeDisplacements();
 
@@ -75,6 +79,8 @@ public:
   Eigen::MatrixXd F() { return F_; }
   Eigen::MatrixXd U() { return U_; }
   float StrainEnergy() { return sE_; }
+  int NumNodes() { return base_size_; }
+  int NumDof() { return element_->getDofPerNode(); }
 
 
 

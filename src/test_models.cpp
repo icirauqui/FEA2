@@ -17,7 +17,7 @@ class AbaqusC3D8_1 {
             unsigned int offset = (_y0+1)*(_z0+1);//*(_x0+1-x);
             //std::cout << "n (offset) = " << n << " (" << offset << ") : (x,y,z) = (" << x << "," << y << "," << z << ")" << std::endl;
 
-            std::array<unsigned int,8> element = {
+            std::vector<unsigned int> element = {
               n,
               n+1,
               n+1+(int(_y0)+1),
@@ -34,7 +34,7 @@ class AbaqusC3D8_1 {
     }
     
     std::vector<Eigen::Vector3d> _nodes;
-    std::vector<std::array<unsigned int,8>> _elements;
+    std::vector<std::vector<unsigned int>> _elements;
 
     double _x0 = 5.0;
     double _y0 = 5.0;

@@ -51,17 +51,26 @@ std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::V
 
 int main(int argc, char** argv) {
   AbaqusC3D8_1 model;
-  C3D8 fea_obj = C3D8(E, nu);
-  Eigen::MatrixXd D = fea_obj.getD();
-  std::cout << "Elasticity Matrix: \n" << D << std::endl;
-  std::cout << "E: " << fea_obj.getE() << std::endl;
-  std::cout << "nu: " << fea_obj.getNu() << std::endl;
 
   //Eigen::MatrixXd K = fea_obj.matAssembly(model._nodes, model._elements);
   //std::cout << "Stiffness Matrix: \n" << K << std::endl;
 
   FEA fea("C3D8", E, nu, false);
+  BoundaryConditions bc(fea.NumDof(), &model._nodes);
 
+  Eigen::Vector3d coords(-1.0, -1.0, 0.0);
+  std::vector<double> values = {0.0, 0.0, 0.0};
+  bc.AddNodal(coords, values);
+
+  //std::vector<unsigned int> node_ids = bc.NodeIds();
+  //std::cout << "Num nodes: " << node_ids.size() << std::endl;
+  //for (auto node : node_ids) {
+  //  std::cout << "node: " << node << std::endl;
+  //}
+
+  fea.MatAssembly(model._nodes, model._elements);
+  fea.ApplyBoundaryConditions(bc);
+  
   // Save to csv
   //std::ofstream file;
   //file.open("stiffness_matrix.csv");

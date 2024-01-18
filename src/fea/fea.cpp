@@ -32,9 +32,25 @@ FEA::FEA(std::string element_type,
 void FEA::MatAssembly(std::vector<Eigen::Vector3d> &vpts, 
                       std::vector<std::vector<unsigned int>> &velts) {
   K_ = element_->matAssembly(vpts, velts);
-  
-  Print_K();
 }
+
+
+void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
+  // Apply boundary conditions
+  for (auto node : bc.NodeIds()) {
+    std::vector<unsigned int> dof = bc.Dof(node);
+    std::vector<unsigned int> mp;
+    for (unsigned int i=0; i<dof.size(); i++) {
+      mp.push_back(3*node + i);
+    }
+
+    for (auto m : mp) {
+      K_(m,m) = k_large_;
+      F_(m,0) = 0.0;
+    }  
+  }
+}
+
 
 void FEA::Eigenvalues_K() {
   Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(K_);
@@ -67,7 +83,7 @@ void FEA::SetForces(std::vector<std::vector<float>> &vF) {
 
 
 
-void FEA::EncastreBackLayer(float k_large) {
+void FEA::EncastreBackLayer() {
   std::vector<int> dir;
   for (unsigned int i = K_.rows()/2; i < K_.rows(); i++) {
     // Set row and column to zero
@@ -75,20 +91,20 @@ void FEA::EncastreBackLayer(float k_large) {
       K_(i,j) = 0.0;
       K_(j,i) = 0.0;
     }
-    // Set diagonal to k_large
-    K_(i,i) = k_large;
+    // Set diagonal to k_large_
+    K_(i,i) = k_large_;
   }
 }
 
-void FEA::ImposeDirichletEncastre(std::vector<int> &dir, float k_large) {
+void FEA::ImposeDirichletEncastre(std::vector<int> &dir) {
   for (auto d : dir) {
     int mp0 = 3*(d - 1);
     int mp1 = mp0 + 1;
     int mp2 = mp0 + 2;
 
-    K_(mp0,mp0) = k_large;
-    K_(mp1,mp1) = k_large;
-    K_(mp2,mp2) = k_large;
+    K_(mp0,mp0) = k_large_;
+    K_(mp1,mp1) = k_large_;
+    K_(mp2,mp2) = k_large_;
 
     F_(mp0,0) = 0.0;
     F_(mp1,0) = 0.0;
@@ -97,15 +113,15 @@ void FEA::ImposeDirichletEncastre(std::vector<int> &dir, float k_large) {
 }
 
 
-void FEA::ImposeDirichletEncastre(std::vector<std::vector<int>> &dir, float k_large) {
+void FEA::ImposeDirichletEncastre(std::vector<std::vector<int>> &dir) {
   for (auto d : dir) {
     int mp0 = 3*(d[0] - 1);
     int mp1 = mp0 + 1;
     int mp2 = mp0 + 2;
 
-    K_(mp0,mp0) = k_large;
-    K_(mp1,mp1) = k_large;
-    K_(mp2,mp2) = k_large;
+    K_(mp0,mp0) = k_large_;
+    K_(mp1,mp1) = k_large_;
+    K_(mp2,mp2) = k_large_;
 
     F_(mp0,0) = 0.0;
     F_(mp1,0) = 0.0;
