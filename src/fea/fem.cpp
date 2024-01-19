@@ -1,5 +1,28 @@
 #include "fem.hpp"
 
+
+
+std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::Vector3d> pts) {
+  Eigen::Vector3d centroid(0.0, 0.0, 0.0);
+  for (int i = 0; i < pts.size(); i++) {
+    centroid += pts[i];
+  }
+  centroid /= pts.size();
+
+  double dist = sqrt(pow(centroid(0), 2) + pow(centroid(1), 2) + pow(centroid(2), 2));
+  Eigen::Vector3d tvec = centroid + Eigen::Vector3d(0, 0, dist/2);
+
+  // Compute rotation, from t to centroid, as a quaternion
+  Eigen::Vector3d direction = centroid - tvec;
+  direction.normalize();
+  Eigen::Quaterniond quaternion;
+  quaternion.setFromTwoVectors(-Eigen::Vector3d::UnitX(), direction);
+  Eigen::Vector4d qvec = quaternion.coeffs();
+
+  return std::make_pair(qvec, tvec);
+}
+
+
 FEM::FEM(std::string element): element_(element) {}
 
 void FEM::AddPoint(Eigen::Vector3d point) {

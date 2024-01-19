@@ -35,6 +35,7 @@
 #include <pcl/io/vtk_lib_io.h>
 
 
+std::pair<Eigen::Vector4d, Eigen::Vector3d> ApproximatePose(std::vector<Eigen::Vector3d> pts);
 
 class FEM {
 

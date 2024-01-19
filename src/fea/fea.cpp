@@ -36,17 +36,19 @@ void FEA::MatAssembly(std::vector<Eigen::Vector3d> &vpts,
 
 
 void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
-  // Apply boundary conditions
   for (auto node : bc.NodeIds()) {
-    std::vector<unsigned int> dof = bc.Dof(node);
+    if (node == -1) 
+      continue;
+
+    std::vector<unsigned int>* dof = bc.Dof(node);
     std::vector<unsigned int> mp;
-    for (unsigned int i=0; i<dof.size(); i++) {
+    for (unsigned int i=0; i<dof->size(); i++) {
       mp.push_back(3*node + i);
     }
 
     for (auto m : mp) {
       K_(m,m) = k_large_;
-      F_(m,0) = 0.0;
+      //F_(m,0) = 0.0;
     }  
   }
 }

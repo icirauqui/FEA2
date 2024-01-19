@@ -16,7 +16,7 @@ public:
 
   // Accessors
   std::vector<unsigned int>& NodeIds() { return _node_ids; }
-  std::vector<unsigned int>& Dof(unsigned int idx) { return _dof[idx]; }
+  std::vector<unsigned int>* Dof(unsigned int idx) { return _dof[idx]; }
   std::vector<double>& Values(unsigned int idx) { return _values[idx]; }
 
 
@@ -31,7 +31,7 @@ private:
   std::vector<Eigen::Vector3d>* _nodes;
 
   std::vector<unsigned int> _node_ids;
-  std::vector<std::vector<unsigned int>> _dof;
+  std::vector<std::vector<unsigned int>*> _dof;
   std::vector<std::vector<double>> _values;
 };
 
