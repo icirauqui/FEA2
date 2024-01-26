@@ -33,8 +33,17 @@ public:
       }
     } 
   }
+
+  void ApplyDisplacements(std::vector<Eigen::Vector3d> &displacements, double scale = 1.0) {
+    _nodes_deformed.clear();
+    for (unsigned int n=0; n<_nodes.size(); n++) {
+      _nodes_deformed.push_back(_nodes[n] + displacements[n]);
+    }
+
     
-  std::vector<Eigen::Vector3d> _nodes;
+  }
+    
+  std::vector<Eigen::Vector3d> _nodes, _nodes_deformed;
   std::vector<std::vector<unsigned int>> _elements;
 
   double _x0 = 5.0;

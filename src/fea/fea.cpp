@@ -36,21 +36,49 @@ void FEA::MatAssembly(std::vector<Eigen::Vector3d> &vpts,
 
 
 void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
-  for (auto node : bc.NodeIds()) {
-    if (node == -1) 
+
+  // Reset F_ to zero
+  F_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
+
+  int bc_encastre = 0;
+  int bc_force = 0;
+  int bc_displ = 0;
+
+  for (unsigned int node = 0; node < bc.NodeIds().size(); node++) {
+    if (!bc.NodeIds()[node])
       continue;
-
+    
     std::vector<unsigned int>* dof = bc.Dof(node);
-    std::vector<unsigned int> mp;
-    for (unsigned int i=0; i<dof->size(); i++) {
-      mp.push_back(3*node + i);
-    }
+    std::vector<double> values = bc.Values(node);
 
-    for (auto m : mp) {
-      K_(m,m) = k_large_;
-      //F_(m,0) = 0.0;
-    }  
+    for (unsigned int i=0; i<dof->size(); i++) {
+      unsigned int m = 3*node + i;
+      if ((*dof)[i] == 0) {
+        // set row and col m to zero
+        for (unsigned int j=0; j<K_.cols(); j++) {
+          K_(m,j) = 0.0;
+          K_(j,m) = 0.0;
+        }
+        K_(m,m) = 1.0;
+
+        if (values[i] != 0.0) {
+          F_(m,0) = values[i];
+          bc_displ++;
+        } else {
+          bc_encastre++;
+        }
+      }
+      else {
+        F_(m,0) = values[i];
+        bc_force++;
+      }  
+    }
   }
+
+
+  std::cout << " - Encastre conditions: " << bc_encastre << std::endl;
+  std::cout << " - Force conditions: " << bc_force << std::endl;
+  std::cout << " - Displacement conditions: " << bc_displ << std::endl;
 }
 
 

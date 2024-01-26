@@ -12,12 +12,17 @@ public:
   BoundaryConditions(int num_dof, std::vector<Eigen::Vector3d>* nodes);
 
   void AddNodal(std::vector<unsigned int> &node_ids, std::vector<unsigned int> &dof, std::vector<double> &values);
-  void AddNodal(Eigen::Vector3d coords, std::vector<double> &values);
+  void AddNodal(Eigen::Vector3d coords, std::vector<unsigned int> dof, std::vector<double> values);
 
   // Accessors
-  std::vector<unsigned int>& NodeIds() { return _node_ids; }
+  bool NodeIds(unsigned int idx) { return _node_ids[idx]; }
+  std::vector<bool>& NodeIds() { return _node_ids; }
   std::vector<unsigned int>* Dof(unsigned int idx) { return _dof[idx]; }
+  std::vector<std::vector<unsigned int>*> Dof() { return _dof; }
   std::vector<double>& Values(unsigned int idx) { return _values[idx]; }
+  std::vector<std::vector<double>>& Values() { return _values; }
+
+  void Report();
 
 
 private:
@@ -30,7 +35,7 @@ private:
 
   std::vector<Eigen::Vector3d>* _nodes;
 
-  std::vector<unsigned int> _node_ids;
+  std::vector<bool> _node_ids;
   std::vector<std::vector<unsigned int>*> _dof;
   std::vector<std::vector<double>> _values;
 };
