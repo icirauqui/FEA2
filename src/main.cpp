@@ -73,7 +73,11 @@ int main(int argc, char** argv) {
   }
 
 
-  //std::cout << "\nVisualization" << std::endl;
+  std::cout << "\nReport" << std::endl;
+  fea.ReportNodes("nodes.txt");
+
+
+  std::cout << "\nVisualization" << std::endl;
   PCLViewer viewer(true);
   viewer.AddNodes(model._nodes, "original", Eigen::Vector3d(0.0, 0.0, 1.0));
   viewer.AddEdges(model._elements, "original", Eigen::Vector3d(0.0, 0.0, 1.0));

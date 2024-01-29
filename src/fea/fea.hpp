@@ -40,6 +40,7 @@
 #include <boundary_conditions.hpp>
 
 
+
 class FEA {
 
 public:
@@ -74,6 +75,8 @@ public:
   double ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
                              std::vector<Eigen::Vector3d> &u1);
 
+  void ReportNodes(std::string filename);
+
   // Accessors
   Eigen::MatrixXd K() { return K_; }
   Eigen::MatrixXd F() { return F_; }
@@ -81,6 +84,8 @@ public:
   float StrainEnergy() { return sE_; }
   int NumNodes() { return base_size_; }
   int NumDof() { return element_->getDofPerNode(); }
+
+
 
 
 

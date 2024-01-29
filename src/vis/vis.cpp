@@ -115,11 +115,11 @@ void PCLViewer::AddLoads(std::vector<bool> &nodes, std::vector<std::vector<doubl
       //viewer_->addSphere<pcl::PointXYZ>(cloud_->points[i], 0.2, 1.0, 1.0, 0.0, "load_" + std::to_string(i));
       viewer_->addSphere<pcl::PointXYZ>(cloud_->points[i], 0.2, 0.4, 0.4, 0.4, "load_" + std::to_string(i));
     } else {
-      std::cout << std::endl;
-      std::cout << "pts[" << i << "]" << std::endl;
-      std::cout << cloud_->points[i].x << ", " << cloud_->points[i].y << ", " << cloud_->points[i].z << std::endl;
-      std::cout << mag[i][0] << ", " << mag[i][1] << ", " << mag[i][2] << std::endl;
-      std::cout << cloud_->points[i].x + scale * mag[i][0] << ", " << cloud_->points[i].y + scale * mag[i][1] << ", " << cloud_->points[i].z + scale * mag[i][2] << std::endl;
+      //std::cout << std::endl;
+      //std::cout << "pts[" << i << "]" << std::endl;
+      //std::cout << cloud_->points[i].x << ", " << cloud_->points[i].y << ", " << cloud_->points[i].z << std::endl;
+      //std::cout << mag[i][0] << ", " << mag[i][1] << ", " << mag[i][2] << std::endl;
+      //std::cout << cloud_->points[i].x + scale * mag[i][0] << ", " << cloud_->points[i].y + scale * mag[i][1] << ", " << cloud_->points[i].z + scale * mag[i][2] << std::endl;
 
       viewer_->addArrow<pcl::PointXYZ, pcl::PointXYZ>(pcl::PointXYZ(cloud_->points[i].x + scale * mag[i][0],
                                                                     cloud_->points[i].y + scale * mag[i][1],

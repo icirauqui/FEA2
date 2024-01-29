@@ -207,3 +207,26 @@ int FEA::initializeElementDim(const std::string& value) {
         return 1;
     }
 }
+
+
+
+void FEA::ReportNodes(std::string filename) {
+
+  // Transform U_ to size nx3
+  Eigen::MatrixXd U = Eigen::MatrixXd::Zero(U_.rows()/3, 3);
+  Eigen::MatrixXd F = Eigen::MatrixXd::Zero(F_.rows()/3, 3);
+  for (unsigned int n=0; n<U.rows(); n++) {
+    U(n/3, n%3) = U_(n,0);
+    F(n/3, n%3) = F_(n,0);
+  }
+
+  std::ofstream file;
+  file.open(filename);
+  file << "n, u.x, u.y, u.z, f.x, f.y, f.z" << std::endl;
+
+  for (unsigned int n=0; n<U.rows(); n++) {
+      file << n << "\t" << U(n,0) << "\t" << U(n,1) << "\t" << U(n,2) << "\t" << F(n,0) << "\t" << F(n,1) << "\t" << F(n,2) << std::endl;
+  }
+
+  file.close();
+}
