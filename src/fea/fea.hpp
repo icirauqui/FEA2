@@ -76,6 +76,7 @@ public:
                              std::vector<Eigen::Vector3d> &u1);
 
   void ReportNodes(std::string filename);
+  void ExportK(std::string filename);
 
   // Accessors
   Eigen::MatrixXd K() { return K_; }

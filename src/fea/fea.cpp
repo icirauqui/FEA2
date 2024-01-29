@@ -222,11 +222,20 @@ void FEA::ReportNodes(std::string filename) {
 
   std::ofstream file;
   file.open(filename);
-  file << "n, u.x, u.y, u.z, f.x, f.y, f.z" << std::endl;
+  file << "n\tu.x\tu.y\tu.z\tf.x\tf.y\tf.z" << std::endl;
 
   for (unsigned int n=0; n<U.rows(); n++) {
       file << n << "\t" << U(n,0) << "\t" << U(n,1) << "\t" << U(n,2) << "\t" << F(n,0) << "\t" << F(n,1) << "\t" << F(n,2) << std::endl;
   }
 
+  file.close();
+}
+
+
+void FEA::ExportK(std::string filename) {
+  std::ofstream file;
+  file.open(filename);
+  file << K_ << std::endl;
+  file << std::endl << "K ( " << K_.rows() << ", " << K_.cols() << " ) " << std::endl;
   file.close();
 }
