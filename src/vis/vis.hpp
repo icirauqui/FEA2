@@ -22,7 +22,7 @@ class PCLViewer {
 
 public:
 
-  PCLViewer();
+  PCLViewer(bool contours_only = false);
 
   void initializeViewer();
 
@@ -34,8 +34,13 @@ public:
 
 private:
   
+    bool contours_only_;
     pcl::visualization::PCLVisualizer::Ptr viewer_;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, cloud_contour_;
+    std::vector<unsigned int> edges_, edges_contour_;
+    Eigen::Vector3d contour_bound_min_, contour_bound_max_;
+    std::vector<bool> contour_nodes_;
+
 
 };
 

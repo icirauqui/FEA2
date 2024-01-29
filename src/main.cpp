@@ -74,8 +74,7 @@ int main(int argc, char** argv) {
 
 
   //std::cout << "\nVisualization" << std::endl;
-  PCLViewer viewer;
-
+  PCLViewer viewer(true);
   viewer.AddNodes(model._nodes, "original", Eigen::Vector3d(0.0, 0.0, 1.0));
   viewer.AddEdges(model._elements, "original", Eigen::Vector3d(0.0, 0.0, 1.0));
   viewer.AddLoads(bc.NodeIds(), bc.Values(), 1.0);
