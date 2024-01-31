@@ -34,8 +34,20 @@ int main(int argc, char** argv) {
   std::cout << "\nApplyBoundaryConditions" << std::endl;
   fea.ApplyBoundaryConditions(bc);
 
-  std::cout << "\nComputeDisplacements" << std::endl;
-  fea.ComputeDisplacements();
+  //std::cout << "\nComputeDisplacements" << std::endl;
+  //fea.ComputeDisplacements();
+
+
+
+  // FEA Solver
+  std::cout << "\nSolve" << std::endl;
+  fea.ExportK("../data/abaqus_c3d8_2/K_a.csv");
+  fea.Solve();
+  fea.ExportK("../data/abaqus_c3d8_2/K_b.csv");
+
+
+
+  std::cout << "\nSolver Done" << std::endl;
 
   std::cout << "\nCompute deformed positions" << std::endl;
   Eigen::MatrixXd U = fea.U();
@@ -43,32 +55,38 @@ int main(int argc, char** argv) {
   for (unsigned int n=0; n<model._nodes.size(); n++) {
     u.push_back(U.block(n*3, 0, 3, 1));
   }
-  double scale = 100.0;
+  std::cout << " - u.size(): " << u.size() << std::endl;
+  std::cout << " - model._nodes.size(): " << model._nodes.size() << std::endl;
+  double scale = 10.0;
   model.ApplyDisplacements(u, scale);
 
-  //std::cout << "\nLen nodes: " << model._nodes.size() << "; Len _nodes_deformed: " << model._nodes_deformed.size() << std::endl;
-  ////for (unsigned int i=0; i<u.size(); i++) {
-  //for (unsigned int i=0; i<5; i++) {
-  //  std::cout << "u[" << i << "] = " 
-  //            << model._nodes[i].transpose() << " ->\t"
-  //            << scale * u[i].transpose() << " ->\t"
-  //            << model._nodes_deformed[i].transpose() << std::endl;
-  //}
+  std::cout << "\nExport All" << std::endl;
+  fea.ExportAll("../data/abaqus_c3d8_2/abaqus_c3d8_2.csv");
 
 
-  std::cout << "\nReport" << std::endl;
-  fea.ReportNodes("../data/abaqus_c3d8_2/nodes.csv");
-  fea.ExportK("../data/abaqus_c3d8_2/K.csv");
 
 
-  //std::cout << "\nVisualization" << std::endl;
-  //PCLViewer viewer(true);
-  //viewer.AddNodes(model._nodes, "original", Eigen::Vector3d(0.0, 0.0, 1.0));
-  //viewer.AddEdges(model._elements, "original", Eigen::Vector3d(0.0, 0.0, 1.0));
-  //viewer.AddLoads(bc.NodeIds(), bc.Values(), 1.0);
-  //viewer.AddNodes(model._nodes_deformed, "deformed", Eigen::Vector3d(1.0, 0.0, 0.0));
-  //viewer.AddEdges(model._elements, "deformed", Eigen::Vector3d(1.0, 0.0, 0.0));
-  //viewer.Render();
+  std::cout << "\nLen nodes/deformed: " << model._nodes.size() << " / " << model._nodes_deformed.size() << std::endl;
+  for (unsigned int i=0; i<5; i++) {
+    std::cout << "u[" << i << "] = " 
+              << model._nodes[i].transpose() << " ->\t"
+              << scale * u[i].transpose() << " ->\t"
+              << model._nodes_deformed[i].transpose() << std::endl;
+  }
+
+
+  //std::cout << "\nReport" << std::endl;
+  //fea.ReportNodes("../data/abaqus_c3d8_2/nodes.csv");
+  //fea.ExportK("../data/abaqus_c3d8_2/K.csv");
+
+
+  std::cout << "\nVisualization" << std::endl;
+  PCLViewer viewer;
+  viewer.AddNodes(model._nodes, "original", Eigen::Vector3d(0.0, 0.0, 1.0));
+  viewer.AddNodes(model._nodes_deformed, "deformed", Eigen::Vector3d(1.0, 0.0, 0.0));
+  viewer.AddLoads(bc.NodeIds(), bc.Values());
+  viewer.AddEdges(model._elements);
+  viewer.Render();
 
   
   return 0;

@@ -22,22 +22,31 @@ class PCLViewer {
 
 public:
 
-  PCLViewer(bool contours_only = false);
+  PCLViewer();
 
   void initializeViewer();
 
   void AddNodes(std::vector<Eigen::Vector3d> &pts, std::string name, Eigen::Vector3d color);
-  void AddEdges(std::vector<std::vector<unsigned int>> &elts, std::string name, Eigen::Vector3d color);
-  void AddLoads(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag, double scale = 1.0);
+  void AddEdges(std::vector<std::vector<unsigned int>> &elts);
+  void AddLoads(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag);
 
-  void Render();
+  void Render(double scale = 1.0, bool contours_only = false);
 
 private:
-  
-    bool contours_only_;
+
     pcl::visualization::PCLVisualizer::Ptr viewer_;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, cloud_contour_;
-    std::vector<unsigned int> edges_, edges_contour_;
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_;
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_countour_;
+    std::vector<std::string> cloud_names_;
+    std::vector<Eigen::Vector3d> cloud_colors_;
+
+    std::vector<std::tuple<unsigned int, unsigned int>> edges_;
+    std::vector<std::tuple<unsigned int, unsigned int>> edges_contour_;
+
+    std::vector<int> load_nodes_;
+    std::vector<std::vector<double>> load_mags_;
+
+
     Eigen::Vector3d contour_bound_min_, contour_bound_max_;
     std::vector<bool> contour_nodes_;
 

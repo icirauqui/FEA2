@@ -7,7 +7,12 @@
 #include <math.h>
 #include <chrono>
 #include <bits/stdc++.h>
+
 #include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Sparse>
+#include <eigen3/Eigen/LU>
+#include <limits>
+#include <cmath>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/vtk_io.h>
@@ -55,8 +60,25 @@ public:
 
   void ApplyBoundaryConditions(BoundaryConditions &bc);
 
+  void Solve();
 
+  bool IsSingularOrIllConditioned1(Eigen::MatrixXd &A);
+  bool IsSingularOrIllConditioned2(Eigen::MatrixXd &A);
 
+  Eigen::VectorXd SolveSystemWithPreconditioning(const Eigen::MatrixXd &A, const Eigen::MatrixXd &b, std::string method);
+
+  Eigen::VectorXd SolveSystemWithPreconditioningCG(const Eigen::MatrixXd &A, const Eigen::VectorXd &b);
+  Eigen::VectorXd SolveSystemWithPreconditioningBiCGSTAB(const Eigen::MatrixXd &A, const Eigen::VectorXd &b);
+
+  Eigen::VectorXd SolveSystemWithLU(const Eigen::MatrixXd &A, const Eigen::VectorXd &b);
+  Eigen::VectorXd SolveSystemWithFullPivLU(const Eigen::MatrixXd &A, const Eigen::VectorXd &b);
+
+  Eigen::VectorXd MatrixToVector(const Eigen::MatrixXd &columnMatrix);
+
+  //Eigen::MatrixXd PreconditionMatrix(Eigen::MatrixXd &A);
+  //bool UseDirectSolver(Eigen::MatrixXd &A);
+  //Eigen::MatrixXd DirectSolver(Eigen::MatrixXd &A, Eigen::MatrixXd &b);
+  //Eigen::MatrixXd IterativeSolver(Eigen::MatrixXd &A, Eigen::MatrixXd &b);
 
   // Legacy fea
 
@@ -76,7 +98,10 @@ public:
   // Reports
 
   void ReportNodes(std::string filename);
+  void ExportAll(std::string filename);
   void ExportK(std::string filename);
+  void ExportF(std::string filename);
+  void ExportU(std::string filename);
   void PrintK();
   void PrintEigenvaluesK();
 
@@ -86,7 +111,6 @@ public:
   Eigen::MatrixXd F() { return F_; }
   Eigen::MatrixXd U() { return U_; }
   float StrainEnergy() { return sE_; }
-  int NumNodes() { return base_size_; }
   int NumDof() { return element_->getDofPerNode(); }
 
 
@@ -95,6 +119,7 @@ public:
 
 private:
 
+  
   Element* element_;
 
   Eigen::MatrixXd K_;
@@ -103,6 +128,8 @@ private:
 
   Eigen::MatrixXd F_;
   Eigen::MatrixXd U_;
+
+  std::vector<bool> bc_;
 
   float k_large_ = 1e8;
 
