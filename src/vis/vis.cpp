@@ -108,7 +108,6 @@ void PCLViewer::AddEdges(std::vector<std::vector<unsigned int>> &elts) {
       }
     }
   }
-
 }
 
 void PCLViewer::AddLoads(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag) {
@@ -117,20 +116,7 @@ void PCLViewer::AddLoads(std::vector<bool> &nodes, std::vector<std::vector<doubl
 
     load_nodes_.push_back(i);
     load_mags_.push_back(mag[i]);
-    //if (mag[i][0] == 0.0 && mag[i][1] == 0.0 && mag[i][2] == 0.0) {
-    //  load_mags_.push_back(mag[i]);
-    //  //viewer_->addSphere<pcl::PointXYZ>(cloud_->points[i], 0.2, 0.4, 0.4, 0.4, "load_" + std::to_string(i));
-    //} else {
-    //
-    //  viewer_->addArrow<pcl::PointXYZ, pcl::PointXYZ>(pcl::PointXYZ(cloud_->points[i].x + scale * mag[i][0],
-    //                                                                cloud_->points[i].y + scale * mag[i][1],
-    //                                                                cloud_->points[i].z + scale * mag[i][2]),
-    //                                                  cloud_->points[i],
-    //                                                  1.0, 0.0, 0.0, false, "load_" + std::to_string(i));
-    //}
-
   }
-
 }
 
 void PCLViewer::Render(double scale, bool contours_only) {
@@ -152,7 +138,6 @@ void PCLViewer::Render(double scale, bool contours_only) {
       viewer_->addPointCloud<pcl::PointXYZ>(clouds_[i], cloud_names_[i]);
      
       for (auto edge : edges_) {
-        std::cout << "edge: " << std::get<0>(edge) << " " << std::get<1>(edge) << std::endl;
         unsigned int node0 = std::get<0>(edge);
         unsigned int node1 = std::get<1>(edge);
         viewer_->addLine(clouds_[i]->points[node0], 
@@ -164,7 +149,7 @@ void PCLViewer::Render(double scale, bool contours_only) {
   }
 
   for (unsigned int i=0; i<clouds_.size(); i++) {
-    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, cloud_names_[i]);
+    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, cloud_names_[i]);
     viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, cloud_colors_[i](0), cloud_colors_[i](1), cloud_colors_[i](2), cloud_names_[i]);
   }
 
@@ -182,8 +167,5 @@ void PCLViewer::Render(double scale, bool contours_only) {
     }
   }
   
-
-
-
   viewer_->spin();
 }

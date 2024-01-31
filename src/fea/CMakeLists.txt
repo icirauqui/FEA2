@@ -37,6 +37,8 @@ add_library(fea
     elts/c3d8.cpp
     boundary_conditions.hpp
     boundary_conditions.cpp
+    solver.hpp
+    solver.cpp
     pos.cpp
     pos.hpp
     fem.cpp

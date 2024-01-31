@@ -39,6 +39,7 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
   int bc_encastre = 0;
   int bc_force = 0;
   int bc_displ = 0;
+  int bc_others = 0;
 
   bc_.resize(bc.NodeIds().size());
 
@@ -53,6 +54,7 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
 
     for (unsigned int i=0; i<dof->size(); i++) {
       unsigned int m = 3*node + i;
+
       if ((*dof)[i] == 0) {
         // set row and col m to zero
         for (unsigned int j=0; j<K_.cols(); j++) {
@@ -61,37 +63,44 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
         }
         K_(m,m) = 1.0;
 
-        if (values[i] != 0.0) {
-          F_(m,0) = values[i];
-          bc_displ++;
-        } else {
-          bc_encastre++;
-        }
+        F_(m,0) = 0.0;
+        bc_encastre++;
+
+        //if (values[i] != 0.0) {
+        //  F_(m,0) = values[i];
+        //  bc_displ++;
+        //} else {
+        //  bc_encastre++;
+        //}
       }
-      else {
+      else if ((*dof)[i] == 1) {
         F_(m,0) = values[i];
         bc_force++;
       }  
+      else {
+        bc_others++;
+      }
     }
   }
 
   std::cout << " - Encastre conditions: " << bc_encastre << std::endl;
   std::cout << " - Force conditions: " << bc_force << std::endl;
   std::cout << " - Displacement conditions: " << bc_displ << std::endl;
+  std::cout << " - Other conditions: " << bc_others << std::endl;
 }
 
 
 
-void FEA::Solve() {
+void FEA::Solve(std::string method) {
   // Check if K is singular or ill-conditioned
-  if (IsSingularOrIllConditioned2(K_)) {
+  if (solver::IsSingularOrIllConditioned2(K_)) {
     std::cout << "K is singular or ill-conditioned" << std::endl;
     return;
   }
   std::cout << "K is OK: not singular or ill-conditioned" << std::endl;
 
   // Rearrange the matrix for efficiency
-  U_ = SolveSystemWithPreconditioning(K_, F_, "CG");
+  U_ = solver::SolveSystemWithPreconditioning(K_, F_, method);
 
 //  // Solve using the appropiate method for efficiency
 //  if (UseDirectSolver(K)) {
@@ -101,181 +110,12 @@ void FEA::Solve() {
 //  }
 }
 
-bool FEA::IsSingularOrIllConditioned1(Eigen::MatrixXd &A) {
-  Eigen::JacobiSVD<Eigen::MatrixXd> svd(A);
-  double cond = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size()-1);
-  if (cond > 1e10) {
-    std::cout << "Condition number: " << cond << std::endl;
-    return true;
-  }
-  return false;
-}
-
-bool FEA::IsSingularOrIllConditioned2(Eigen::MatrixXd &A) {
-    // Threshold for determining if the determinant is effectively zero
-    const double detThreshold = 1e-10;
-    // Threshold for numerical instability in solutions, indicative of ill-conditioning
-    const double solutionThreshold = 1e-10;
-
-    // Check if the matrix is singular by determinant
-    double det = A.determinant();
-    if (std::fabs(det) < detThreshold) {
-        return true; // Matrix is singular or near-singular
-    }
-
-    // Attempt to solve A*x = b for a unit vector b to check for ill-conditioning
-    Eigen::VectorXd b = Eigen::VectorXd::Ones(A.rows());
-    Eigen::VectorXd x = A.fullPivLu().solve(b);
-
-    // Check if the solution is significantly different from what is expected
-    Eigen::VectorXd b_check = A * x; // Recompute b to check solution
-    if ((b - b_check).norm() / b.norm() > solutionThreshold) {
-        return true; // Solution instability suggests ill-conditioning
-    }
-
-    // If neither singularity nor significant solution instability was detected
-    return false;
-}
 
 
 
-Eigen::VectorXd FEA::SolveSystemWithPreconditioning(const Eigen::MatrixXd &A, const Eigen::MatrixXd &b, std::string method) {
-
-  Eigen::VectorXd b_vec = MatrixToVector(b);
-
-  if (method == "CG") {
-    return SolveSystemWithPreconditioningCG(A, b_vec);
-  } else if (method == "BiCGSTAB") {
-    return SolveSystemWithPreconditioningBiCGSTAB(A, b_vec);
-  } else if (method == "Lu") {
-    return SolveSystemWithLU(A, b_vec);
-  } else if (method == "LuFull") {
-    return SolveSystemWithFullPivLU(A, b_vec);
-  } else {
-    std::cout << "Method not supported" << std::endl;
-    return Eigen::VectorXd::Zero(b.size());
-  }
-
-}
-
-// Function to solve a system of linear equations A*x = b using an iterative solver with diagonal preconditioning
-Eigen::VectorXd FEA::SolveSystemWithPreconditioningCG(const Eigen::MatrixXd &A, const Eigen::VectorXd &b) {
-    // Convert the dense matrix A to a sparse matrix for efficiency with iterative solvers
-    Eigen::SparseMatrix<double> Asparse = A.sparseView();
-
-    // Initialize the iterative solver with diagonal preconditioning
-    Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower|Eigen::Upper, Eigen::DiagonalPreconditioner<double>> cg;
-    cg.compute(Asparse);
-
-    // Check if the factorization was successful
-    if(cg.info() != Eigen::Success) {
-        std::cerr << "Matrix decomposition failed. Returning zero vector." << std::endl;
-        return Eigen::VectorXd::Zero(b.size());
-    }
-
-    // Solve the system A*x = b
-    Eigen::VectorXd x = cg.solve(b);
-
-    // Return the solution vector
-    return x;
-}
-
-// Function to solve a system of linear equations A*x = b using Eigen::BiCGSTAB with diagonal preconditioning
-Eigen::VectorXd FEA::SolveSystemWithPreconditioningBiCGSTAB(const Eigen::MatrixXd &A, const Eigen::VectorXd &b) {
-    // Convert the dense matrix A to a sparse matrix format for efficiency
-    Eigen::SparseMatrix<double> Asparse = A.sparseView();
-
-    // Initialize the BiCGSTAB solver with diagonal preconditioning for the sparse matrix
-    Eigen::BiCGSTAB<Eigen::SparseMatrix<double>, Eigen::DiagonalPreconditioner<double>> bicgstab;
-    bicgstab.compute(Asparse);
-
-    // Check if the decomposition was successful
-    if (bicgstab.info() != Eigen::Success) {
-        std::cerr << "Matrix decomposition failed. Returning zero vector." << std::endl;
-        return Eigen::VectorXd::Zero(b.size());
-    }
-
-    // Solve the system A*x = b
-    Eigen::VectorXd x = bicgstab.solve(b);
-
-    return x;
-}
-
-Eigen::VectorXd FEA::SolveSystemWithLU(const Eigen::MatrixXd &A, const Eigen::VectorXd &b) {
-    // Compute the LU decomposition of A
-    Eigen::PartialPivLU<Eigen::MatrixXd> lu(A);
-
-    // Use the LU decomposition to solve for x
-    Eigen::VectorXd x = lu.solve(b);
-
-    return x;
-}
 
 
-Eigen::VectorXd FEA::SolveSystemWithFullPivLU(const Eigen::MatrixXd &A, const Eigen::VectorXd &b) {
-    // Compute the LU decomposition of A with full pivoting
-    Eigen::FullPivLU<Eigen::MatrixXd> lu(A);
 
-    // Before solving, check if the solution is possible and the system is not singular
-    if (!lu.isInvertible()) {
-        std::cerr << "Matrix is singular or nearly singular, solution may not be accurate or possible." << std::endl;
-        return Eigen::VectorXd::Zero(b.size()); // Return a zero vector if not invertible
-    }
-
-    // Use the LU decomposition to solve for x
-    Eigen::VectorXd x = lu.solve(b);
-
-    return x;
-}
-
-// Function to convert a column matrix (Eigen::MatrixXd) to Eigen::VectorXd
-Eigen::VectorXd FEA::MatrixToVector(const Eigen::MatrixXd &columnMatrix) {
-    // Ensure the matrix is indeed a column matrix
-    if (columnMatrix.cols() != 1) {
-        std::cerr << "Error: The input matrix is not a column matrix." << std::endl;
-        return Eigen::VectorXd(); // Return an empty vector in case of error
-    }
-
-    // Directly convert the column matrix to a vector
-    Eigen::VectorXd vector = columnMatrix.col(0);
-
-    return vector;
-}
-
-
-//Eigen::MatrixXd PreconditionMatrix(Eigen::MatrixXd &A) {
-//    // Convert the input dense matrix A to a sparse matrix for efficient preconditioning
-//    Eigen::SparseMatrix<double> Asparse = A.sparseView();
-//
-//    // Initialize the diagonal preconditioner
-//    Eigen::DiagonalPreconditioner<double> preconditioner;
-//
-//    // Compute the preconditioner based on the sparse matrix
-//    preconditioner.compute(Asparse);
-//
-//    // Although directly applying the preconditioner to the matrix is not typical,
-//    // for demonstration, we show how the preconditioned matrix might be formed.
-//    // In practical applications, you would use the preconditioner directly with an iterative solver.
-//    Eigen::MatrixXd Apreconditioned(Asparse.rows(), Asparse.cols());
-//    
-//    // The following loop applies the diagonal preconditioning effect manually for demonstration.
-//    // This mimics the preconditioner's effect by scaling each row by the inverse of its diagonal element.
-//    for (int i = 0; i < Asparse.rows(); ++i) {
-//        double diagVal = preconditioner.diag()(i);
-//        if (diagVal != 0) {  // Avoid division by zero
-//            for (int j = 0; j < Asparse.cols(); ++j) {
-//                Apreconditioned(i, j) = A(i, j) / diagVal;
-//            }
-//        }
-//    }
-//
-//    return Apreconditioned;
-//}
-
-
-//bool FEA::UseDirectSolver(Eigen::MatrixXd &A);
-//Eigen::MatrixXd FEA::DirectSolver(Eigen::MatrixXd &A, Eigen::MatrixXd &b);
-//Eigen::MatrixXd FEA::IterativeSolver(Eigen::MatrixXd &A, Eigen::MatrixXd &b);
 
 // 
 // LEGACY FEA

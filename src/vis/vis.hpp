@@ -34,23 +34,20 @@ public:
 
 private:
 
-    pcl::visualization::PCLVisualizer::Ptr viewer_;
-    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_;
-    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_countour_;
-    std::vector<std::string> cloud_names_;
-    std::vector<Eigen::Vector3d> cloud_colors_;
+  pcl::visualization::PCLVisualizer::Ptr viewer_;
+  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_;
+  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_countour_;
+  std::vector<std::string> cloud_names_;
+  std::vector<Eigen::Vector3d> cloud_colors_;
 
-    std::vector<std::tuple<unsigned int, unsigned int>> edges_;
-    std::vector<std::tuple<unsigned int, unsigned int>> edges_contour_;
+  std::vector<std::tuple<unsigned int, unsigned int>> edges_;
+  std::vector<std::tuple<unsigned int, unsigned int>> edges_contour_;
 
-    std::vector<int> load_nodes_;
-    std::vector<std::vector<double>> load_mags_;
+  std::vector<int> load_nodes_;
+  std::vector<std::vector<double>> load_mags_;
 
-
-    Eigen::Vector3d contour_bound_min_, contour_bound_max_;
-    std::vector<bool> contour_nodes_;
-
-
+  Eigen::Vector3d contour_bound_min_, contour_bound_max_;
+  std::vector<bool> contour_nodes_;
 };
 
 
