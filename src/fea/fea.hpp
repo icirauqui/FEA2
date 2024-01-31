@@ -50,24 +50,22 @@ public:
       float young_modulus, float poisson_coefficient,
       bool debug_mode);
     
-  // Finite Element Analysis
-
   void MatAssembly(std::vector<Eigen::Vector3d> &vpts, 
                    std::vector<std::vector<unsigned int>> &velts);
 
   void ApplyBoundaryConditions(BoundaryConditions &bc);
 
-  void Print_K();
-  void Eigenvalues_K();
 
-  void ComputeForces();
 
-  void SetForces(std::vector<std::vector<float>> &vF);
 
+  // Legacy fea
 
   void EncastreBackLayer();
   void ImposeDirichletEncastre(std::vector<int> &dir);
   void ImposeDirichletEncastre(std::vector<std::vector<int>> &dir);
+
+  void ComputeForces();
+  void SetForces(std::vector<std::vector<float>> &vF);
 
   void ComputeDisplacements();
 
@@ -75,10 +73,15 @@ public:
   double ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
                              std::vector<Eigen::Vector3d> &u1);
 
+  // Reports
+
   void ReportNodes(std::string filename);
   void ExportK(std::string filename);
+  void PrintK();
+  void PrintEigenvaluesK();
 
   // Accessors
+
   Eigen::MatrixXd K() { return K_; }
   Eigen::MatrixXd F() { return F_; }
   Eigen::MatrixXd U() { return U_; }
@@ -91,8 +94,6 @@ public:
 
 
 private:
-
-  static int initializeElementDim(const std::string& value);
 
   Element* element_;
 
@@ -109,16 +110,6 @@ private:
 
   float E_ = 1.0;
   float nu_ = 0.499;
-  float h_ = 1.0;
-
-  float lambda_ = 0.0;
-  float G_ = 0.0;
-  int base_size_ = 0;
-
-  Eigen::MatrixXd dndgs_;
-  Eigen::Matrix3d J_;
-  Eigen::Matrix3d J1_;
-  Eigen::MatrixXd B_;
 
   bool debug_mode_ = false;
 };

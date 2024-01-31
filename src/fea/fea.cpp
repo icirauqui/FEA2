@@ -3,10 +3,7 @@
 FEA::FEA(std::string element_type,
          float young_modulus, float poisson_coefficient, 
          bool debug_mode) : E_(young_modulus), nu_(poisson_coefficient), debug_mode_(debug_mode) {
-  //E_ = young_modulus;
-  //nu_ = poisson_coefficient;
-  //debug_mode_ = debug_mode;
-
+          
   if (element_type == "C3D6") {
     //setElement(new C3D6(young_modulus, poisson_coefficient));
     element_ = new C3D6(young_modulus, poisson_coefficient);
@@ -82,35 +79,14 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
 }
 
 
-void FEA::Eigenvalues_K() {
-  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(K_);
-  std::cout << std::endl
-            << "The eigenvalues of K_ are:" << std::endl
-            << es.eigenvalues().transpose() << std::endl;
-
-}
-
-void FEA::Print_K() {
-  std::cout << std::endl
-            << "K_ = " << std::endl
-            << K_ << std::endl;
-}
 
 
-void FEA::ComputeForces() {
-  F_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
-  F_ = K_ * U_;
-}
 
-void FEA::SetForces(std::vector<std::vector<float>> &vF) {
-  F_ = Eigen::MatrixXd::Zero(3*vF.size(), 1);
-  for (unsigned int i = 0; i < vF.size(); i++) {
-    F_(i*3, 0) = vF[i][0];
-    F_(i*3+1, 0) = vF[i][1];
-    F_(i*3+2, 0) = vF[i][2];
-  }
-}
 
+
+// 
+// LEGACY FEA
+// 
 
 
 void FEA::EncastreBackLayer() {
@@ -125,6 +101,7 @@ void FEA::EncastreBackLayer() {
     K_(i,i) = k_large_;
   }
 }
+
 
 void FEA::ImposeDirichletEncastre(std::vector<int> &dir) {
   for (auto d : dir) {
@@ -161,6 +138,22 @@ void FEA::ImposeDirichletEncastre(std::vector<std::vector<int>> &dir) {
 }
 
 
+void FEA::ComputeForces() {
+  F_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
+  F_ = K_ * U_;
+}
+
+
+void FEA::SetForces(std::vector<std::vector<float>> &vF) {
+  F_ = Eigen::MatrixXd::Zero(3*vF.size(), 1);
+  for (unsigned int i = 0; i < vF.size(); i++) {
+    F_(i*3, 0) = vF[i][0];
+    F_(i*3+1, 0) = vF[i][1];
+    F_(i*3+2, 0) = vF[i][2];
+  }
+}
+
+
 void FEA::ComputeDisplacements() {
   K1_ = K_.inverse();
   U_ = K1_ * F_;
@@ -171,6 +164,7 @@ void FEA::ComputeStrainEnergy() {
   sE_ = (U_.transpose() * F_)(0,0);
   sE_ = std::abs(sE_);
 }
+
 
 double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
                                 std::vector<Eigen::Vector3d> &u1) {
@@ -198,20 +192,14 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
 }
 
 
-int FEA::initializeElementDim(const std::string& value) {
-    if (value == "C3D6") {
-        return 6;
-    } else if (value == "C3D8") {
-        return 8;
-    } else {
-        return 1;
-    }
-}
 
 
+
+// 
+// REPORT FUNCTIONS
+// 
 
 void FEA::ReportNodes(std::string filename) {
-
   // Transform U_ to size nx3
   Eigen::MatrixXd U = Eigen::MatrixXd::Zero(U_.rows()/3, 3);
   Eigen::MatrixXd F = Eigen::MatrixXd::Zero(F_.rows()/3, 3);
@@ -231,11 +219,24 @@ void FEA::ReportNodes(std::string filename) {
   file.close();
 }
 
-
 void FEA::ExportK(std::string filename) {
   std::ofstream file;
   file.open(filename);
   file << K_ << std::endl;
   file << std::endl << "K ( " << K_.rows() << ", " << K_.cols() << " ) " << std::endl;
   file.close();
+}
+
+void FEA::PrintEigenvaluesK() {
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(K_);
+  std::cout << std::endl
+            << "The eigenvalues of K_ are:" << std::endl
+            << es.eigenvalues().transpose() << std::endl;
+
+}
+
+void FEA::PrintK() {
+  std::cout << std::endl
+            << "K_ = " << std::endl
+            << K_ << std::endl;
 }
