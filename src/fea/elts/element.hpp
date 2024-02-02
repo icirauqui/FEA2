@@ -25,7 +25,8 @@ public:
   virtual std::pair<Eigen::MatrixXd, double> computeInverseJacobianAndDet(const Eigen::MatrixXd& J) = 0;
 
   // Function to compute the Strain-Displacement Matrix (B)
-  virtual Eigen::MatrixXd computeStrainDisplacementMatrix(const std::vector<Eigen::Vector3d>& nodes, double xi, double eta, double zeta) = 0;
+  virtual Eigen::MatrixXd computeStrainDisplacementMatrix(const std::vector<Eigen::Vector3d>& nodes, 
+                                                          Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ) = 0;
 
   // Function to compute the elasticity matrix
   virtual void computeElasticityMatrix() = 0;

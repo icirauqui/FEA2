@@ -31,8 +31,8 @@ int main(int argc, char** argv) {
   std::cout << "\nMatAssembly" << std::endl;
   fea.MatAssembly(model._nodes, model._elements);
   fea.ExportK("../data/abaqus_c3d8_3/K_a.csv");
-  
-  return 0;
+
+  //return 0;
 
   std::cout << "\nApplyBoundaryConditions" << std::endl;
   fea.ApplyBoundaryConditions(bc);
@@ -61,11 +61,11 @@ int main(int argc, char** argv) {
   }
   std::cout << " - u.size(): " << u.size() << std::endl;
   std::cout << " - model._nodes.size(): " << model._nodes.size() << std::endl;
-  double scale = 10.0;
+  double scale = 1000.0;
   model.ApplyDisplacements(u, scale);
 
   std::cout << "\nExport All" << std::endl;
-  fea.ExportAll("../data/abaqus_c3d8_2/abaqus_c3d8_2.csv");
+  fea.ExportAll("../data/abaqus_c3d8_3/abaqus_c3d8_3.csv");
 
 
 
@@ -79,15 +79,15 @@ int main(int argc, char** argv) {
   }
 
 
-  //std::cout << "\nReport" << std::endl;
-  //fea.ReportNodes("../data/abaqus_c3d8_2/nodes.csv");
-  //fea.ExportK("../data/abaqus_c3d8_2/K.csv");
+  std::cout << "\nReport" << std::endl;
+  fea.ReportNodes("../data/abaqus_c3d8_3/nodes.csv");
+  fea.ExportK("../data/abaqus_c3d8_3/K.csv");
 
 
   std::cout << "\nVisualization" << std::endl;
   PCLViewer viewer;
   viewer.AddNodes(model._nodes, "original", Eigen::Vector3d(0.0, 0.0, 1.0));
-  viewer.AddNodes(model._nodes_deformed, "deformed", Eigen::Vector3d(1.0, 0.0, 0.0));
+  viewer.AddNodes(model._nodes_deformed, "deformed", Eigen::Vector3d(0.0, 0.7, 0.0));
   viewer.AddLoads(bc.NodeIds(), bc.Values());
   viewer.AddEdges(model._elements);
   viewer.Render();

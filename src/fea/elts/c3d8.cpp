@@ -29,36 +29,36 @@ Eigen::MatrixXd C3D8::computeShapeFunctionDerivatives(double xi, double eta, dou
 
     // Derivatives of shape functions with respect to xi, eta, zeta
     dN(0, 0) = -(1 - eta) * (1 - zeta) / 8; // dN1/dxi
-    dN(0, 1) = -(1 - xi) * (1 - zeta) / 8; // dN1/deta
-    dN(0, 2) = -(1 - xi) * (1 - eta) / 8; // dN1/dzeta
+    dN(0, 1) = -(1 - xi)  * (1 - zeta) / 8; // dN1/deta
+    dN(0, 2) = -(1 - xi)  * (1 - eta)  / 8; // dN1/dzeta
 
     dN(1, 0) =  (1 - eta) * (1 - zeta) / 8; // dN2/dxi
-    dN(1, 1) = -(1 + xi) * (1 - zeta) / 8; // dN2/deta
-    dN(1, 2) = -(1 + xi) * (1 - eta) / 8; // dN2/dzeta
+    dN(1, 1) = -(1 + xi)  * (1 - zeta) / 8; // dN2/deta
+    dN(1, 2) = -(1 + xi)  * (1 - eta)  / 8; // dN2/dzeta
 
     dN(2, 0) =  (1 + eta) * (1 - zeta) / 8; // dN3/dxi
-    dN(2, 1) =  (1 + xi) * (1 - zeta) / 8; // dN3/deta
-    dN(2, 2) = -(1 + xi) * (1 + eta) / 8; // dN3/dzeta
+    dN(2, 1) =  (1 + xi)  * (1 - zeta) / 8; // dN3/deta
+    dN(2, 2) = -(1 + xi)  * (1 + eta)  / 8; // dN3/dzeta
 
     dN(3, 0) = -(1 + eta) * (1 - zeta) / 8; // dN4/dxi
-    dN(3, 1) =  (1 - xi) * (1 - zeta) / 8; // dN4/deta
-    dN(3, 2) = -(1 - xi) * (1 + eta) / 8; // dN4/dzeta
+    dN(3, 1) =  (1 - xi)  * (1 - zeta) / 8; // dN4/deta
+    dN(3, 2) = -(1 - xi)  * (1 + eta)  / 8; // dN4/dzeta
 
     dN(4, 0) = -(1 - eta) * (1 + zeta) / 8; // dN5/dxi
-    dN(4, 1) = -(1 - xi) * (1 + zeta) / 8; // dN5/deta
-    dN(4, 2) =  (1 - xi) * (1 - eta) / 8; // dN5/dzeta
+    dN(4, 1) = -(1 - xi)  * (1 + zeta) / 8; // dN5/deta
+    dN(4, 2) =  (1 - xi)  * (1 - eta)  / 8; // dN5/dzeta
 
     dN(5, 0) =  (1 - eta) * (1 + zeta) / 8; // dN6/dxi
-    dN(5, 1) = -(1 + xi) * (1 + zeta) / 8; // dN6/deta
-    dN(5, 2) =  (1 + xi) * (1 - eta) / 8; // dN6/dzeta
+    dN(5, 1) = -(1 + xi)  * (1 + zeta) / 8; // dN6/deta
+    dN(5, 2) =  (1 + xi)  * (1 - eta)  / 8; // dN6/dzeta
 
     dN(6, 0) =  (1 + eta) * (1 + zeta) / 8; // dN7/dxi
-    dN(6, 1) =  (1 + xi) * (1 + zeta) / 8; // dN7/deta
-    dN(6, 2) =  (1 + xi) * (1 + eta) / 8; // dN7/dzeta
+    dN(6, 1) =  (1 + xi)  * (1 + zeta) / 8; // dN7/deta
+    dN(6, 2) =  (1 + xi)  * (1 + eta)  / 8; // dN7/dzeta
 
     dN(7, 0) = -(1 + eta) * (1 + zeta) / 8; // dN8/dxi
-    dN(7, 1) =  (1 - xi) * (1 + zeta) / 8; // dN8/deta
-    dN(7, 2) =  (1 - xi) * (1 + eta) / 8; // dN8/dzeta
+    dN(7, 1) =  (1 - xi)  * (1 + zeta) / 8; // dN8/deta
+    dN(7, 2) =  (1 - xi)  * (1 + eta)  / 8; // dN8/dzeta
 
     return dN;
 }
@@ -88,14 +88,8 @@ std::pair<Eigen::MatrixXd, double> C3D8::computeInverseJacobianAndDet(const Eige
 }
 
 // Function to compute the Strain-Displacement Matrix (B)
-Eigen::MatrixXd C3D8::computeStrainDisplacementMatrix(const std::vector<Eigen::Vector3d>& nodes, double xi, double eta, double zeta) {
-    // Compute the derivatives of the shape functions
-    Eigen::MatrixXd dN = C3D8::computeShapeFunctionDerivatives(xi, eta, zeta);
-
-    // Compute the Jacobian matrix and its inverse
-    Eigen::MatrixXd J = C3D8::computeJacobian(nodes, xi, eta, zeta);
-    auto [invJ, detJ] = C3D8::computeInverseJacobianAndDet(J);
-
+Eigen::MatrixXd C3D8::computeStrainDisplacementMatrix(const std::vector<Eigen::Vector3d>& nodes, 
+                                                      Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ) {
     // Compute the derivatives of shape functions w.r.t. global coordinates
     Eigen::MatrixXd dNdXYZ = invJ * dN.transpose();
 
@@ -139,9 +133,11 @@ Eigen::MatrixXd C3D8::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>&
                 double eta = gaussPoints[j];
                 double zeta = gaussPoints[k];
 
+                Eigen::MatrixXd dN = C3D8::computeShapeFunctionDerivatives(xi, eta, zeta);
+
                 Eigen::MatrixXd J = C3D8::computeJacobian(nodes, xi, eta, zeta);
                 auto [invJ, detJ] = C3D8::computeInverseJacobianAndDet(J);
-                Eigen::MatrixXd B = C3D8::computeStrainDisplacementMatrix(nodes, xi, eta, zeta);
+                Eigen::MatrixXd B = C3D8::computeStrainDisplacementMatrix(nodes, dN, invJ, detJ);
 
                 // Weight calculation considering different weights
                 double weight = gaussWeights[i] * gaussWeights[j] * gaussWeights[k];
@@ -177,8 +173,12 @@ Eigen::MatrixXd C3D8::matAssembly(std::vector<Eigen::Vector3d> &vpts,
     std::vector<Eigen::Vector3d> xyzi(8);
     std::vector<int> mn(8);
 
+    //std::vector<int> elt_order = {0, 1, 3, 2, 4, 5, 7, 6};
+    //std::vector<int> elt_order = {5,1,2,6,4,0,3,7};
 
     for (unsigned int i=0; i<elt.size(); i++) {
+      //xyzi[i] = vpts[elt[elt_order[i]]];
+      //mn[i] = elt[elt_order[i]]*3;
       xyzi[i] = vpts[elt[i]];
       mn[i] = elt[i]*_dof_per_node;
     }

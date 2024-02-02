@@ -105,7 +105,15 @@ public:
 
 
 
-
+// template a function to print std::vector
+template <typename T>
+void printVectorA(std::string title, std::vector<T> &v) {
+  std::cout << title << ":";
+  for (auto i : v) {
+    std::cout << " " << i;
+  }
+  std::cout << std::endl;
+}
 
 
 class AbaqusC3D8_3 {
@@ -125,15 +133,31 @@ public:
           //std::cout << "n (offset) = " << n << " (" << offset << ") : (x,y,z) = (" << x << "," << y << "," << z << ")" << std::endl;
 
           std::vector<unsigned int> element = {
-            n,
-            n+1,
-            n+1+(int(_y0)+1),
-            n+(int(_y0)+1),
-            n+offset,
-            n+1+offset,
-            n+1+(int(_y0)+1)+offset,
-            n+(int(_y0)+1)+offset
+            n+1+(int(_y0)+1)+offset,  //11
+            n+1+(int(_y0)+1),         //3
+            n+(int(_y0)+1),           //2
+            n+(int(_y0)+1)+offset,    //10
+
+            n+1+offset,               //9
+            n+1,                      //1
+            n,                        //0
+            n+offset,                 //8
+            
           };
+
+          /*
+            n+1+offset,               //9
+            n+1,                      //1
+            n+1+(int(_y0)+1),         //3
+            n+1+(int(_y0)+1)+offset,  //11
+            
+            n+offset,                 //8
+            n,                        //0
+            n+(int(_y0)+1),           //2
+            n+(int(_y0)+1)+offset     //10
+            */
+
+          printVectorA("ElementA " + std::to_string(n), element);
 
           _elements.push_back(element);
         }
