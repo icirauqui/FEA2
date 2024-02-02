@@ -156,26 +156,46 @@ Eigen::MatrixXd C3D8::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>&
 }
 
 
+// template a function to print std::vector
+template <typename T>
+void printVector(std::string title, std::vector<T> &v) {
+  std::cout << title << ":";
+  for (auto i : v) {
+    std::cout << " " << i;
+  }
+  std::cout << std::endl;
+}
+
 
 Eigen::MatrixXd C3D8::matAssembly(std::vector<Eigen::Vector3d> &vpts, 
                                   std::vector<std::vector<unsigned int>> &velts) {
   Eigen::MatrixXd K = Eigen::MatrixXd::Zero(3*vpts.size(), 3*vpts.size());
 
+  int num_element = 0;
   for (auto elt : velts) {
+
     std::vector<Eigen::Vector3d> xyzi(8);
     std::vector<int> mn(8);
 
+
     for (unsigned int i=0; i<elt.size(); i++) {
       xyzi[i] = vpts[elt[i]];
-      mn[i] = elt[i]*3;
+      mn[i] = elt[i]*_dof_per_node;
     }
+
+    //printVector("Element " + std::to_string(num_element), elt);
+    //printVector("       mn", mn);
+    //printVector("xyzi", xyzi);
+    
+    num_element++;
 
     Eigen::MatrixXd Kei = C3D8::computeStiffnessMatrix(xyzi);
 
+    // For each node (8) in the element
     for (unsigned int ni = 0; ni < mn.size(); ni++) {
       for (unsigned int nj = 0; nj < mn.size(); nj++) {
-        for (unsigned int m = 0; m < 3; m++) {
-          for (unsigned int n = 0; n < 3; n++) {
+        for (unsigned int m = 0; m < _dof_per_node; m++) {
+          for (unsigned int n = 0; n < _dof_per_node; n++) {
             K(mn[ni]+m, mn[nj]+n) += Kei(ni*3+m, nj*3+n);
           }
         }

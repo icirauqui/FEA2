@@ -14,7 +14,7 @@ float Klarge = 100000000.0;
 
 
 int main(int argc, char** argv) {
-  AbaqusC3D8_2 model;
+  AbaqusC3D8_3 model;
 
   std::cout << "\nBuild FEA" << std::endl;
   FEA fea("C3D8", E, nu, true);
@@ -23,16 +23,22 @@ int main(int argc, char** argv) {
   BoundaryConditions bc(fea.NumDof(), &model._nodes);
   std::cout << " - Encastre in z = 0" << std::endl;
   bc.AddNodal(Eigen::Vector3d(-1.0, -1.0, 0.0), {0, 0, 0}, {0.0, 0.0, 0.0});
-  std::cout << " - Force of magnitude 1 in direction of z on nodes in z = 25" << std::endl;
-  bc.AddNodal(Eigen::Vector3d(-1.0, -1.0, 5.0), {1, 1, 1}, {0.0, 0.0, 1.0});
+  std::cout << " - Force of magnitude 1 in direction of z on nodes in z = 3" << std::endl;
+  bc.AddNodal(Eigen::Vector3d(-1.0, -1.0, 3.0), {1, 1, 1}, {0.0, 0.0, 1.0});
   //bc.Report();
 
 
   std::cout << "\nMatAssembly" << std::endl;
   fea.MatAssembly(model._nodes, model._elements);
+  fea.ExportK("../data/abaqus_c3d8_3/K_a.csv");
+  
+  return 0;
 
   std::cout << "\nApplyBoundaryConditions" << std::endl;
   fea.ApplyBoundaryConditions(bc);
+  fea.ExportK("../data/abaqus_c3d8_3/K_b.csv");
+
+
 
   //std::cout << "\nComputeDisplacements" << std::endl;
   //fea.ComputeDisplacements();
@@ -41,9 +47,7 @@ int main(int argc, char** argv) {
 
   // FEA Solver
   std::cout << "\nSolve" << std::endl;
-  fea.ExportK("../data/abaqus_c3d8_2/K_a.csv");
   fea.Solve();
-  fea.ExportK("../data/abaqus_c3d8_2/K_b.csv");
 
 
 
