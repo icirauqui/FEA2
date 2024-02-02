@@ -233,23 +233,29 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
 // 
 
 void FEA::ReportNodes(std::string filename) {
-  // Transform U_ to size nx3
-  Eigen::MatrixXd U = Eigen::MatrixXd::Zero(U_.rows()/3, 3);
-  Eigen::MatrixXd F = Eigen::MatrixXd::Zero(F_.rows()/3, 3);
+
+  // Eigen Matrix of size U_.rows()/3 x 7
+  // n, u.x, u.y, u.z, f.x, f.y, f.z
+  Eigen::MatrixXd U = Eigen::MatrixXd::Zero(U_.rows()/3, 7);
+
   for (unsigned int n=0; n<U.rows(); n++) {
-    U(n/3, n%3) = U_(n,0);
-    F(n/3, n%3) = F_(n,0);
+    U(n,0) = n;
+    U(n,1) = U_(n*3, 0);
+    U(n,2) = U_(n*3+1, 0);
+    U(n,3) = U_(n*3+2, 0);
+    U(n,4) = F_(n*3, 0);
+    U(n,5) = F_(n*3+1, 0);
+    U(n,6) = F_(n*3+2, 0);
   }
 
   std::ofstream file;
   file.open(filename);
   file << "n\tu.x\tu.y\tu.z\tf.x\tf.y\tf.z" << std::endl;
-
-  for (unsigned int n=0; n<U.rows(); n++) {
-      file << n << "\t" << U(n,0) << "\t" << U(n,1) << "\t" << U(n,2) << "\t" << F(n,0) << "\t" << F(n,1) << "\t" << F(n,2) << std::endl;
-  }
+  file << U << std::endl;
 
   file.close();
+
+  std::cout << "ReportNodes [U,F]: " << filename << std::endl;
 }
 
 void FEA::ExportAll(std::string filename) {
@@ -262,6 +268,8 @@ void FEA::ExportAll(std::string filename) {
   file << U_ << std::endl;
   file << std::endl << "U ( " << U_.rows() << ", " << U_.cols() << " ) " << std::endl << std::endl;
   file.close();
+
+  std::cout << "ExportAll [K,F,U]: " << filename << std::endl;
 }
 
 void FEA::ExportK(std::string filename) {
@@ -270,6 +278,8 @@ void FEA::ExportK(std::string filename) {
   file << K_ << std::endl;
   file << std::endl << "K ( " << K_.rows() << ", " << K_.cols() << " ) " << std::endl;
   file.close();
+
+  std::cout << "ExportK [K]: " << filename << std::endl;
 }
 
 void FEA::ExportF(std::string filename) {
@@ -278,6 +288,8 @@ void FEA::ExportF(std::string filename) {
   file << F_ << std::endl;
   file << std::endl << "F ( " << F_.rows() << ", " << F_.cols() << " ) " << std::endl;
   file.close();
+
+  std::cout << "ExportF [F]: " << filename << std::endl;
 }
 
 void FEA::ExportU(std::string filename) {
@@ -286,6 +298,8 @@ void FEA::ExportU(std::string filename) {
   file << U_ << std::endl;
   file << std::endl << "U ( " << U_.rows() << ", " << U_.cols() << " ) " << std::endl;
   file.close();
+
+  std::cout << "ExportU [U]: " << filename << std::endl;
 }
 
 

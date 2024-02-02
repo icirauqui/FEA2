@@ -30,28 +30,20 @@ int main(int argc, char** argv) {
 
   std::cout << "\nMatAssembly" << std::endl;
   fea.MatAssembly(model._nodes, model._elements);
-  fea.ExportK("../data/abaqus_c3d8_3/K_a.csv");
+  fea.ExportK("../data/" + model.Name() + "/K_a.csv");
 
   //return 0;
 
   std::cout << "\nApplyBoundaryConditions" << std::endl;
   fea.ApplyBoundaryConditions(bc);
-  fea.ExportK("../data/abaqus_c3d8_3/K_b.csv");
-
-
+  fea.ExportK("../data/" + model.Name() + "/K_b.csv");
 
   //std::cout << "\nComputeDisplacements" << std::endl;
   //fea.ComputeDisplacements();
 
-
-
   // FEA Solver
   std::cout << "\nSolve" << std::endl;
   fea.Solve();
-
-
-
-  std::cout << "\nSolver Done" << std::endl;
 
   std::cout << "\nCompute deformed positions" << std::endl;
   Eigen::MatrixXd U = fea.U();
@@ -64,24 +56,20 @@ int main(int argc, char** argv) {
   double scale = 1000.0;
   model.ApplyDisplacements(u, scale);
 
-  std::cout << "\nExport All" << std::endl;
-  fea.ExportAll("../data/abaqus_c3d8_3/abaqus_c3d8_3.csv");
+  fea.ExportAll("../data/" + model.Name() + "/KFU.csv");
 
 
 
 
-  std::cout << "\nLen nodes/deformed: " << model._nodes.size() << " / " << model._nodes_deformed.size() << std::endl;
-  for (unsigned int i=0; i<5; i++) {
-    std::cout << "u[" << i << "] = " 
-              << model._nodes[i].transpose() << " ->\t"
-              << scale * u[i].transpose() << " ->\t"
-              << model._nodes_deformed[i].transpose() << std::endl;
-  }
+  //std::cout << "\nLen nodes/deformed: " << model._nodes.size() << " / " << model._nodes_deformed.size() << std::endl;
+  //for (unsigned int i=0; i<5; i++) {
+  //  std::cout << "u[" << i << "] = " 
+  //            << model._nodes[i].transpose() << " ->\t"
+  //            << scale * u[i].transpose() << " ->\t"
+  //            << model._nodes_deformed[i].transpose() << std::endl;
+  //}
 
-
-  std::cout << "\nReport" << std::endl;
-  fea.ReportNodes("../data/abaqus_c3d8_3/nodes.csv");
-  fea.ExportK("../data/abaqus_c3d8_3/K.csv");
+  fea.ReportNodes("../data/" + model.Name() + "/nodes.csv");
 
 
   std::cout << "\nVisualization" << std::endl;

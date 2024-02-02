@@ -48,6 +48,8 @@ public:
   double _y0 = 5.0;
   double _z0 = 25.0;
   double _w = 1.0;
+
+  std::string Name() { return "abaqus_c3d8_1"; }
 };
 
 
@@ -101,6 +103,8 @@ public:
   double _y0 = 1.0;
   double _z0 = 5.0;
   double _w = 1.0;
+
+  std::string Name() { return "abaqus_c3d8_2"; }
 };
 
 
@@ -179,6 +183,8 @@ public:
   double _y0 = 1.0;
   double _z0 = 3.0;
   double _w = 1.0;
+
+  std::string Name() { return "abaqus_c3d8_3"; }
 };
 
 
