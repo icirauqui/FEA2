@@ -11,7 +11,7 @@
 namespace solver {
 
 bool IsSingularOrIllConditioned1(Eigen::MatrixXd &A);
-bool IsSingularOrIllConditioned2(Eigen::MatrixXd &A);
+int IsSingularOrIllConditioned2(Eigen::MatrixXd &A);
 
 Eigen::VectorXd SolveSystemWithPreconditioning(const Eigen::MatrixXd &A, const Eigen::MatrixXd &b, std::string method);
 

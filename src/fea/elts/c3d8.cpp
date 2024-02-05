@@ -9,7 +9,7 @@ C3D8::C3D8(double E, double nu) : Element3D(E, nu) {
 
 Eigen::VectorXd C3D8::computeShapeFunctions(double xi, double eta, double zeta) {
     // Initialize a vector to store the shape functions
-    Eigen::VectorXd N(8);
+    Eigen::VectorXd N(_num_nodes);
 
     // Compute the shape functions for each node
     N(0) = (1 - xi) * (1 - eta) * (1 - zeta) / 8;
@@ -97,7 +97,7 @@ Eigen::MatrixXd C3D8::computeStrainDisplacementMatrix(const std::vector<Eigen::V
     Eigen::MatrixXd B = Eigen::MatrixXd::Zero(6, 24); // 6 strain components, 24 displacement components (3 per node)
 
     // Fill the B matrix
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < _num_nodes; ++i) {
         B(0, 3 * i) = dNdXYZ(0, i);
         B(1, 3 * i + 1) = dNdXYZ(1, i);
         B(2, 3 * i + 2) = dNdXYZ(2, i);
@@ -118,8 +118,8 @@ Eigen::MatrixXd C3D8::computeStrainDisplacementMatrix(const std::vector<Eigen::V
 
 // Function to compute the stiffness matrix for a triangular prism
 Eigen::MatrixXd C3D8::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>& nodes) {
-    // Initialize the stiffness matrix
-    Eigen::MatrixXd K = Eigen::MatrixXd::Zero(24, 24); // 24x24 for 8 nodes, 3 DOF each
+    // Initialize the stiffness matrix: 24x24 for 8 nodes, 3 DOF each
+    Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_num_nodes*_dof_per_node, _num_nodes*_dof_per_node);
 
     // Gauss quadrature points and weights (2-point quadrature)
     std::array<double, 2> gaussPoints = {-1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0)};
@@ -165,38 +165,25 @@ void printVector(std::string title, std::vector<T> &v) {
 
 Eigen::MatrixXd C3D8::matAssembly(std::vector<Eigen::Vector3d> &vpts, 
                                   std::vector<std::vector<unsigned int>> &velts) {
-  Eigen::MatrixXd K = Eigen::MatrixXd::Zero(3*vpts.size(), 3*vpts.size());
+  Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_dof_per_node*vpts.size(), _dof_per_node*vpts.size());
 
-  int num_element = 0;
   for (auto elt : velts) {
 
-    std::vector<Eigen::Vector3d> xyzi(8);
-    std::vector<int> mn(8);
-
-    //std::vector<int> elt_order = {0, 1, 3, 2, 4, 5, 7, 6};
-    //std::vector<int> elt_order = {5,1,2,6,4,0,3,7};
+    std::vector<Eigen::Vector3d> xyzi(_num_nodes);
+    std::vector<int> mn(_num_nodes);
 
     for (unsigned int i=0; i<elt.size(); i++) {
-      //xyzi[i] = vpts[elt[elt_order[i]]];
-      //mn[i] = elt[elt_order[i]]*3;
       xyzi[i] = vpts[elt[i]];
       mn[i] = elt[i]*_dof_per_node;
     }
 
-    //printVector("Element " + std::to_string(num_element), elt);
-    //printVector("       mn", mn);
-    //printVector("xyzi", xyzi);
-    
-    num_element++;
-
     Eigen::MatrixXd Kei = C3D8::computeStiffnessMatrix(xyzi);
 
-    // For each node (8) in the element
     for (unsigned int ni = 0; ni < mn.size(); ni++) {
       for (unsigned int nj = 0; nj < mn.size(); nj++) {
         for (unsigned int m = 0; m < _dof_per_node; m++) {
           for (unsigned int n = 0; n < _dof_per_node; n++) {
-            K(mn[ni]+m, mn[nj]+n) += Kei(ni*3+m, nj*3+n);
+            K(mn[ni]+m, mn[nj]+n) += Kei(ni*_dof_per_node+m, nj*_dof_per_node+n);
           }
         }
       }

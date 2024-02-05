@@ -4,7 +4,9 @@ FEA::FEA(std::string element_type,
          float young_modulus, float poisson_coefficient, 
          bool debug_mode) : E_(young_modulus), nu_(poisson_coefficient), debug_mode_(debug_mode) {
 
-  if (element_type == "C3D6") {
+  if (element_type == "C2D4") {
+    element_ = new C2D4(young_modulus, poisson_coefficient);
+  } else if (element_type == "C3D6") {
     //setElement(new C3D6(young_modulus, poisson_coefficient));
     element_ = new C3D6(young_modulus, poisson_coefficient);
   } else if (element_type == "C3D8") {
@@ -93,14 +95,16 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
 
 void FEA::Solve(std::string method) {
   // Check if K is singular or ill-conditioned
-  if (solver::IsSingularOrIllConditioned2(K_)) {
-    std::cout << "K is singular or ill-conditioned" << std::endl;
+  if (solver::IsSingularOrIllConditioned2(K_) == 1) {
+    //std::cout << "K is singular or ill-conditioned" << std::endl;
     return;
   }
-  std::cout << "K is OK: not singular or ill-conditioned" << std::endl;
+  //std::cout << "K is OK: not singular or ill-conditioned" << std::endl;
 
   // Rearrange the matrix for efficiency
   U_ = solver::SolveSystemWithPreconditioning(K_, F_, method);
+
+  Fi_ = K_ * U_;
 
 //  // Solve using the appropiate method for efficiency
 //  if (UseDirectSolver(K)) {
@@ -232,26 +236,51 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
 // REPORT FUNCTIONS
 // 
 
+std::string buildHeader() {
+  int len_field = 12;
+  std::vector<std::string> hdrs = {"n", "f", "f.x", "f.y", "f.z", "fi", "fi.x", "fi.y", "fi.z", "u", "u.x", "u.y", "u.z"};
+
+  std::string header;
+  for (auto h : hdrs) {
+    for (unsigned int i = 0; i < len_field - h.size(); i++) {
+      header += " ";
+    }
+    header += h + " ";
+  }
+
+  return header;
+}
+
+
 void FEA::ReportNodes(std::string filename) {
 
   // Eigen Matrix of size U_.rows()/3 x 7
   // n, u.x, u.y, u.z, f.x, f.y, f.z
-  Eigen::MatrixXd U = Eigen::MatrixXd::Zero(U_.rows()/3, 7);
+  Eigen::MatrixXd exp = Eigen::MatrixXd::Zero(U_.rows()/3, 13);
 
-  for (unsigned int n=0; n<U.rows(); n++) {
-    U(n,0) = n;
-    U(n,1) = U_(n*3, 0);
-    U(n,2) = U_(n*3+1, 0);
-    U(n,3) = U_(n*3+2, 0);
-    U(n,4) = F_(n*3, 0);
-    U(n,5) = F_(n*3+1, 0);
-    U(n,6) = F_(n*3+2, 0);
+  for (unsigned int n=0; n<exp.rows(); n++) {
+    exp(n,0) = n;
+
+    exp(n,2) = F_(n*3, 0);
+    exp(n,3) = F_(n*3+1, 0);
+    exp(n,4) = F_(n*3+2, 0);
+    exp(n,1) = sqrt(exp(n,2)*exp(n,2) + exp(n,3)*exp(n,3) + exp(n,4)*exp(n,4));
+
+    exp(n,6) = Fi_(n*3, 0);
+    exp(n,7) = Fi_(n*3+1, 0);
+    exp(n,8) = Fi_(n*3+2, 0);
+    exp(n,5) = sqrt(exp(n,6)*exp(n,6) + exp(n,7)*exp(n,7) + exp(n,8)*exp(n,8));
+
+    exp(n,10) = U_(n*3, 0);
+    exp(n,11) = U_(n*3+1, 0);
+    exp(n,12) = U_(n*3+2, 0);
+    exp(n,9) = sqrt(exp(n,10)*exp(n,10) + exp(n,11)*exp(n,11) + exp(n,12)*exp(n,12));
   }
 
   std::ofstream file;
   file.open(filename);
-  file << "n\tu.x\tu.y\tu.z\tf.x\tf.y\tf.z" << std::endl;
-  file << U << std::endl;
+  file << buildHeader() << std::endl;
+  file << exp << std::endl;
 
   file.close();
 

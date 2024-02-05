@@ -12,19 +12,18 @@ double nu = 0.495;
 float Klarge = 100000000.0;
 
 
-
-int main(int argc, char** argv) {
-  AbaqusC3D8_3 model;
+void test_c3d8() {
+  AbaqusC3D8_2 model;
 
   std::cout << "\nBuild FEA" << std::endl;
   FEA fea("C3D8", E, nu, true);
 
   std::cout << "\nBuild BoundaryConditions" << std::endl;
-  BoundaryConditions bc(fea.NumDof(), &model._nodes);
+  BoundaryConditions3d bc(fea.NumDof(), &model._nodes);
   std::cout << " - Encastre in z = 0" << std::endl;
   bc.AddNodal(Eigen::Vector3d(-1.0, -1.0, 0.0), {0, 0, 0}, {0.0, 0.0, 0.0});
-  std::cout << " - Force of magnitude 1 in direction of z on nodes in z = 3" << std::endl;
-  bc.AddNodal(Eigen::Vector3d(-1.0, -1.0, 3.0), {1, 1, 1}, {0.0, 0.0, 1.0});
+  std::cout << " - Force of magnitude 1 in direction of z on nodes in z = " << model.LoadLocation() << std::endl;
+  bc.AddNodal(Eigen::Vector3d(-1.0, -1.0, model.LoadLocation()), {1, 1, 1}, {0.0, 0.0, 1.0});
   //bc.Report();
 
 
@@ -43,7 +42,7 @@ int main(int argc, char** argv) {
 
   // FEA Solver
   std::cout << "\nSolve" << std::endl;
-  fea.Solve();
+  fea.Solve("BiCGSTAB");
 
   std::cout << "\nCompute deformed positions" << std::endl;
   Eigen::MatrixXd U = fea.U();
@@ -57,29 +56,32 @@ int main(int argc, char** argv) {
   model.ApplyDisplacements(u, scale);
 
   fea.ExportAll("../data/" + model.Name() + "/KFU.csv");
-
-
-
-
-  //std::cout << "\nLen nodes/deformed: " << model._nodes.size() << " / " << model._nodes_deformed.size() << std::endl;
-  //for (unsigned int i=0; i<5; i++) {
-  //  std::cout << "u[" << i << "] = " 
-  //            << model._nodes[i].transpose() << " ->\t"
-  //            << scale * u[i].transpose() << " ->\t"
-  //            << model._nodes_deformed[i].transpose() << std::endl;
-  //}
-
   fea.ReportNodes("../data/" + model.Name() + "/nodes.csv");
-
 
   std::cout << "\nVisualization" << std::endl;
   PCLViewer viewer;
-  viewer.AddNodes(model._nodes, "original", Eigen::Vector3d(0.0, 0.0, 1.0));
+  viewer.AddNodes(model._nodes, "original", Eigen::Vector3d(0.2, 0.2, 1.0));
   viewer.AddNodes(model._nodes_deformed, "deformed", Eigen::Vector3d(0.0, 0.7, 0.0));
   viewer.AddLoads(bc.NodeIds(), bc.Values());
   viewer.AddEdges(model._elements);
   viewer.Render();
+}
 
+
+//void test_c2d4() {
+//  AbaqusC2D4_1 model("../py/Dogbone_Tension.input");
+//
+//  std::cout << "\nBuild FEA" << std::endl;
+//  FEA fea("C2D4", E, nu, true);
+//
+//  std::cout << "\nBuild BoundaryConditions" << std::endl;
+//  BoundaryConditions3d bc(fea.NumDof(), &model._nodes);
+//}
+
+
+int main(int argc, char** argv) {
+
+  test_c3d8();
   
   return 0;
 }

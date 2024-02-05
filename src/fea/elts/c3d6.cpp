@@ -4,20 +4,23 @@
 
 C3D6::C3D6(double E, double nu) : Element3D(E, nu) {
   _element_name = "C3D6";
+  _num_nodes = 6;
+  _dof_per_node = 3;
+
 }
 
 
 Eigen::VectorXd C3D6::computeShapeFunctions(double xi, double eta, double zeta) {
     // Initialize a vector to store the shape functions
-    Eigen::VectorXd N(6);
+    Eigen::VectorXd N(_num_nodes);
 
     // Compute the shape functions for each node
     N(0) = (1 - xi - eta) * (1 - zeta) / 2;
-    N(1) = xi * (1 - zeta) / 2;
-    N(2) = eta * (1 - zeta) / 2;
+    N(1) =             xi * (1 - zeta) / 2;
+    N(2) =            eta * (1 - zeta) / 2;
     N(3) = (1 - xi - eta) * (1 + zeta) / 2;
-    N(4) = xi * (1 + zeta) / 2;
-    N(5) = eta * (1 + zeta) / 2;
+    N(4) =             xi * (1 + zeta) / 2;
+    N(5) =            eta * (1 + zeta) / 2;
 
     return N;
 }
@@ -61,7 +64,7 @@ Eigen::MatrixXd C3D6::computeJacobian(const std::vector<Eigen::Vector3d>& nodes,
     Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3, 3);
 
     // Compute the Jacobian matrix
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < _num_nodes; ++i) {
         J.col(0) += nodes[i] * dN(i, 0); // Contribution to the first column of J
         J.col(1) += nodes[i] * dN(i, 1); // Contribution to the second column of J
         J.col(2) += nodes[i] * dN(i, 2); // Contribution to the third column of J
@@ -105,8 +108,8 @@ Eigen::MatrixXd C3D6::computeStrainDisplacementMatrix(const std::vector<Eigen::V
 
 // Function to compute the stiffness matrix for a triangular prism
 Eigen::MatrixXd C3D6::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>& nodes) {
-    // Initialize the stiffness matrix
-    Eigen::MatrixXd K = Eigen::MatrixXd::Zero(18, 18); // 18x18 for 6 nodes, 3 DOF each
+    // Initialize the stiffness matrix: 18x18 for 6 nodes, 3 DOF each
+    Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_num_nodes*_dof_per_node, _num_nodes*_dof_per_node);
 
     // Gauss quadrature points and weights (2-point quadrature)
     std::array<double, 2> gaussPoints = {-1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0)};
@@ -143,24 +146,24 @@ Eigen::MatrixXd C3D6::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>&
 
 Eigen::MatrixXd C3D6::matAssembly(std::vector<Eigen::Vector3d> &vpts, 
                                 std::vector<std::vector<unsigned int>> &velts) {
-  Eigen::MatrixXd K = Eigen::MatrixXd::Zero(3*vpts.size(), 3*vpts.size());
+  Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_dof_per_node*vpts.size(), _dof_per_node*vpts.size());
 
   for (auto elt : velts) {
-    std::vector<Eigen::Vector3d> xyzi(6);
-    std::vector<int> mn(6);
+    std::vector<Eigen::Vector3d> xyzi(_num_nodes);
+    std::vector<int> mn(_num_nodes);
 
     for (unsigned int i=0; i<elt.size(); i++) {
       xyzi[i] = vpts[elt[i]];
-      mn[i] = elt[i]*3;
+      mn[i] = elt[i]*_dof_per_node;
     }
 
     Eigen::MatrixXd Kei = C3D6::computeStiffnessMatrix(xyzi);
 
     for (unsigned int ni = 0; ni < mn.size(); ni++) {
       for (unsigned int nj = 0; nj < mn.size(); nj++) {
-        for (unsigned int m = 0; m < 3; m++) {
-          for (unsigned int n = 0; n < 3; n++) {
-            K(mn[ni]+m, mn[nj]+n) += Kei(ni*3+m, nj*3+n);
+        for (unsigned int m = 0; m < _dof_per_node; m++) {
+          for (unsigned int n = 0; n < _dof_per_node; n++) {
+            K(mn[ni]+m, mn[nj]+n) += Kei(ni*_dof_per_node+m, nj*_dof_per_node+n);
           }
         }
       }

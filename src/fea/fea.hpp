@@ -38,11 +38,14 @@
 #include <pcl/io/vtk_lib_io.h>
 
 #include <elts/element.hpp>
+#include <elts/element2d.hpp>
+#include <elts/c2d4.hpp>
 #include <elts/element3d.hpp>
 #include <elts/c3d6.hpp>
 #include <elts/c3d8.hpp>
 
-#include <boundary_conditions.hpp>
+#include <bcs/boundary_conditions.hpp>
+#include <bcs/boundary_conditions_3d.hpp>
 
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Sparse>
@@ -68,6 +71,12 @@ public:
 
   void ApplyBoundaryConditions(BoundaryConditions &bc);
 
+  /**
+   * Solves the finite element system, using K and F to get U.
+   *
+   * @param method Solver to use: CG, BiCGSTAB, LU, LUFull.
+   * @return <void>, U is stored in the object.
+   */
   void Solve(std::string method = "LU");
 
   //Eigen::MatrixXd PreconditionMatrix(Eigen::MatrixXd &A);
@@ -121,7 +130,7 @@ private:
   Eigen::MatrixXd K1_;
   Eigen::MatrixXd Kei_;
 
-  Eigen::MatrixXd F_;
+  Eigen::MatrixXd F_, Fi_;
   Eigen::MatrixXd U_;
 
   std::vector<bool> bc_;
