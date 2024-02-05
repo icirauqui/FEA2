@@ -44,13 +44,13 @@ Eigen::MatrixXd C2D4::computeJacobian(const std::vector<Eigen::Vector3d>& nodes,
     Eigen::MatrixXd dN = C2D4::computeShapeFunctionDerivatives(xi, eta, zeta);
 
     // Initialize the Jacobian matrix
-    Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3, 3);
+    Eigen::MatrixXd J = Eigen::MatrixXd::Zero(2, 2);
 
     // Compute the Jacobian matrix
     for (int i = 0; i < 4; ++i) {
-        J.col(0) += nodes[i] * dN(i, 0); // Contribution to the first column of J
-        J.col(1) += nodes[i] * dN(i, 1); // Contribution to the second column of J
-        J.col(2) += nodes[i] * dN(i, 2); // Contribution to the third column of J
+      Eigen::Vector2d node = nodes[i].head(2);
+      J.col(0) += node * dN(i, 0); // Contribution to the first column of J
+      J.col(1) += node * dN(i, 1); // Contribution to the second column of J
     }
 
     return J;
@@ -64,8 +64,7 @@ std::pair<Eigen::MatrixXd, double> C2D4::computeInverseJacobianAndDet(const Eige
 }
 
 // Function to compute the Strain-Displacement Matrix (B)
-Eigen::MatrixXd C2D4::computeStrainDisplacementMatrix(const std::vector<Eigen::Vector3d>& nodes, 
-                                                      Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ) {
+Eigen::MatrixXd C2D4::computeStrainDisplacementMatrix(Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ) {
     // Compute the derivatives of shape functions w.r.t. global coordinates
     Eigen::MatrixXd dNdXYZ = invJ * dN.transpose();
 
@@ -74,11 +73,11 @@ Eigen::MatrixXd C2D4::computeStrainDisplacementMatrix(const std::vector<Eigen::V
 
     // Fill the B matrix
     for (int i = 0; i < _num_nodes; ++i) {
-        B(0, 3 * i)     = dNdXYZ(0, i);
-        B(1, 3 * i + 1) = dNdXYZ(1, i);
+        B(0, _dof_per_node * i)     = dNdXYZ(0, i);
+        B(1, _dof_per_node * i + 1) = dNdXYZ(1, i);
 
-        B(3, 3 * i)     = dNdXYZ(1, i);
-        B(3, 3 * i + 1) = dNdXYZ(0, i);
+        B(2, _dof_per_node * i)     = dNdXYZ(1, i);
+        B(2, _dof_per_node * i + 1) = dNdXYZ(0, i);
     }
 
     return B;
@@ -87,7 +86,7 @@ Eigen::MatrixXd C2D4::computeStrainDisplacementMatrix(const std::vector<Eigen::V
 
 // Function to compute the stiffness matrix for a triangular prism
 Eigen::MatrixXd C2D4::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>& nodes) {
-    // Initialize the stiffness matrix: 24x24 for 8 nodes, 3 DOF each
+    // Initialize the stiffness matrix: 24x24 for 4 nodes, 2 DOF each
     Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_num_nodes*_dof_per_node, _num_nodes*_dof_per_node);
 
     // Gauss quadrature points and weights (2-point quadrature)
@@ -103,10 +102,10 @@ Eigen::MatrixXd C2D4::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>&
                 double zeta = gaussPoints[k];
 
                 Eigen::MatrixXd dN = C2D4::computeShapeFunctionDerivatives(xi, eta, zeta);
-
+                
                 Eigen::MatrixXd J = C2D4::computeJacobian(nodes, xi, eta, zeta);
                 auto [invJ, detJ] = C2D4::computeInverseJacobianAndDet(J);
-                Eigen::MatrixXd B = C2D4::computeStrainDisplacementMatrix(nodes, dN, invJ, detJ);
+                Eigen::MatrixXd B = C2D4::computeStrainDisplacementMatrix(dN, invJ, detJ);
 
                 // Weight calculation considering different weights
                 double weight = gaussWeights[i] * gaussWeights[j] * gaussWeights[k];

@@ -14,7 +14,9 @@ public:
   BoundaryConditions2d(int num_dof, std::vector<Eigen::Vector2d>* nodes);
 
   void AddNodal(std::vector<unsigned int> &node_ids, std::vector<unsigned int> &dof, std::vector<double> &values);
-  void AddNodal(Eigen::Vector2d coords, std::vector<unsigned int> dof, std::vector<double> values);
+  void AddNodal(std::vector<double> coords, std::vector<unsigned int> dof, std::vector<double> values);
+
+  void Encastre(std::vector<double> coords);
 
 
 

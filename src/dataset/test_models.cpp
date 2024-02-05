@@ -243,81 +243,89 @@ public:
     std::string line;
     int state = 0;
     while (getline(inpFile, line)) {
-        // Trim leading and trailing whitespace
-        line.erase(0, line.find_first_not_of(" \t"));
-        line.erase(line.find_last_not_of(" \t") + 1);
+      // Trim leading and trailing whitespace
+      line.erase(0, line.find_first_not_of(" \t"));
+      line.erase(line.find_last_not_of(" \t") + 1);
 
-        if (line.empty()) continue;
-        if (line[0] == '*') {
-            state = 0;
-        }
-        if (line.length() >= 5 && line.substr(0, 5).compare("*node") == 0) {
-            state = 1;
-            continue;
-        }
-        if (line.length() >= 8 && line.substr(0, 8).compare("*element") == 0) {
-            state = 2;
-            continue;
-        }
-        if (line.length() >= 9 && line.substr(0, 9).compare("*boundary") == 0) {
-            state = 3;
-            continue;
-        }
+      if (line.empty()) continue;
+      if (line[0] == '*') {
+        state = 0;
+      }
+      if (line.length() >= 5 && line.substr(0, 5).compare("*Node") == 0) {
+          state = 1;
+          continue;
+      }
+      if (line.length() >= 8 && line.substr(0, 8).compare("*Element") == 0) {
+          state = 2;
+          continue;
+      }
+      if (line.length() >= 9 && line.substr(0, 9).compare("*Boundary") == 0) {
+          state = 3;
+          continue;
+      }
 
-        if (state == 0) {
-            continue;
-        }
+      //std::cout << "state: " << state << " : " << line << std::endl;
 
-        std::istringstream iss(line);
-        std::string token;
-        std::vector<std::string> tokens;
-        while (getline(iss, token, ',')) {
-            tokens.push_back(token);
-        }
+      if (state == 0) {
+          continue;
+      }
 
-        if (state == 1) {
-            // Read nodes
-            if (tokens.size() != 3) {
-                local_error("A node definition needs 3 values");
-                continue;
-            }
-            int nodeNr = std::stoi(tokens[0]) - 1; // zero indexed
-            double xx = std::stod(tokens[1]);
-            double yy = std::stod(tokens[2]);
-            _nodes.push_back(Eigen::Vector2d(xx, yy)); // assume the nodes are ordered 1, 2, 3...
-        } else if (state == 2) {
-            // Read elements
-            if (tokens.size() != 5) {
-                local_error("An element definition needs 5 values");
-                continue;
-            }
-            int elemNr = std::stoi(tokens[0]); // not used in this context
-            std::vector<int> element;
-            for (int i = 1; i <= 4; ++i) {
-                element.push_back(std::stoi(tokens[i]) - 1); // zero indexed
-            }
-            // Assuming the order needs to be adjusted from the Python code
-            conn.push_back({element[0], element[3], element[2], element[1]});
-        } else if (state == 3) {
-            // Read displacement boundary conditions
-            if (tokens.size() != 4) {
-                local_error("A displacement boundary condition needs 4 values");
-                continue;
-            }
-            int nodeNr = std::stoi(tokens[0]) - 1; // zero indexed
-            int dof1 = std::stoi(tokens[1]);
-            int dof2 = std::stoi(tokens[2]);
-            double val = std::stod(tokens[3]);
-            if (dof1 == 1) {
-                boundary.push_back({static_cast<double>(nodeNr), 1.0, val});
-            }
-            if (dof2 == 2) {
-                boundary.push_back({static_cast<double>(nodeNr), 2.0, val});
-            }
+      std::istringstream iss(line);
+      std::string token;
+      std::vector<std::string> tokens;
+      while (getline(iss, token, ',')) {
+          tokens.push_back(token);
+      }
+
+      if (state == 1) {
+        // Read nodes
+        if (tokens.size() != 3) {
+          local_error("A node definition needs 3 values");
+          continue;
         }
+        int nodeNr = std::stoi(tokens[0]) - 1; // zero indexed
+        double xx = std::stod(tokens[1]);
+        double yy = std::stod(tokens[2]);
+        _nodes.push_back(Eigen::Vector2d(xx, yy)); // assume the nodes are ordered 1, 2, 3...
+      } else if (state == 2) {
+        // Read elements
+        if (tokens.size() != 5) {
+          local_error("An element definition needs 5 values");
+          continue;
+        }
+        int elemNr = std::stoi(tokens[0]); // not used in this context
+        std::vector<unsigned int> element;
+        for (int i = 1; i <= 4; ++i) {
+          element.push_back(std::stoi(tokens[i]) - 1); // zero indexed
+        }
+        // Assuming the order needs to be adjusted from the Python code
+        _elements.push_back({element[0], element[3], element[2], element[1]});
+      } else if (state == 3) {
+        // Read displacement boundary conditions
+        if (tokens.size() != 4) {
+          local_error("A displacement boundary condition needs 4 values");
+          continue;
+        }
+        int nodeNr = std::stoi(tokens[0]) - 1; // zero indexed
+        int dof1 = std::stoi(tokens[1]);
+        int dof2 = std::stoi(tokens[2]);
+        double val = std::stod(tokens[3]);
+        if (dof1 == 1) {
+          boundary.push_back({static_cast<double>(nodeNr), 1.0, val});
+        }
+        if (dof2 == 2) {
+          boundary.push_back({static_cast<double>(nodeNr), 2.0, val});
+        }
+      }
     }
 
     inpFile.close();
+
+    std::cout << "Nodes: " << _nodes.size() << std::endl;
+    std::cout << "Elements: " << conn.size() << std::endl;
+    std::cout << "Elements: " << _elements.size() << std::endl;
+    std::cout << "Boundary: " << boundary.size() << std::endl;
+
   }
 
 
@@ -325,12 +333,12 @@ public:
 
 
 
-  //void ApplyDisplacements(std::vector<Eigen::Vector3d> &displacements, double scale = 1.0) {
-  //  _nodes_deformed.clear();
-  //  for (unsigned int n=0; n<_nodes.size(); n++) {
-  //    _nodes_deformed.push_back(_nodes[n] + scale * displacements[n]);
-  //  }
-  //}
+  void ApplyDisplacements(std::vector<Eigen::Vector2d> &displacements, double scale = 1.0) {
+    _nodes_deformed.clear();
+    for (unsigned int n=0; n<_nodes.size(); n++) {
+      _nodes_deformed.push_back(_nodes[n] + scale * displacements[n]);
+    }
+  }
     
   std::vector<Eigen::Vector2d> _nodes, _nodes_deformed;
   std::vector<std::vector<unsigned int>> _elements;

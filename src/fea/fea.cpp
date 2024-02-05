@@ -23,8 +23,20 @@ FEA::FEA(std::string element_type,
     std::cout << "element name: " << element_->getElementName() << std::endl;
     std::cout << "element dim: " << element_->getNumNodes() << std::endl;
     std::cout << "element dof: " << element_->getDofPerNode() << std::endl;
-    std::cout << "element D: " << element_->getD() << std::endl;
+    std::cout << "element D: " << std::endl << element_->getD() << std::endl;
   }
+}
+
+
+void FEA::MatAssembly(std::vector<Eigen::Vector2d> &vpts, 
+                      std::vector<std::vector<unsigned int>> &velts) {
+
+  std::vector<Eigen::Vector3d> vpts3d;
+  for (auto v : vpts) {
+    vpts3d.push_back(Eigen::Vector3d(v[0], v[1], 0.0));
+  }
+  
+  K_ = element_->matAssembly(vpts3d, velts);
 }
 
 
@@ -96,22 +108,13 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
 void FEA::Solve(std::string method) {
   // Check if K is singular or ill-conditioned
   if (solver::IsSingularOrIllConditioned2(K_) == 1) {
-    //std::cout << "K is singular or ill-conditioned" << std::endl;
     return;
   }
-  //std::cout << "K is OK: not singular or ill-conditioned" << std::endl;
 
-  // Rearrange the matrix for efficiency
+  std::cout << " - Solving system with " << method << " method" << std::endl;
   U_ = solver::SolveSystemWithPreconditioning(K_, F_, method);
 
   Fi_ = K_ * U_;
-
-//  // Solve using the appropiate method for efficiency
-//  if (UseDirectSolver(K)) {
-//    U_ = DirectSolver(K, F_);
-//  } else {
-//    U_ = IterativeSolver(K, F_);
-//  }
 }
 
 

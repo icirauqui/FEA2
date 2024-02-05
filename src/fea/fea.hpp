@@ -45,6 +45,7 @@
 #include <elts/c3d8.hpp>
 
 #include <bcs/boundary_conditions.hpp>
+#include <bcs/boundary_conditions_2d.hpp>
 #include <bcs/boundary_conditions_3d.hpp>
 
 #include <eigen3/Eigen/Dense>
@@ -65,6 +66,9 @@ public:
   FEA(std::string element_type,
       float young_modulus, float poisson_coefficient,
       bool debug_mode);
+    
+  void MatAssembly(std::vector<Eigen::Vector2d> &vpts, 
+                   std::vector<std::vector<unsigned int>> &velts);
     
   void MatAssembly(std::vector<Eigen::Vector3d> &vpts, 
                    std::vector<std::vector<unsigned int>> &velts);

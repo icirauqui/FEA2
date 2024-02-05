@@ -39,6 +39,8 @@ add_library(fea
     elts/c3d6.cpp
     elts/c3d8.cpp
     bcs/boundary_conditions.hpp
+    bcs/boundary_conditions_2d.hpp
+    bcs/boundary_conditions_2d.cpp
     bcs/boundary_conditions_3d.hpp
     bcs/boundary_conditions_3d.cpp
     solver.hpp

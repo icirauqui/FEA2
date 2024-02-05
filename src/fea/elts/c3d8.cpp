@@ -88,8 +88,7 @@ std::pair<Eigen::MatrixXd, double> C3D8::computeInverseJacobianAndDet(const Eige
 }
 
 // Function to compute the Strain-Displacement Matrix (B)
-Eigen::MatrixXd C3D8::computeStrainDisplacementMatrix(const std::vector<Eigen::Vector3d>& nodes, 
-                                                      Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ) {
+Eigen::MatrixXd C3D8::computeStrainDisplacementMatrix(Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ) {
     // Compute the derivatives of shape functions w.r.t. global coordinates
     Eigen::MatrixXd dNdXYZ = invJ * dN.transpose();
 
@@ -137,7 +136,7 @@ Eigen::MatrixXd C3D8::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>&
 
                 Eigen::MatrixXd J = C3D8::computeJacobian(nodes, xi, eta, zeta);
                 auto [invJ, detJ] = C3D8::computeInverseJacobianAndDet(J);
-                Eigen::MatrixXd B = C3D8::computeStrainDisplacementMatrix(nodes, dN, invJ, detJ);
+                Eigen::MatrixXd B = C3D8::computeStrainDisplacementMatrix(dN, invJ, detJ);
 
                 // Weight calculation considering different weights
                 double weight = gaussWeights[i] * gaussWeights[j] * gaussWeights[k];

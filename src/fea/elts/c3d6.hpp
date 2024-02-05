@@ -25,8 +25,7 @@ public:
     std::pair<Eigen::MatrixXd, double> computeInverseJacobianAndDet(const Eigen::MatrixXd& J);
 
     // Function to compute the Strain-Displacement Matrix (B)
-    Eigen::MatrixXd computeStrainDisplacementMatrix(const std::vector<Eigen::Vector3d>& nodes, 
-                                                    Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ);
+    Eigen::MatrixXd computeStrainDisplacementMatrix(Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ);
 
     // Function to compute the stiffness matrix for a triangular prism
     Eigen::MatrixXd computeStiffnessMatrix(const std::vector<Eigen::Vector3d>& nodes);

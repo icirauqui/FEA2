@@ -31,7 +31,9 @@ void BoundaryConditions2d::AddNodal(std::vector<unsigned int> &node_ids, std::ve
   std::cout << "Added " << node_ids.size() << " new boundary conditions" << std::endl;
 }
 
-void BoundaryConditions2d::AddNodal(Eigen::Vector2d coords, std::vector<unsigned int> dof, std::vector<double> values) {
+
+
+void BoundaryConditions2d::AddNodal(std::vector<double> coords, std::vector<unsigned int> dof, std::vector<double> values) {
   // Transform dof into a pointer to a vector
   std::vector<unsigned int>* pdof = new std::vector<unsigned int>(_num_dof, 0);
   for (unsigned int i = 0; i < _num_dof; i++) {
@@ -41,10 +43,10 @@ void BoundaryConditions2d::AddNodal(Eigen::Vector2d coords, std::vector<unsigned
   int num_new_bcs = 0;
   for (unsigned int node = 0; node < _nodes->size(); node++) {
     for (unsigned int dof = 0; dof < _num_dof; dof++) {
-      if (coords(dof) < 0.0)
+      if (coords[dof] < 0.0)
         continue;
 
-      if (abs((*_nodes)[node](dof) - coords(dof)) < _tolerance) {
+      if (abs((*_nodes)[node](dof) - coords[dof]) < _tolerance) {
         _node_ids[node] = true;
         _dof[node] = pdof;
         _values[node] = values;
@@ -55,5 +57,33 @@ void BoundaryConditions2d::AddNodal(Eigen::Vector2d coords, std::vector<unsigned
   }
 
   std::cout << "   Added " << num_new_bcs << " new boundary conditions" << std::endl;
+}
+
+
+
+
+
+void BoundaryConditions2d::Encastre(std::vector<double> coords) {
+  // Transform dof into a pointer to a vector
+  std::vector<unsigned int>* pdof = new std::vector<unsigned int>(_num_dof, 0);
+  std::vector<double> values = {0.0, 0.0};
+
+  int num_new_bcs = 0;
+  for (unsigned int node = 0; node < _nodes->size(); node++) {
+    for (unsigned int dof = 0; dof < _num_dof; dof++) {
+      if (coords[dof] < 0.0)
+        continue;
+
+      if (abs((*_nodes)[node](dof) - coords[dof]) < _tolerance) {
+        _node_ids[node] = true;
+        _dof[node] = pdof;
+        _values[node] = values;
+        num_new_bcs++;
+        break;
+      }
+    }
+  }
+
+  std::cout << "   Added encastre in " << num_new_bcs << " nodes" << std::endl;
 }
 
