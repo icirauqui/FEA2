@@ -64,9 +64,12 @@ void FEA::MatAssembly(std::vector<Eigen::Vector3d> &vpts,
 void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
 
   int bc_encastre = 0;
-  int bc_force = 0;
   int bc_displ = 0;
-  int bc_others = 0;
+
+  int num_dof = bc.NumDof();
+
+  std::cout << " K Size = " << K_.rows() << " x " << K_.cols() << std::endl;
+  std::cout << " F Size = " << F_.rows() << " x " << F_.cols() << std::endl;
 
   bc_.resize(bc.NodeIds().size());
 
@@ -79,7 +82,7 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
     std::vector<double> values = bc.Values(node);
 
     for (unsigned int i=0; i<values.size(); i++) {
-      unsigned int m = 3*node + i;
+      unsigned int m = num_dof*node + i;
 
       if (values[i] == 0) {
         for (unsigned int j=0; j<K_.cols(); j++) {
@@ -105,6 +108,8 @@ void FEA::ApplyLoads(Loads &loads) {
 
   int loads_node = 0;
 
+  int num_dof = loads.NumDof();
+
   loads_.resize(loads.NodeIds().size());
 
   for (unsigned int node = 0; node < loads.NodeIds().size(); node++) {
@@ -116,7 +121,7 @@ void FEA::ApplyLoads(Loads &loads) {
     std::vector<double> values = loads.Values(node);
 
     for (unsigned int i=0; i<values.size(); i++) {
-      unsigned int m = 3*node + i;
+      unsigned int m = num_dof*node + i;
       F_(m,0) = values[i];
       loads_node++;
     }
