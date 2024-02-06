@@ -48,6 +48,10 @@
 #include <bcs/boundary_conditions_2d.hpp>
 #include <bcs/boundary_conditions_3d.hpp>
 
+#include <loads/loads.hpp>
+#include <loads/loads_2d.hpp>
+//#include <loads/loads3d.hpp>
+
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Sparse>
 #include <eigen3/Eigen/LU>
@@ -74,6 +78,7 @@ public:
                    std::vector<std::vector<unsigned int>> &velts);
 
   void ApplyBoundaryConditions(BoundaryConditions &bc);
+  void ApplyLoads(Loads &loads);
 
   /**
    * Solves the finite element system, using K and F to get U.
@@ -129,6 +134,8 @@ private:
 
   
   Element* element_;
+  //BoundaryConditions* bcs_;
+  //Loads* loads_;
 
   Eigen::MatrixXd K_;
   Eigen::MatrixXd K1_;
@@ -138,6 +145,7 @@ private:
   Eigen::MatrixXd U_;
 
   std::vector<bool> bc_;
+  std::vector<bool> loads_;
 
   float k_large_ = 1e8;
 

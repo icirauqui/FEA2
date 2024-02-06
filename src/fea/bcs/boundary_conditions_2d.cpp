@@ -28,7 +28,7 @@ void BoundaryConditions2d::AddNodal(std::vector<unsigned int> &node_ids, std::ve
     _values[node] = values;
   }
 
-  std::cout << "Added " << node_ids.size() << " new boundary conditions" << std::endl;
+  std::cout << "   Added " << node_ids.size() << " new boundary conditions" << std::endl;
 }
 
 

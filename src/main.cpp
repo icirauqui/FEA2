@@ -11,7 +11,7 @@ double E = 10000.0;
 double nu = 0.495;
 float Klarge = 100000000.0;
 
-
+/*
 void test_c3d8() {
   AbaqusC3D8_2 model;
 
@@ -63,14 +63,14 @@ void test_c3d8() {
   viewer.AddNodes(model._nodes, "original", Eigen::Vector3d(0.2, 0.2, 1.0));
   viewer.AddNodes(model._nodes_deformed, "deformed", Eigen::Vector3d(0.0, 0.7, 0.0));
   viewer.AddLoads(bc.NodeIds(), bc.Values());
-  viewer.AddEdges(model._elements);
+  viewer.AddEdges(model._elements, model.ElementType());
   viewer.Render();
 }
+*/
 
 
 void test_c2d4() {
   AbaqusC2D4_1 model("../py/Dogbone_Tension.input");
-
   std::cout << "num nodes = " << model._nodes.size() << "\n";
 
   std::cout << "\nBuild FEA" << std::endl;
@@ -80,8 +80,14 @@ void test_c2d4() {
   BoundaryConditions2d bc(fea.NumDof(), &model._nodes);
   std::cout << " - Encastre in x = 0" << std::endl;
   bc.Encastre({0.0, -1.0});
+
+  std::cout << "\nBuild Loads" << std::endl;
+  Loads2d loads(fea.NumDof(), &model._nodes);
+
+
   std::cout << " - Force of magnitude 1 in direction x on nodes in x = 115.0" << std::endl;
-  bc.AddNodal({115.0, -1.0}, {1, 1}, {1.0, 0.0});
+  //bc.AddNodal({115.0, -1.0}, {1, 1}, {1.0, 0.0});
+  loads.AddNodal({115.0, -1.0}, {1.0, 0.0});
   
   std::cout << "\nMatAssembly" << std::endl;
   fea.MatAssembly(model._nodes, model._elements);
@@ -89,6 +95,7 @@ void test_c2d4() {
 
   std::cout << "\nApplyBoundaryConditions" << std::endl;
   fea.ApplyBoundaryConditions(bc);
+  fea.ApplyLoads(loads);
   fea.ExportK("../data/" + model.Name() + "/K_b.csv");
 
   std::cout << "\nSolve" << std::endl;
@@ -114,16 +121,13 @@ void test_c2d4() {
     nodes_deformed_vis.push_back(Eigen::Vector3d(model._nodes_deformed[n][0], model._nodes_deformed[n][1], 0.0));
   }
 
+
   std::cout << "\nVisualization" << std::endl;
   PCLViewer viewer;
-  std::cout << " - AddNodes" << std::endl;
   viewer.AddNodes(nodes_vis, "original", Eigen::Vector3d(0.2, 0.2, 1.0));
   viewer.AddNodes(nodes_deformed_vis, "deformed", Eigen::Vector3d(0.0, 0.7, 0.0));
-  //std::cout << " - AddLoads" << std::endl;
-  //viewer.AddLoads(bc.NodeIds(), bc.Values());
-  //std::cout << " - AddEdges" << std::endl;
-  //viewer.AddEdges(model._elements);
-  std::cout << " - Render" << std::endl;
+  viewer.AddLoads(bc.NodeIds(), bc.Values());
+  viewer.AddEdges(model._elements, model.ElementType());
   viewer.Render();
 
 

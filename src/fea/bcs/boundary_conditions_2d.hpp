@@ -13,12 +13,16 @@ public:
 
   BoundaryConditions2d(int num_dof, std::vector<Eigen::Vector2d>* nodes);
 
+  
+
   void AddNodal(std::vector<unsigned int> &node_ids, std::vector<unsigned int> &dof, std::vector<double> &values);
   void AddNodal(std::vector<double> coords, std::vector<unsigned int> dof, std::vector<double> values);
 
   void Encastre(std::vector<double> coords);
 
 
+  // Setters
+  void SetNodes(std::vector<Eigen::Vector2d>* nodes) { _nodes = nodes; }
 
 private:
 

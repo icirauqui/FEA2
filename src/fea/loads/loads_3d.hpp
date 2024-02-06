@@ -17,8 +17,6 @@ public:
   void AddNodal(Eigen::Vector3d coords, std::vector<unsigned int> dof, std::vector<double> values);
 
 
-  // Setters
-  void SetNodes(std::vector<Eigen::Vector3d>* nodes) { _nodes = nodes; }
 
 private:
 

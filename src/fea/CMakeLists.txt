@@ -43,6 +43,9 @@ add_library(fea
     bcs/boundary_conditions_2d.cpp
     bcs/boundary_conditions_3d.hpp
     bcs/boundary_conditions_3d.cpp
+    loads/loads.hpp
+    loads/loads_2d.hpp
+    loads/loads_2d.cpp
     solver.hpp
     solver.cpp
     pos.cpp

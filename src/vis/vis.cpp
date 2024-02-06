@@ -70,23 +70,35 @@ void PCLViewer::AddNodes(std::vector<Eigen::Vector3d> &pts, std::string name, Ei
   //viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, color(0), color(1), color(2), name);
 }
 
-void PCLViewer::AddEdges(std::vector<std::vector<unsigned int>> &elts) {
+void PCLViewer::AddEdges(std::vector<std::vector<unsigned int>> &elts, std::string elt) {
 
   // Create a vector of tuples with pairs of point indices
-  std::vector<std::tuple<unsigned int, unsigned int>> edges = {
-    std::make_tuple(0, 1),
-    std::make_tuple(1, 2),
-    std::make_tuple(2, 3),
-    std::make_tuple(3, 0),
-    std::make_tuple(4, 5),
-    std::make_tuple(5, 6),
-    std::make_tuple(6, 7),
-    std::make_tuple(7, 4),
-    std::make_tuple(0, 4),
-    std::make_tuple(1, 5),
-    std::make_tuple(2, 6),
-    std::make_tuple(3, 7)
-  };
+  std::vector<std::tuple<unsigned int, unsigned int>> edges;
+  
+  if (elt == "C2D4") {
+    edges = {
+      std::make_tuple(0, 1),
+      std::make_tuple(1, 2),
+      std::make_tuple(2, 3),
+      std::make_tuple(3, 0)
+    };
+
+  } else if (elt == "C3D8") {
+    edges = {
+      std::make_tuple(0, 1),
+      std::make_tuple(1, 2),
+      std::make_tuple(2, 3),
+      std::make_tuple(3, 0),
+      std::make_tuple(4, 5),
+      std::make_tuple(5, 6),
+      std::make_tuple(6, 7),
+      std::make_tuple(7, 4),
+      std::make_tuple(0, 4),
+      std::make_tuple(1, 5),
+      std::make_tuple(2, 6),
+      std::make_tuple(3, 7)
+    };
+  }
 
   for (unsigned int e=0; e<elts.size(); e++) {
     //std::string name = "edge_" + name + "_" + std::to_string(e) + "_";

@@ -6,12 +6,17 @@ FEA::FEA(std::string element_type,
 
   if (element_type == "C2D4") {
     element_ = new C2D4(young_modulus, poisson_coefficient);
+    //bcs_ = new BoundaryConditions2d(2, nullptr);
+    //loads_ = new Loads2d(2, nullptr);
   } else if (element_type == "C3D6") {
     //setElement(new C3D6(young_modulus, poisson_coefficient));
     element_ = new C3D6(young_modulus, poisson_coefficient);
+    //bcs_ = new BoundaryConditions3d(3, nullptr);
+    //loads_ = new Loads3d(3, nullptr);
   } else if (element_type == "C3D8") {
     //setElement(new C3D8(young_modulus, poisson_coefficient));
     element_ = new C3D8(young_modulus, poisson_coefficient);
+    //bcs_ = new BoundaryConditions3d(3, nullptr);
   } else {
     std::cout << "Element not supported" << std::endl;
   }
@@ -37,18 +42,26 @@ void FEA::MatAssembly(std::vector<Eigen::Vector2d> &vpts,
   }
   
   K_ = element_->matAssembly(vpts3d, velts);
+
+  // Reset F_ and U_ to zero
+  F_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
+  U_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
 }
 
 
 void FEA::MatAssembly(std::vector<Eigen::Vector3d> &vpts, 
                       std::vector<std::vector<unsigned int>> &velts) {
   K_ = element_->matAssembly(vpts, velts);
+
+  // Reset F_ and U_ to zero
+  F_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
+  U_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
 }
 
 
+
+
 void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
-  // Reset F_ to zero
-  F_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
 
   int bc_encastre = 0;
   int bc_force = 0;
@@ -63,44 +76,53 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
     if (!bc.NodeIds()[node])
       continue;
     
-    std::vector<unsigned int>* dof = bc.Dof(node);
     std::vector<double> values = bc.Values(node);
 
-    for (unsigned int i=0; i<dof->size(); i++) {
+    for (unsigned int i=0; i<values.size(); i++) {
       unsigned int m = 3*node + i;
 
-      if ((*dof)[i] == 0) {
-        // set row and col m to zero
+      if (values[i] == 0) {
         for (unsigned int j=0; j<K_.cols(); j++) {
           K_(m,j) = 0.0;
           K_(j,m) = 0.0;
         }
         K_(m,m) = 1.0;
-
         F_(m,0) = 0.0;
         bc_encastre++;
-
-        //if (values[i] != 0.0) {
-        //  F_(m,0) = values[i];
-        //  bc_displ++;
-        //} else {
-        //  bc_encastre++;
-        //}
-      }
-      else if ((*dof)[i] == 1) {
-        F_(m,0) = values[i];
-        bc_force++;
-      }  
-      else {
-        bc_others++;
       }
     }
   }
 
   std::cout << " - Encastre conditions: " << bc_encastre << std::endl;
-  std::cout << " - Force conditions: " << bc_force << std::endl;
   std::cout << " - Displacement conditions: " << bc_displ << std::endl;
-  std::cout << " - Other conditions: " << bc_others << std::endl;
+}
+
+
+
+
+
+void FEA::ApplyLoads(Loads &loads) {
+
+  int loads_node = 0;
+
+  loads_.resize(loads.NodeIds().size());
+
+  for (unsigned int node = 0; node < loads.NodeIds().size(); node++) {
+    loads_[node] = loads.NodeIds()[node];
+
+    if (!loads.NodeIds()[node])
+      continue;
+    
+    std::vector<double> values = loads.Values(node);
+
+    for (unsigned int i=0; i<values.size(); i++) {
+      unsigned int m = 3*node + i;
+      F_(m,0) = values[i];
+      loads_node++;
+    }
+  }
+
+  std::cout << " - Node loads: " << loads_node << std::endl;
 }
 
 

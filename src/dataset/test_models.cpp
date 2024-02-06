@@ -5,6 +5,20 @@
 #include <string>
 #include "eigen3/Eigen/Dense"
 
+
+
+// template a function to print std::vector
+template <typename T>
+void printVectorA(std::string title, std::vector<T> &v) {
+  std::cout << title << ":";
+  for (auto i : v) {
+    std::cout << " " << i;
+  }
+  std::cout << std::endl;
+}
+
+
+
 class AbaqusC3D8_1 {
 public:
   AbaqusC3D8_1() {
@@ -67,9 +81,8 @@ public:
 
   std::string Name() { return "abaqus_c3d8_1"; }
   double LoadLocation() { return _z0; }
+  std::string ElementType() { return "C3D8"; }
 };
-
-
 
 
 
@@ -135,19 +148,9 @@ public:
 
   std::string Name() { return "abaqus_c3d8_2"; }
   double LoadLocation() { return _z0; }
+  std::string ElementType() { return "C3D8"; }
 };
 
-
-
-// template a function to print std::vector
-template <typename T>
-void printVectorA(std::string title, std::vector<T> &v) {
-  std::cout << title << ":";
-  for (auto i : v) {
-    std::cout << " " << i;
-  }
-  std::cout << std::endl;
-}
 
 
 class AbaqusC3D8_3 {
@@ -215,6 +218,7 @@ public:
 
   std::string Name() { return "abaqus_c3d8_3"; }
   double LoadLocation() { return _z0; }
+  std::string ElementType() { return "C3D8"; }
 };
 
 
@@ -322,15 +326,10 @@ public:
     inpFile.close();
 
     std::cout << "Nodes: " << _nodes.size() << std::endl;
-    std::cout << "Elements: " << conn.size() << std::endl;
     std::cout << "Elements: " << _elements.size() << std::endl;
     std::cout << "Boundary: " << boundary.size() << std::endl;
 
   }
-
-
-
-
 
 
   void ApplyDisplacements(std::vector<Eigen::Vector2d> &displacements, double scale = 1.0) {
@@ -342,8 +341,6 @@ public:
     
   std::vector<Eigen::Vector2d> _nodes, _nodes_deformed;
   std::vector<std::vector<unsigned int>> _elements;
-
-  std::vector<std::vector<int>> conn;
   std::vector<std::vector<double>> boundary;
 
   double _x0 = 1.0;
@@ -353,6 +350,7 @@ public:
 
   std::string Name() { return "abaqus_c2d4"; }
   double LoadLocation() { return _z0; }
+  std::string ElementType() { return "C2D4"; }
 };
 
 
