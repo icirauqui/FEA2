@@ -85,6 +85,7 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
     
     for (unsigned int i=0; i<values.size(); i++) {
       unsigned int m = num_dof*node + i;
+      unsigned int m = num_dof*node + i;
 
       if (!encastre && values[i] == 0) {
         continue;
