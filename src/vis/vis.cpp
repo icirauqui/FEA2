@@ -122,7 +122,7 @@ void PCLViewer::AddEdges(std::vector<std::vector<unsigned int>> &elts, std::stri
   }
 }
 
-void PCLViewer::AddLoads(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag) {
+void PCLViewer::AddBCs(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag) {
   for (unsigned int i=0; i<nodes.size(); i++) {
     if (!nodes[i]) continue;
 

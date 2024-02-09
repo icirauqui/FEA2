@@ -56,6 +56,9 @@ void FEA::MatAssembly(std::vector<Eigen::Vector3d> &vpts,
   // Reset F_ and U_ to zero
   F_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
   U_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
+
+  bc_ = std::vector<bool>(vpts.size(), false);
+  loads_ = std::vector<bool>(vpts.size(), false);
 }
 
 
@@ -64,32 +67,48 @@ void FEA::MatAssembly(std::vector<Eigen::Vector3d> &vpts,
 void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
 
   int bc_encastre = 0;
-  int bc_force = 0;
   int bc_displ = 0;
-  int bc_others = 0;
 
-  bc_.resize(bc.NodeIds().size());
+  int num_dof = bc.NumDof();
+
+  std::cout << " K Size = " << K_.rows() << " x " << K_.cols() << std::endl;
+  std::cout << " F Size = " << F_.rows() << " x " << F_.cols() << std::endl;
 
   for (unsigned int node = 0; node < bc.NodeIds().size(); node++) {
-    bc_[node] = bc.NodeIds()[node];
 
     if (!bc.NodeIds()[node])
       continue;
     
     std::vector<double> values = bc.Values(node);
 
+    bool encastre = std::all_of(values.begin(), values.end(), [](double val) { return val == 0.0; });
+    
     for (unsigned int i=0; i<values.size(); i++) {
-      unsigned int m = 3*node + i;
+      unsigned int m = num_dof*node + i;
 
-      if (values[i] == 0) {
-        for (unsigned int j=0; j<K_.cols(); j++) {
-          K_(m,j) = 0.0;
+      if (!encastre && values[i] == 0) {
+        continue;
+      }
+
+      for (unsigned int j=0; j<K_.cols(); j++) {
+        K_(m,j) = 0.0;
+        if (encastre) {
+          K_(j,m) = 0.0;
+        } else {
+          F_(j,0) -= K_(j,m) * values[i];
           K_(j,m) = 0.0;
         }
-        K_(m,m) = 1.0;
-        F_(m,0) = 0.0;
-        bc_encastre++;
       }
+
+      if (encastre) {
+        bc_encastre++;
+      } else {
+        bc_displ++;
+      }
+
+      K_(m,m) = 1;
+      F_(m,0) = values[i];
+
     }
   }
 
@@ -105,21 +124,26 @@ void FEA::ApplyLoads(Loads &loads) {
 
   int loads_node = 0;
 
-  loads_.resize(loads.NodeIds().size());
+  int num_dof = loads.NumDof();
 
   for (unsigned int node = 0; node < loads.NodeIds().size(); node++) {
-    loads_[node] = loads.NodeIds()[node];
-
     if (!loads.NodeIds()[node])
       continue;
     
     std::vector<double> values = loads.Values(node);
 
     for (unsigned int i=0; i<values.size(); i++) {
-      unsigned int m = 3*node + i;
-      F_(m,0) = values[i];
+      if (values[i] == 0) {
+        continue;
+      }
+
+      unsigned int m = num_dof*node + i;
+      
+      F_(m,0) += values[i];
+      
       loads_node++;
     }
+    std::cout << std::endl;
   }
 
   std::cout << " - Node loads: " << loads_node << std::endl;

@@ -2,6 +2,7 @@
 #define FEA_HPP
 
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <math.h>

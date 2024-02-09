@@ -20,6 +20,7 @@ public:
   // Accessors
   bool NodeIds(unsigned int idx) { return _node_ids[idx]; }
   std::vector<bool>& NodeIds() { return _node_ids; }
+  int NumDof() { return _num_dof; }
   std::vector<unsigned int>* Dof(unsigned int idx) { return _dof[idx]; }
   std::vector<std::vector<unsigned int>*> Dof() { return _dof; }
   std::vector<double>& Values(unsigned int idx) { return _values[idx]; }

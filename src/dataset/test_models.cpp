@@ -348,7 +348,7 @@ public:
   double _z0 = 3.0;
   double _w = 1.0;
 
-  std::string Name() { return "abaqus_c2d4"; }
+  std::string Name() { return "abaqus_c2d4_1"; }
   double LoadLocation() { return _z0; }
   std::string ElementType() { return "C2D4"; }
 };

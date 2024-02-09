@@ -9,7 +9,6 @@
 // Parameters
 double E = 10000.0;
 double nu = 0.495;
-float Klarge = 100000000.0;
 
 /*
 void test_c3d8() {
@@ -71,23 +70,24 @@ void test_c3d8() {
 
 void test_c2d4() {
   AbaqusC2D4_1 model("../py/Dogbone_Tension.input");
+  //AbaqusC2D4_1 model("../py/tn1.input");
   std::cout << "num nodes = " << model._nodes.size() << "\n";
 
   std::cout << "\nBuild FEA" << std::endl;
-  FEA fea("C2D4", E, nu, true);
+  FEA fea("C2D4", 100.0, 0.3, true);
 
   std::cout << "\nBuild BoundaryConditions" << std::endl;
   BoundaryConditions2d bc(fea.NumDof(), &model._nodes);
   std::cout << " - Encastre in x = 0" << std::endl;
   bc.Encastre({0.0, -1.0});
+  bc.AddNodal({115.0, -1.0}, {1, 0}, {1, 0.0});
 
   std::cout << "\nBuild Loads" << std::endl;
-  Loads2d loads(fea.NumDof(), &model._nodes);
+  //Loads2d loads(fea.NumDof(), &model._nodes);
 
 
-  std::cout << " - Force of magnitude 1 in direction x on nodes in x = 115.0" << std::endl;
-  //bc.AddNodal({115.0, -1.0}, {1, 1}, {1.0, 0.0});
-  loads.AddNodal({115.0, -1.0}, {1.0, 0.0});
+  //std::cout << " - Force of magnitude 1 in direction x on nodes in x = 115.0" << std::endl;
+  //loads.AddNodal({4.0, -1.0}, {1.0, 0.0});
   
   std::cout << "\nMatAssembly" << std::endl;
   fea.MatAssembly(model._nodes, model._elements);
@@ -95,11 +95,13 @@ void test_c2d4() {
 
   std::cout << "\nApplyBoundaryConditions" << std::endl;
   fea.ApplyBoundaryConditions(bc);
-  fea.ApplyLoads(loads);
+  //fea.ApplyLoads(loads);
   fea.ExportK("../data/" + model.Name() + "/K_b.csv");
+  fea.ExportF("../data/" + model.Name() + "/F.csv");
 
   std::cout << "\nSolve" << std::endl;
   fea.Solve("LU");
+  fea.ExportU("../data/" + model.Name() + "/U.csv");
 
   std::cout << "\nCompute deformed positions" << std::endl;
   Eigen::MatrixXd U = fea.U();
@@ -109,7 +111,7 @@ void test_c2d4() {
   }
   std::cout << " - u.size(): " << u.size() << std::endl;
   std::cout << " - model._nodes.size(): " << model._nodes.size() << std::endl;
-  double scale = 1000.0;
+  double scale = 1.0;
   model.ApplyDisplacements(u, scale);
 
   fea.ExportAll("../data/" + model.Name() + "/KFU.csv");
@@ -126,7 +128,8 @@ void test_c2d4() {
   PCLViewer viewer;
   viewer.AddNodes(nodes_vis, "original", Eigen::Vector3d(0.2, 0.2, 1.0));
   viewer.AddNodes(nodes_deformed_vis, "deformed", Eigen::Vector3d(0.0, 0.7, 0.0));
-  viewer.AddLoads(bc.NodeIds(), bc.Values());
+  viewer.AddBCs(bc.NodeIds(), bc.Values());
+  //viewer.AddBCs(loads.NodeIds(), loads.Values());
   viewer.AddEdges(model._elements, model.ElementType());
   viewer.Render();
 

@@ -56,10 +56,7 @@ Eigen::MatrixXd C3D6::computeShapeFunctionDerivatives(double xi, double eta, dou
     return dN;
 }
 
-Eigen::MatrixXd C3D6::computeJacobian(const std::vector<Eigen::Vector3d>& nodes, double xi, double eta, double zeta) {
-    // Compute the derivatives of the shape functions
-    Eigen::MatrixXd dN = C3D6::computeShapeFunctionDerivatives(xi, eta, zeta);
-
+Eigen::MatrixXd C3D6::computeJacobian(const std::vector<Eigen::Vector3d>& nodes, Eigen::MatrixXd &dN) {
     // Initialize the Jacobian matrix
     Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3, 3);
 
@@ -124,7 +121,7 @@ Eigen::MatrixXd C3D6::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>&
 
                 Eigen::MatrixXd dN = C3D6::computeShapeFunctionDerivatives(xi, eta, zeta);
 
-                Eigen::MatrixXd J = C3D6::computeJacobian(nodes, xi, eta, zeta);
+                Eigen::MatrixXd J = C3D6::computeJacobian(nodes, dN);
                 auto [invJ, detJ] = C3D6::computeInverseJacobianAndDet(J);
                 Eigen::MatrixXd B = C3D6::computeStrainDisplacementMatrix(dN, invJ, detJ);
 

@@ -19,7 +19,7 @@ public:
   virtual Eigen::MatrixXd computeShapeFunctionDerivatives(double xi, double eta, double zeta) = 0;
 
   // Function to compute the Jacobian matrix for a triangular prism
-  virtual Eigen::MatrixXd computeJacobian(const std::vector<Eigen::Vector3d>& nodes, double xi, double eta, double zeta) = 0;
+  virtual Eigen::MatrixXd computeJacobian(const std::vector<Eigen::Vector3d>& nodes, Eigen::MatrixXd &dN) = 0;
 
   // Function to compute the inverse of the Jacobian matrix and its determinant
   virtual std::pair<Eigen::MatrixXd, double> computeInverseJacobianAndDet(const Eigen::MatrixXd& J) = 0;

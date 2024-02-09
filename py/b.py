@@ -40,18 +40,32 @@ def shape(xi):
 		(1.0+xi)*(1.0+eta), 
 		(1.0-xi)*(1.0+eta)]
 	return 0.25 * np.array(N)
+
 def gradshape(xi):
 	"""Gradient of the shape functions for a 4-node, isoparametric element.
 		dN_i(xi,eta)/dxi and dN_i(xi,eta)/deta
 		Input: 1x2,  Output: 2x4"""
 	xi,eta = tuple(xi)
-	dN = [[-(1.0-eta),  (1.0-eta), (1.0+eta), -(1.0+eta)],
-		  [-(1.0-xi), -(1.0+xi), (1.0+xi),  (1.0-xi)]]
+	dN = [
+		[
+			-(1.0-eta),  
+			 (1.0-eta), 
+			 (1.0+eta), 
+		    -(1.0+eta)
+		],[
+			-(1.0-xi), 
+			-(1.0+xi), 
+			 (1.0+xi),  
+			 (1.0-xi)
+		]
+	]
 	return 0.25 * np.array(dN)
+
 def local_error(str):
 	print("*** ERROR ***")
 	print(str)
 	sys.exit(3)
+
 def read_inp_file(inpFileName, nodes, conn, boundary):
 	print('\n** Read input file')
 	inpFile = open(inpFileName, 'r')
@@ -112,10 +126,9 @@ def read_inp_file(inpFileName, nodes, conn, boundary):
 				boundary.append([nodeNr,2,val])
 			continue
 
+
+
 def main():
-	##
-	## Main Program
-	##
 	nodes = []
 	conn = []
 	boundary = []
@@ -128,12 +141,15 @@ def main():
 	print('   number of elements:', len(conn))
 	print('   number of displacement boundary conditions:', len(boundary))
 
+
 	###############################
 	# Plane-strain material tangent (see Bathe p. 194)
 	# C is 3x3
 	E = 100.0
 	v = 0.3
 	C = E/(1.0+v)/(1.0-2.0*v) * np.array([[1.0-v, v, 0.0], [v, 1.0-v, 0.0], [0.0, 0.0, 0.5-v]])
+
+
 	###############################
 	# Make stiffness matrix
 	# if N is the number of DOF, then K is NxN
@@ -148,6 +164,8 @@ def main():
 	# strain11 = B11 U1 + B12 U2 + B13 U3 + B14 U4 + B15 U5 + B16 U6 + B17 U7 + B18 U8
 	#          = B11 u1          + B13 u1          + B15 u1          + B17 u1
 	#          = dN1/dx u1       + dN2/dx u1       + dN3/dx u1       + dN4/dx u1
+
+
 	B = np.zeros((3,8))
 	# conn[0] is node numbers of the element
 	for c in conn:     # loop through each element
@@ -179,6 +197,9 @@ def main():
 				K[2*I+1,2*J]   += Ke[2*i+1,2*j]
 				K[2*I+1,2*J+1] += Ke[2*i+1,2*j+1]
 				K[2*I,2*J+1]   += Ke[2*i,2*j+1]
+
+
+
 	###############################
 	# Assign nodal forces and boundary conditions
 	#    if N is the number of nodes, then f is 2xN
@@ -202,14 +223,22 @@ def main():
 		nn  = boundary[i][0]
 		dof = boundary[i][1]
 		val = boundary[i][2]
+		print(f'   boundary condition: node={nn}, dof={dof}, value={val}')
 		j = 2*nn
 		if dof == 2: j = j + 1
 		K[j,:] = 0.0
+		#K[:,j] = 0.0
 		K[j,j] = 1.0
 		f[j] = val
+
+
+
+
 	###############################
 	print('\n** Solve linear system: Ku = f')	# [K] = 2N x 2N, [f] = 2N x 1, [u] = 2N x 1
 	u = np.linalg.solve(K, f)
+
+
 	###############################
 	print('\n** Post process the data')
 	# (pre-allocate space for nodal stress and strain)
@@ -281,7 +310,7 @@ def main():
 	xvec = []
 	yvec = []
 	res  = []
-	plot_type = 'e11'
+	plot_type = 'u1'
 	for ni,pt in enumerate(nodes):
 		xvec.append(pt[0] + u[2*ni])
 		yvec.append(pt[1] + u[2*ni+1])

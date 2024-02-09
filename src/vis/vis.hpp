@@ -28,7 +28,7 @@ public:
 
   void AddNodes(std::vector<Eigen::Vector3d> &pts, std::string name, Eigen::Vector3d color);
   void AddEdges(std::vector<std::vector<unsigned int>> &elts, std::string elt);
-  void AddLoads(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag);
+  void AddBCs(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag);
 
   void Render(double scale = 1.0, bool contours_only = false);
 

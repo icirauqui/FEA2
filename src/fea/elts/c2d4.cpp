@@ -39,10 +39,7 @@ Eigen::MatrixXd C2D4::computeShapeFunctionDerivatives(double xi, double eta, dou
     return dN;
 }
 
-Eigen::MatrixXd C2D4::computeJacobian(const std::vector<Eigen::Vector3d>& nodes, double xi, double eta, double zeta) {
-    // Compute the derivatives of the shape functions
-    Eigen::MatrixXd dN = C2D4::computeShapeFunctionDerivatives(xi, eta, zeta);
-
+Eigen::MatrixXd C2D4::computeJacobian(const std::vector<Eigen::Vector3d>& nodes, Eigen::MatrixXd &dN) {
     // Initialize the Jacobian matrix
     Eigen::MatrixXd J = Eigen::MatrixXd::Zero(2, 2);
 
@@ -86,37 +83,35 @@ Eigen::MatrixXd C2D4::computeStrainDisplacementMatrix(Eigen::MatrixXd &dN, Eigen
 
 // Function to compute the stiffness matrix for a triangular prism
 Eigen::MatrixXd C2D4::computeStiffnessMatrix(const std::vector<Eigen::Vector3d>& nodes) {
-    // Initialize the stiffness matrix: 24x24 for 4 nodes, 2 DOF each
-    Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_num_nodes*_dof_per_node, _num_nodes*_dof_per_node);
+  // Initialize the stiffness matrix: 24x24 for 4 nodes, 2 DOF each
+  Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_num_nodes*_dof_per_node, _num_nodes*_dof_per_node);
 
-    // Gauss quadrature points and weights (2-point quadrature)
-    std::array<double, 2> gaussPoints = {-1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0)};
-    std::array<double, 2> gaussWeights = {1.0, 1.0};
+  // Gauss quadrature points and weights (2-point quadrature)
+  std::array<double, 2> gaussPoints = {-1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0)};
+  std::array<double, 2> gaussWeights = {1.0, 1.0};
 
-    // Integration (simplified example, replace with appropriate Gauss quadrature in real applications)
-    for (int i = 0; i < gaussPoints.size(); ++i) {
-        for (int j = 0; j < gaussPoints.size(); ++j) {
-            for (int k = 0; k < gaussPoints.size(); ++k) {
-                double xi = gaussPoints[i];
-                double eta = gaussPoints[j];
-                double zeta = gaussPoints[k];
+  // Integration (simplified example, replace with appropriate Gauss quadrature in real applications)
+  for (int i = 0; i < gaussPoints.size(); ++i) {
+    for (int j = 0; j < gaussPoints.size(); ++j) {
+      double xi = gaussPoints[i];
+      double eta = gaussPoints[j];
+      double zeta = 0.0;
 
-                Eigen::MatrixXd dN = C2D4::computeShapeFunctionDerivatives(xi, eta, zeta);
+      Eigen::MatrixXd dN = C2D4::computeShapeFunctionDerivatives(xi, eta, zeta);
                 
-                Eigen::MatrixXd J = C2D4::computeJacobian(nodes, xi, eta, zeta);
-                auto [invJ, detJ] = C2D4::computeInverseJacobianAndDet(J);
-                Eigen::MatrixXd B = C2D4::computeStrainDisplacementMatrix(dN, invJ, detJ);
+      Eigen::MatrixXd J = C2D4::computeJacobian(nodes, dN);
+      auto [invJ, detJ] = C2D4::computeInverseJacobianAndDet(J);
+      Eigen::MatrixXd B = C2D4::computeStrainDisplacementMatrix(dN, invJ, detJ);
 
-                // Weight calculation considering different weights
-                double weight = gaussWeights[i] * gaussWeights[j] * gaussWeights[k];
+      // Weight calculation considering different weights
+      double weight = gaussWeights[i] * gaussWeights[j];
 
-                // K += B^T * D * B * detJ
-                K += B.transpose() * _D * B * detJ;
-            }
-        }
+      // K += B^T * D * B * detJ
+      K += B.transpose() * _D * B * detJ;
     }
+  }
 
-    return K;
+  return K;
 }
 
 
