@@ -3,41 +3,28 @@
 
 Loads2d::Loads2d(int num_dof, std::vector<Eigen::Vector2d>* nodes) 
   : Loads(num_dof) {
-
-    _nodes = nodes;
-
-    _node_ids = std::vector<bool>(nodes->size(), false);
-    _values = std::vector<std::vector<double>>(nodes->size(), std::vector<double>(_num_dof, 0.0));
-  }
-
-
-void Loads2d::AddNodal(std::vector<unsigned int> &node_ids, std::vector<double> &values) {
-  for (auto node : node_ids) {
-    _node_ids[node] = true;
-    _values[node] = values;
-  }
-
-  std::cout << "   Added loads in " << node_ids.size() << " nodes" << std::endl;
+  _nodes = nodes;
+  _node_ids = std::vector<bool>(nodes->size(), false);
+  _values = std::vector<std::vector<double>>(nodes->size(), std::vector<double>(_num_dof, 0.0));
 }
 
 
-
-void Loads2d::AddNodal(std::vector<double> coords, std::vector<double> values) {
+void Loads2d::AddNodalByCoords(std::vector<double> coords, std::vector<bool> dof, std::vector<double> values) {
   std::vector<unsigned int> nodes;
 
   for (unsigned int node = 0; node < _nodes->size(); node++) {
-    for (unsigned int dof = 0; dof < _num_dof; dof++) {
-      if (coords[dof] < 0.0)
+    for (unsigned int d = 0; d < _num_dof; d++) {
+      if (!dof[d])
         continue;
 
-      if (abs((*_nodes)[node](dof) - coords[dof]) < _tolerance) {
+      if (abs((*_nodes)[node](d) - coords[d]) < _tolerance) {
         nodes.push_back(node);
         break;
       }
     }
   }
 
-  AddNodal(nodes, values);
+  AddNodalByNodeIds(nodes, values);
 }
 
 

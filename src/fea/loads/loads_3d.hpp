@@ -1,27 +1,25 @@
-#ifndef BOUNDARY_CONDITIONS_3D_HPP
-#define BOUNDARY_CONDITIONS_3D_HPP
+#ifndef LOADS_3D_HPP
+#define LOADS_3D_HPP
 
 #include <iostream>
 #include <vector>
 #include <eigen3/Eigen/Dense>
 
-#include "boundary_conditions.hpp"
+#include "loads.hpp"
 
-class BoundaryConditions3d : public BoundaryConditions {
+class Loads3d : public Loads {
 
 public:
 
-  BoundaryConditions3d(int num_dof, std::vector<Eigen::Vector3d>* nodes);
-
-  void AddNodal(std::vector<unsigned int> &node_ids, std::vector<unsigned int> &dof, std::vector<double> &values);
-  void AddNodal(Eigen::Vector3d coords, std::vector<unsigned int> dof, std::vector<double> values);
-
+  Loads3d(int num_dof, std::vector<Eigen::Vector3d>* nodes);
 
 
 private:
 
   std::vector<Eigen::Vector3d>* _nodes;
   
+  void AddNodalByCoords(std::vector<double> coords, std::vector<bool> dof, std::vector<double> values);
+
 };
 
 

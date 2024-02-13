@@ -79,14 +79,14 @@ void test_c2d4() {
   std::cout << "\nBuild BoundaryConditions" << std::endl;
   BoundaryConditions2d bc(fea.NumDof(), &model._nodes);
   std::cout << " - Encastre in x = 0" << std::endl;
-  bc.Encastre({0.0, -1.0});
+  bc.EncastreX(0.0);
   //std::cout << " - Displacement of magnitude 1 in direction x on nodes in x = 115.0" << std::endl;
   //bc.AddNodal({115.0, -1.0}, {1, 0}, {1, 0.0});
 
   std::cout << "\nBuild Loads" << std::endl;
   Loads2d loads(fea.NumDof(), &model._nodes);
   std::cout << " - Force of magnitude 1 in direction x on nodes in x = 115.0" << std::endl;
-  loads.AddNodal({5.0, -1.0}, {1.0, 1.0});
+  loads.AddNodalX(5.0, {1.0, 1.0});
   
   std::cout << "\nMatAssembly" << std::endl;
   fea.MatAssembly(model._nodes, model._elements);

@@ -13,6 +13,55 @@ public:
     _num_dof = num_dof;
   }
 
+  void AddNodalByNodeIds(std::vector<unsigned int> &node_ids, std::vector<double> &values) {
+    for (auto node : node_ids) {
+      _node_ids[node] = true;
+      _values[node] = values;
+    }
+  
+    std::cout << "   Added loads in " << node_ids.size() << " nodes" << std::endl;
+  }
+
+  virtual void AddNodalByCoords(std::vector<double> coords, std::vector<bool> dof, std::vector<double> values) = 0;
+
+  void AddNodalX(float x, std::vector<double> values) {
+    std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
+    coords[0] = x;
+    std::vector<bool> dof = std::vector<bool>(_num_dof, false);
+    dof[0] = true;
+    AddNodalByCoords(coords, dof, values);
+  }
+
+  void AddNodalY(float y, std::vector<double> values) {
+    std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
+    coords[1] = y;
+    std::vector<bool> dof = std::vector<bool>(_num_dof, false);
+    dof[1] = true;
+    AddNodalByCoords(coords, dof, values);
+  }
+
+  void AddNodalZ(float z, std::vector<double> values) {
+    std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
+    coords[2] = z;
+    std::vector<bool> dof = std::vector<bool>(_num_dof, false);
+    dof[2] = true;
+    AddNodalByCoords(coords, dof, values);
+  }
+
+  void AddNodalXY(float x, float y, std::vector<double> values) {
+    std::vector<double> coords = {x, y};
+    std::vector<bool> dof = {true, true, false};
+    AddNodalByCoords(coords, dof, values);
+  }
+
+  void AddNodalXYZ(float x, float y, float z, std::vector<double> values) {
+    std::vector<double> coords = {x, y, z};
+    std::vector<bool> dof = {true, true, true};
+    AddNodalByCoords(coords, dof, values);
+  }
+
+
+
   // Accessors
   bool NodeIds(unsigned int idx) { return _node_ids[idx]; }
   int NumDof() { return _num_dof; }

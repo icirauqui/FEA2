@@ -13,15 +13,12 @@ public:
 
   Loads2d(int num_dof, std::vector<Eigen::Vector2d>* nodes);
 
-  void AddNodal(std::vector<unsigned int> &node_ids, std::vector<double> &values);
-  void AddNodal(std::vector<double> coords, std::vector<double> values);
-
-
-
 
 private:
 
   std::vector<Eigen::Vector2d>* _nodes;
+
+  void AddNodalByCoords(std::vector<double> coords, std::vector<bool> dof, std::vector<double> values);
   
 };
 

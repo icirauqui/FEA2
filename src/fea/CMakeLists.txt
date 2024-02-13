@@ -46,6 +46,8 @@ add_library(fea
     loads/loads.hpp
     loads/loads_2d.hpp
     loads/loads_2d.cpp
+    loads/loads_3d.hpp
+    loads/loads_3d.cpp
     solver.hpp
     solver.cpp
     pos.cpp
