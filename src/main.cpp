@@ -69,7 +69,7 @@ void test_c3d8() {
 
 
 void test_c2d4() {
-  AbaqusC2D4_1 model("../py/Dogbone_Tension.input");
+  AbaqusC2D4_1 model("../py/tn5.input");
   //AbaqusC2D4_1 model("../py/tn1.input");
   std::cout << "num nodes = " << model._nodes.size() << "\n";
 
@@ -80,14 +80,13 @@ void test_c2d4() {
   BoundaryConditions2d bc(fea.NumDof(), &model._nodes);
   std::cout << " - Encastre in x = 0" << std::endl;
   bc.Encastre({0.0, -1.0});
-  bc.AddNodal({115.0, -1.0}, {1, 0}, {1, 0.0});
+  //std::cout << " - Displacement of magnitude 1 in direction x on nodes in x = 115.0" << std::endl;
+  //bc.AddNodal({115.0, -1.0}, {1, 0}, {1, 0.0});
 
   std::cout << "\nBuild Loads" << std::endl;
-  //Loads2d loads(fea.NumDof(), &model._nodes);
-
-
-  //std::cout << " - Force of magnitude 1 in direction x on nodes in x = 115.0" << std::endl;
-  //loads.AddNodal({4.0, -1.0}, {1.0, 0.0});
+  Loads2d loads(fea.NumDof(), &model._nodes);
+  std::cout << " - Force of magnitude 1 in direction x on nodes in x = 115.0" << std::endl;
+  loads.AddNodal({5.0, -1.0}, {1.0, 1.0});
   
   std::cout << "\nMatAssembly" << std::endl;
   fea.MatAssembly(model._nodes, model._elements);
@@ -95,7 +94,7 @@ void test_c2d4() {
 
   std::cout << "\nApplyBoundaryConditions" << std::endl;
   fea.ApplyBoundaryConditions(bc);
-  //fea.ApplyLoads(loads);
+  fea.ApplyLoads(loads);
   fea.ExportK("../data/" + model.Name() + "/K_b.csv");
   fea.ExportF("../data/" + model.Name() + "/F.csv");
 
@@ -129,7 +128,7 @@ void test_c2d4() {
   viewer.AddNodes(nodes_vis, "original", Eigen::Vector3d(0.2, 0.2, 1.0));
   viewer.AddNodes(nodes_deformed_vis, "deformed", Eigen::Vector3d(0.0, 0.7, 0.0));
   viewer.AddBCs(bc.NodeIds(), bc.Values());
-  //viewer.AddBCs(loads.NodeIds(), loads.Values());
+  viewer.AddBCs(loads.NodeIds(), loads.Values());
   viewer.AddEdges(model._elements, model.ElementType());
   viewer.Render();
 

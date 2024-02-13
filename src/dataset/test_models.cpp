@@ -303,7 +303,8 @@ public:
           element.push_back(std::stoi(tokens[i]) - 1); // zero indexed
         }
         // Assuming the order needs to be adjusted from the Python code
-        _elements.push_back({element[0], element[3], element[2], element[1]});
+        _elements.push_back({element[0], element[1], element[2], element[3]});
+        //_elements.push_back({element[0], element[3], element[2], element[1]});
       } else if (state == 3) {
         // Read displacement boundary conditions
         if (tokens.size() != 4) {
