@@ -32,7 +32,7 @@ void BoundaryConditions3d::AddNodalByCoords(std::vector<double> coords, std::vec
 }
 
 
-void BoundaryConditions3d::Encastre(std::vector<double> coords, std::vector<bool> dof) {
+void BoundaryConditions3d::EncastreInCoord(std::vector<double> coords, std::vector<bool> dof) {
   std::vector<double> values = std::vector<double>(_num_dof, 0.0);
   std::vector<unsigned int> nodes;
 

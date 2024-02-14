@@ -12,34 +12,25 @@ public:
   BoundaryConditions(int num_dof, bool bypass = false);
 
 
-
   void AddNodalByNodeIds(std::vector<unsigned int> &node_ids, std::vector<double> &values);
+
 
   virtual void AddNodalByCoords(std::vector<double> coords, std::vector<bool> dof, std::vector<double> values) = 0;
 
-  void AddNodalX(float x, float f);
-
-  void AddNodalY(float y, float f);
-
-  void AddNodalZ(float z, float f);
-
-  void AddNodalXY(float x, float y, float fx, float fy);
-
-  void AddNodalXYZ(float x, float y, float z, float fx, float fy, float fz);
+  void AddNodalDisplacementByCoordX(float x, std::vector<double> values);
+  void AddNodalDisplacementByCoordY(float y, std::vector<double> values);
+  void AddNodalDisplacementByCoordZ(float z, std::vector<double> values);
+  void AddNodalDisplacementByCoordsXY(float x, float y, std::vector<double> values);
+  void AddNodalDisplacementByCoordsXYZ(float x, float y, float z, std::vector<double> values);
 
 
+  virtual void EncastreInCoord(std::vector<double> coords, std::vector<bool> dof) = 0;
 
-  virtual void Encastre(std::vector<double> coords, std::vector<bool> dof) = 0;
-
-  void EncastreX(float x);
-
-  void EncastreY(float y);
-
-  void EncastreZ(float z);
-
-  void EncastreXY(float x, float y);
-
-  void EncastreXYZ(float x, float y, float z);
+  void EncastreInCoordX(float x);
+  void EncastreInCoordY(float y);
+  void EncastreInCoordZ(float z);
+  void EncastreInCoordXY(float x, float y);
+  void EncastreInCoordXYZ(float x, float y, float z);
 
 
   void Report();

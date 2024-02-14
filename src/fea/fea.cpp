@@ -79,18 +79,16 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
     for (unsigned int i=0; i<values.size(); i++) {
       unsigned int m = num_dof*node + i;
 
-      if (!encastre && values[i] == 0) {
-        continue;
-      }
+      //if (!encastre && values[i] == 0) {
+      //  continue;
+      //}
 
       for (unsigned int j=0; j<K_.cols(); j++) {
         K_(m,j) = 0.0;
-        if (encastre) {
-          K_(j,m) = 0.0;
-        } else {
+        if (!encastre) {
           F_(j,0) -= K_(j,m) * values[i];
-          K_(j,m) = 0.0;
         }
+        K_(j,m) = 0.0;
       }
 
       if (encastre) {
@@ -101,7 +99,6 @@ void FEA::ApplyBoundaryConditions(BoundaryConditions &bc) {
 
       K_(m,m) = 1;
       F_(m,0) = values[i];
-
     }
   }
 

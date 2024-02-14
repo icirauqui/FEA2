@@ -28,7 +28,7 @@ public:
 
   void AddNodes(std::vector<Eigen::Vector3d> &pts, std::string name, Eigen::Vector3d color);
   void AddEdges(std::vector<std::vector<unsigned int>> &elts, std::string elt);
-  void AddBCs(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag);
+  void AddBCs(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag, bool isLoad = false);
 
   void Render(double scale = 1.0, bool contours_only = false);
 
@@ -45,6 +45,7 @@ private:
 
   std::vector<int> load_nodes_;
   std::vector<std::vector<double>> load_mags_;
+  std::vector<bool> is_load_;
 
   Eigen::Vector3d contour_bound_min_, contour_bound_max_;
   std::vector<bool> contour_nodes_;

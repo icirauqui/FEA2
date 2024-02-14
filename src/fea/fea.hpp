@@ -51,7 +51,7 @@
 
 #include <loads/loads.hpp>
 #include <loads/loads_2d.hpp>
-//#include <loads/loads3d.hpp>
+#include <loads/loads_3d.hpp>
 
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Sparse>

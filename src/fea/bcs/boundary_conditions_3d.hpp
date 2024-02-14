@@ -21,7 +21,7 @@ private:
   std::vector<Eigen::Vector3d>* _nodes;
 
   void AddNodalByCoords(std::vector<double> coords, std::vector<bool> dof, std::vector<double> values);
-  void Encastre(std::vector<double> coords, std::vector<bool> dof);
+  void EncastreInCoord(std::vector<double> coords, std::vector<bool> dof);
 
 };
 

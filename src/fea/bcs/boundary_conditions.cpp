@@ -26,86 +26,80 @@ void BoundaryConditions::AddNodalByNodeIds(std::vector<unsigned int> &node_ids, 
   std::cout << "   Added loads in " << node_ids.size() << " nodes" << std::endl;
 }
 
-void BoundaryConditions::AddNodalX(float x, float f) {
+void BoundaryConditions::AddNodalDisplacementByCoordX(float x, std::vector<double> values) {
   std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
   coords[0] = x;
   std::vector<bool> dof = std::vector<bool>(_num_dof, false);
   dof[0] = true;
-  std::vector<double> values = std::vector<double>(_num_dof, 0.0);
-  values[0] = f;
   AddNodalByCoords(coords, dof, values);
 }
 
-void BoundaryConditions::AddNodalY(float y, float f) {
+void BoundaryConditions::AddNodalDisplacementByCoordY(float y, std::vector<double> values) {
   std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
   coords[1] = y;
   std::vector<bool> dof = std::vector<bool>(_num_dof, false);
   dof[1] = true;
-  std::vector<double> values = std::vector<double>(_num_dof, 0.0);
-  values[1] = f;
   AddNodalByCoords(coords, dof, values);
 }
 
-void BoundaryConditions::AddNodalZ(float z, float f) {
+void BoundaryConditions::AddNodalDisplacementByCoordZ(float z, std::vector<double> values) {
   std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
   coords[2] = z;
   std::vector<bool> dof = std::vector<bool>(_num_dof, false);
   dof[2] = true;
-  std::vector<double> values = std::vector<double>(_num_dof, 0.0);
-  values[2] = f;
   AddNodalByCoords(coords, dof, values);
 }
 
-void BoundaryConditions::AddNodalXY(float x, float y, float fx, float fy) {
+void BoundaryConditions::AddNodalDisplacementByCoordsXY(float x, float y, std::vector<double> values) {
   std::vector<double> coords = {x, y};
-  std::vector<bool> dof = {true, true};
-  std::vector<double> values = {fx, fy};
+  std::vector<bool> dof = std::vector<bool>(_num_dof, false);
+  dof[0] = true;
+  dof[1] = true;
   AddNodalByCoords(coords, dof, values);
 }
 
-void BoundaryConditions::AddNodalXYZ(float x, float y, float z, float fx, float fy, float fz) {
+void BoundaryConditions::AddNodalDisplacementByCoordsXYZ(float x, float y, float z, std::vector<double> values) {
   std::vector<double> coords = {x, y, z};
-  std::vector<bool> dof = {true, true, true};
-  std::vector<double> values = {fx, fy, fz};
+  std::vector<bool> dof = std::vector<bool>(_num_dof, true);
   AddNodalByCoords(coords, dof, values);
 }
 
 
-void BoundaryConditions::EncastreX(float x) {
+void BoundaryConditions::EncastreInCoordX(float x) {
   std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
   coords[0] = x;
   std::vector<bool> dof = std::vector<bool>(_num_dof, false);
   dof[0] = true;
-  Encastre(coords, dof);
+  EncastreInCoord(coords, dof);
 }
 
-void BoundaryConditions::EncastreY(float y) {
+void BoundaryConditions::EncastreInCoordY(float y) {
   std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
   coords[1] = y;
   std::vector<bool> dof = std::vector<bool>(_num_dof, false);
   dof[1] = true;
-  Encastre(coords, dof);
+  EncastreInCoord(coords, dof);
 }
 
-void BoundaryConditions::EncastreZ(float z) {
+void BoundaryConditions::EncastreInCoordZ(float z) {
   std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
-  coords[1] = z;
+  coords[2] = z;
   std::vector<bool> dof = std::vector<bool>(_num_dof, false);
-  dof[1] = true;
-  Encastre(coords, dof);
+  dof[2] = true;
+  EncastreInCoord(coords, dof);
 }
 
-void BoundaryConditions::EncastreXY(float x, float y) {
+void BoundaryConditions::EncastreInCoordXY(float x, float y) {
   std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
   coords[0] = x;
   coords[1] = y;
   std::vector<bool> dof = std::vector<bool>(_num_dof, false);
   dof[0] = true;
   dof[1] = true;
-  Encastre(coords, dof);
+  EncastreInCoord(coords, dof);
 }
 
-void BoundaryConditions::EncastreXYZ(float x, float y, float z) {
+void BoundaryConditions::EncastreInCoordXYZ(float x, float y, float z) {
   std::vector<double> coords = std::vector<double>(_num_dof, 0.0);
   coords[0] = x;
   coords[1] = y;
@@ -114,7 +108,7 @@ void BoundaryConditions::EncastreXYZ(float x, float y, float z) {
   dof[0] = true;
   dof[1] = true;
   dof[2] = true;
-  Encastre(coords, dof);
+  EncastreInCoord(coords, dof);
 }
 
 

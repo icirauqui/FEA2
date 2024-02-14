@@ -122,12 +122,13 @@ void PCLViewer::AddEdges(std::vector<std::vector<unsigned int>> &elts, std::stri
   }
 }
 
-void PCLViewer::AddBCs(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag) {
+void PCLViewer::AddBCs(std::vector<bool> &nodes, std::vector<std::vector<double>> &mag, bool isLoad) {
   for (unsigned int i=0; i<nodes.size(); i++) {
     if (!nodes[i]) continue;
 
     load_nodes_.push_back(i);
     load_mags_.push_back(mag[i]);
+    is_load_.push_back(isLoad);
   }
 }
 
@@ -169,13 +170,23 @@ void PCLViewer::Render(double scale, bool contours_only) {
     unsigned int node = load_nodes_[i];
     std::vector<double> mag = load_mags_[i];
     if (mag[0] == 0.0 && mag[1] == 0.0 && mag[2] == 0.0) {
-      viewer_->addSphere<pcl::PointXYZ>(clouds_[0]->points[node], 0.2, 0.4, 0.4, 0.4, "load_" + std::to_string(node));
+      viewer_->addSphere<pcl::PointXYZ>(clouds_[0]->points[node], 0.1, 0.4, 0.4, 0.4, "load_" + std::to_string(node));
     } else {
-      viewer_->addArrow<pcl::PointXYZ, pcl::PointXYZ>(pcl::PointXYZ(clouds_[0]->points[node].x + scale * mag[0],
-                                                                    clouds_[0]->points[node].y + scale * mag[1],
-                                                                    clouds_[0]->points[node].z + scale * mag[2]),
-                                                      clouds_[0]->points[node],
-                                                      1.0, 0.0, 0.0, false, "load_" + std::to_string(node));
+      if (is_load_[i]) {
+        viewer_->addArrow<pcl::PointXYZ, pcl::PointXYZ>(pcl::PointXYZ(clouds_[0]->points[node].x + scale * mag[0],
+                                                                      clouds_[0]->points[node].y + scale * mag[1],
+                                                                      clouds_[0]->points[node].z + scale * mag[2]),
+                                                        clouds_[0]->points[node],
+                                                        1.0, 0.0, 0.0, false, "load_" + std::to_string(node));
+      }
+      else {
+        viewer_->addSphere<pcl::PointXYZ>(clouds_[0]->points[node], 0.1, 0.8, 0.8, 0.0, "displ_node_" + std::to_string(node));
+        viewer_->addArrow<pcl::PointXYZ, pcl::PointXYZ>(pcl::PointXYZ(clouds_[0]->points[node].x + scale * mag[0],
+                                                                      clouds_[0]->points[node].y + scale * mag[1],
+                                                                      clouds_[0]->points[node].z + scale * mag[2]),
+                                                        clouds_[0]->points[node],
+                                                        0.8, 0.8, 0.0, false, "displ_mag_" + std::to_string(node));
+      }
     }
   }
   
