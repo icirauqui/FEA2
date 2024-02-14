@@ -102,6 +102,10 @@ void test_c2d4() {
   fea.Solve("LU");
   fea.ExportU("../data/" + model.Name() + "/U.csv");
 
+  std::cout << "\nPostProcess" << std::endl;
+  fea.PostProcess(model._nodes, model._elements);
+  fea.ReportFEAData("../data/" + model.Name() + "/FEAData.csv");
+
   std::cout << "\nCompute deformed positions" << std::endl;
   Eigen::MatrixXd U = fea.U();
   std::vector<Eigen::Vector2d> u;

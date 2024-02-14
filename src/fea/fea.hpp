@@ -89,10 +89,24 @@ public:
    */
   void Solve(std::string method = "LU");
 
-  //Eigen::MatrixXd PreconditionMatrix(Eigen::MatrixXd &A);
-  //bool UseDirectSolver(Eigen::MatrixXd &A);
-  //Eigen::MatrixXd DirectSolver(Eigen::MatrixXd &A, Eigen::MatrixXd &b);
-  //Eigen::MatrixXd IterativeSolver(Eigen::MatrixXd &A, Eigen::MatrixXd &b);
+  void PostProcess(std::vector<Eigen::Vector2d> &vpts, 
+                   std::vector<std::vector<unsigned int>> &velts);
+
+  void PostProcess(std::vector<Eigen::Vector3d> &vpts, 
+                   std::vector<std::vector<unsigned int>> &velts);
+
+  
+
+  
+  //void PostProcess(std::vector<Eigen::Vector2d> &vpts, 
+  //                 std::vector<std::vector<unsigned int>> &velts,
+  //                 std::vector<Eigen::Vector2d> &u);
+
+  
+  //void PostProcess(std::vector<Eigen::Vector3d> &vpts, 
+  //                 std::vector<std::vector<unsigned int>> &velts,
+  //                 std::vector<Eigen::Vector3d> &u);
+
 
   // Legacy fea
 
@@ -118,6 +132,7 @@ public:
   void ExportU(std::string filename);
   void PrintK();
   void PrintEigenvaluesK();
+  void ReportFEAData(std::string filename);
 
   // Accessors
 
@@ -137,6 +152,7 @@ private:
   Element* element_;
   //BoundaryConditions* bcs_;
   //Loads* loads_;
+  FEAData* fea_data_;
 
   Eigen::MatrixXd K_;
   Eigen::MatrixXd K1_;

@@ -34,6 +34,12 @@ public:
     Eigen::MatrixXd matAssembly(std::vector<Eigen::Vector3d> &vpts, 
                                 std::vector<std::vector<unsigned int>> &velts);
 
+    // Function to post-process the results: calculates stress and strain at each node
+    //void postProcess(std::vector<Eigen::Vector3d> &vpts, 
+    //                 std::vector<std::vector<unsigned int>> &velts,
+    //                 Eigen::MatrixXd U,
+    //                 FEAData &data);
+
 }; // class C2D4
 
 #endif // C2D4_HPP

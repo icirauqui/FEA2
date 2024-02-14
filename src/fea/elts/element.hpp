@@ -4,13 +4,27 @@
 #include <iostream>
 #include <eigen3/Eigen/Dense>
 
+
+class FEAData {
+
+public:
+  std::vector<std::vector<double>> node_stress;
+  std::vector<std::vector<double>> node_strain;
+  std::vector<double> emin;
+  std::vector<double> emax;
+  std::vector<double> smin;
+  std::vector<double> smax;
+
+}; // FEAData
+
+
+
 class Element {
 public:
   Element(double E, double nu) {
     _E = E;
     _nu = nu;
   }
-  //virtual ~Element() = 0;
 
   // Function to compute shape functions for a triangular prism
   virtual Eigen::VectorXd computeShapeFunctions(double xi, double eta, double zeta) = 0;
@@ -36,6 +50,11 @@ public:
   // Function to assemble the global stiffness matrix
   virtual Eigen::MatrixXd matAssembly(std::vector<Eigen::Vector3d> &vpts, 
                                       std::vector<std::vector<unsigned int>> &velts) = 0;
+
+  virtual void postProcess(std::vector<Eigen::Vector3d> &vpts, 
+                           std::vector<std::vector<unsigned int>> &velts,
+                           Eigen::MatrixXd U,
+                           FEAData &data);
 
 
   // Accessors

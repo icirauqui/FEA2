@@ -30,6 +30,7 @@ add_definitions(
 
 add_library(fea
     elts/element.hpp
+    elts/element.cpp
     elts/element2d.hpp
     elts/element3d.hpp
     elts/c2d4.hpp
@@ -39,11 +40,13 @@ add_library(fea
     elts/c3d6.cpp
     elts/c3d8.cpp
     bcs/boundary_conditions.hpp
+    bcs/boundary_conditions.cpp
     bcs/boundary_conditions_2d.hpp
     bcs/boundary_conditions_2d.cpp
     bcs/boundary_conditions_3d.hpp
     bcs/boundary_conditions_3d.cpp
     loads/loads.hpp
+    loads/loads.cpp
     loads/loads_2d.hpp
     loads/loads_2d.cpp
     loads/loads_3d.hpp

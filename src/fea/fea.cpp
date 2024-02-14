@@ -6,17 +6,10 @@ FEA::FEA(std::string element_type,
 
   if (element_type == "C2D4") {
     element_ = new C2D4(young_modulus, poisson_coefficient);
-    //bcs_ = new BoundaryConditions2d(2, nullptr);
-    //loads_ = new Loads2d(2, nullptr);
   } else if (element_type == "C3D6") {
-    //setElement(new C3D6(young_modulus, poisson_coefficient));
     element_ = new C3D6(young_modulus, poisson_coefficient);
-    //bcs_ = new BoundaryConditions3d(3, nullptr);
-    //loads_ = new Loads3d(3, nullptr);
   } else if (element_type == "C3D8") {
-    //setElement(new C3D8(young_modulus, poisson_coefficient));
     element_ = new C3D8(young_modulus, poisson_coefficient);
-    //bcs_ = new BoundaryConditions3d(3, nullptr);
   } else {
     std::cout << "Element not supported" << std::endl;
   }
@@ -162,6 +155,26 @@ void FEA::Solve(std::string method) {
 
   Fi_ = K_ * U_;
 }
+
+
+void FEA::PostProcess(std::vector<Eigen::Vector2d> &vpts, 
+                      std::vector<std::vector<unsigned int>> &velts) {
+
+  std::vector<Eigen::Vector3d> vpts3d;
+  for (auto v : vpts) {
+    vpts3d.push_back(Eigen::Vector3d(v[0], v[1], 0.0));
+  }
+
+  PostProcess(vpts3d, velts);
+}
+
+void FEA::PostProcess(std::vector<Eigen::Vector3d> &vpts, 
+                      std::vector<std::vector<unsigned int>> &velts) {
+  fea_data_ = new FEAData();
+  element_->postProcess(vpts, velts, U_, *fea_data_);
+}
+
+
 
 
 
@@ -381,6 +394,13 @@ void FEA::ExportU(std::string filename) {
 }
 
 
+void FEA::PrintK() {
+  std::cout << std::endl
+            << "K_ = " << std::endl
+            << K_ << std::endl;
+}
+
+
 void FEA::PrintEigenvaluesK() {
   Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(K_);
   std::cout << std::endl
@@ -389,8 +409,53 @@ void FEA::PrintEigenvaluesK() {
 
 }
 
-void FEA::PrintK() {
-  std::cout << std::endl
-            << "K_ = " << std::endl
-            << K_ << std::endl;
+
+void FEA::ReportFEAData(std::string filename) {
+  std::ofstream file;
+  file.open(filename);
+
+  file << "\nStrain min: ";
+  for (auto e : fea_data_->emin) {
+    file << e << " ";
+  }
+  file << "\nStrain max: ";
+  for (auto e : fea_data_->emax) {
+    file << e << " ";
+  }
+  file << "\nStress min: ";
+  for (auto s : fea_data_->smin) {
+    file << s << " ";
+  }
+  file << "\nStress max: ";
+  for (auto s : fea_data_->smax) {
+    file << s << " ";
+  }
+  file << std::endl;
+
+
+  file << "\nNode Strain: " << std::endl;
+  file << "-----------------" << std::endl;
+  file << "n, e.x, e.y, e.z" << std::endl;
+  for (unsigned int n=0; n<fea_data_->node_strain.size(); n++) {
+    file << n << ", ";
+    for (auto n : fea_data_->node_strain[n]) {
+      file << n << ", ";
+    }
+    file << std::endl;
+  }
+
+  file << "\nNode Stress: " << std::endl;
+  file << "-----------------" << std::endl;
+  file << "n, s.x, s.y, s.z" << std::endl;
+  for (unsigned int n=0; n<fea_data_->node_stress.size(); n++) {
+    file << n << ", ";
+    for (auto n : fea_data_->node_stress[n]) {
+      file << n << ", ";
+    }
+    file << std::endl;
+  }
+
+  file.close();
+
+  std::cout << "ReportFEAData: " << filename << std::endl;
 }
