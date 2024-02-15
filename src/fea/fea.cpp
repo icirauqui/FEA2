@@ -14,6 +14,9 @@ FEA::FEA(std::string element_type,
     std::cout << "Element not supported" << std::endl;
   }
 
+  fea_data_ = new FEAData();
+  fea_data_->element_name = element_->getElementName();
+
   if (debug_mode_) {
     std::cout << std::endl;
     std::cout << "FEA: " << element_type << std::endl;
@@ -39,6 +42,9 @@ void FEA::MatAssembly(std::vector<Eigen::Vector2d> &vpts,
   // Reset F_ and U_ to zero
   F_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
   U_ = Eigen::MatrixXd::Zero(K_.rows(), 1);
+
+  fea_data_->number_of_nodes = vpts.size();
+  fea_data_->number_of_elements = velts.size();
 }
 
 
@@ -167,13 +173,41 @@ void FEA::PostProcess(std::vector<Eigen::Vector2d> &vpts,
 
 void FEA::PostProcess(std::vector<Eigen::Vector3d> &vpts, 
                       std::vector<std::vector<unsigned int>> &velts) {
-  fea_data_ = new FEAData();
   element_->postProcess(vpts, velts, U_, *fea_data_);
+  fea_data_->strain_energy = ComputeStrainEnergy();
 }
 
 
 
+double FEA::ComputeStrainEnergy() {
+  sE_ = (U_.transpose() * F_)(0,0);
+  return sE_;
+}
 
+
+double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
+                                std::vector<Eigen::Vector3d> &u1) {
+  int dim_in = u0.size() * 3;
+  int dim_k = K_.rows();
+
+  if (dim_in != dim_k) {
+    std::cout << "Error: dim_in != dim_k" << std::endl;
+    return -1.0;
+  }
+
+  Eigen::MatrixXd U = Eigen::MatrixXd::Zero(dim_in, 1);
+  for (unsigned int i = 0; i < u0.size(); i++) {
+    U(i*3, 0) = u1[i][0] - u0[i][0];
+    U(i*3+1, 0) = u1[i][1] - u0[i][1];
+    U(i*3+2, 0) = u1[i][2] - u0[i][2];
+  }
+
+  Eigen::MatrixXd Fi = K_ * U;
+
+  double sE = (U.transpose() * Fi)(0,0);
+
+  return sE;
+}
 
 
 
@@ -256,36 +290,9 @@ void FEA::ComputeDisplacements() {
 }
 
 
-void FEA::ComputeStrainEnergy() {
-  sE_ = (U_.transpose() * F_)(0,0);
-  sE_ = std::abs(sE_);
-}
-
-
-double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
-                                std::vector<Eigen::Vector3d> &u1) {
-  int dim_in = u0.size() * 3;
-  int dim_k = K_.rows();
-
-  if (dim_in != dim_k) {
-    std::cout << "Error: dim_in != dim_k" << std::endl;
-    return -1.0;
-  }
-
-  //std::cout << std::endl;
-  U_ = Eigen::MatrixXd::Zero(dim_in, 1);
-  for (unsigned int i = 0; i < u0.size(); i++) {
-    U_(i*3, 0) = u1[i][0] - u0[i][0];
-    U_(i*3+1, 0) = u1[i][1] - u0[i][1];
-    U_(i*3+2, 0) = u1[i][2] - u0[i][2];
-  }
-
-  ComputeForces();
-
-  ComputeStrainEnergy();
-
-  return sE_;
-}
+// 
+// LEGACY FEA
+// 
 
 
 
@@ -411,6 +418,14 @@ void FEA::ReportFEAData(std::string filename) {
   std::ofstream file;
   file.open(filename);
 
+  file << "FEA Data" << std::endl;
+  file << "---------" << std::endl;
+  file << "Element: " << fea_data_->element_name << std::endl;
+  file << "Number of nodes: " << fea_data_->number_of_nodes << std::endl;
+  file << "Number of elements: " << fea_data_->number_of_elements << std::endl;
+  file << "Strain energy: " << fea_data_->strain_energy << std::endl;
+  file << std::endl;
+
   file << "\nStrain min: ";
   for (auto e : fea_data_->emin) {
     file << e << " ";
@@ -427,8 +442,7 @@ void FEA::ReportFEAData(std::string filename) {
   for (auto s : fea_data_->smax) {
     file << s << " ";
   }
-  file << std::endl;
-
+  file << std::endl << std::endl;
 
   file << "\nNode Strain: " << std::endl;
   file << "-----------------" << std::endl;
@@ -454,5 +468,34 @@ void FEA::ReportFEAData(std::string filename) {
 
   file.close();
 
-  std::cout << "ReportFEAData: " << filename << std::endl;
+  std::cout << std::endl;
+  std::cout << " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
+  std::cout << " - ReportFEAData: " << filename << std::endl;
+  std::cout << " - Element: " << fea_data_->element_name << std::endl;
+  std::cout << " - Number of nodes: " << fea_data_->number_of_nodes << std::endl;
+  std::cout << " - Number of elements: " << fea_data_->number_of_elements << std::endl;
+  std::cout << " - Strain energy: " << fea_data_->strain_energy << std::endl;
+  std::cout << " - Strain min: ";
+  for (auto e : fea_data_->emin) {
+    std::cout << e << " ";
+  }
+  std::cout << std::endl;
+  std::cout << " - Strain max: ";
+  for (auto e : fea_data_->emax) {
+    std::cout << e << " ";
+  }
+  std::cout << std::endl;
+  std::cout << " - Stress min: ";
+  for (auto s : fea_data_->smin) {
+    std::cout << s << " ";
+  }
+  std::cout << std::endl;
+  std::cout << " - Stress max: ";
+  for (auto s : fea_data_->smax) {
+    std::cout << s << " ";
+  }
+  std::cout << std::endl;
+  std::cout << " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
+  std::cout << std::endl;
+
 }

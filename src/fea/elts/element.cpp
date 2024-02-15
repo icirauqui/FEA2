@@ -5,8 +5,6 @@ void Element::postProcess(std::vector<Eigen::Vector3d> &vpts,
                            Eigen::MatrixXd U,
                            FEAData &data) {
 
-  std::cout << "C2D4 Post Process" << std::endl;
-
   data.node_stress = std::vector<std::vector<double>>(vpts.size(), std::vector<double>(3, 0.0));
   data.node_strain = std::vector<std::vector<double>>(vpts.size(), std::vector<double>(3, 0.0));
   data.emin = std::vector<double>(_D.rows(), 0.0);

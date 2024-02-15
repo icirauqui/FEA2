@@ -14,7 +14,14 @@ public:
   std::vector<double> emax;
   std::vector<double> smin;
   std::vector<double> smax;
-
+  double strain_energy;
+  int number_of_nodes;
+  int number_of_elements;
+  std::string element_name;
+  //std::string analysis_type;
+  //std::string material_model;
+  //std::string element_type;
+  //std::string element_order;
 }; // FEAData
 
 

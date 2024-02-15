@@ -95,19 +95,11 @@ public:
   void PostProcess(std::vector<Eigen::Vector3d> &vpts, 
                    std::vector<std::vector<unsigned int>> &velts);
 
-  
+  double ComputeStrainEnergy();
+  double ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
+                             std::vector<Eigen::Vector3d> &u1);
 
   
-  //void PostProcess(std::vector<Eigen::Vector2d> &vpts, 
-  //                 std::vector<std::vector<unsigned int>> &velts,
-  //                 std::vector<Eigen::Vector2d> &u);
-
-  
-  //void PostProcess(std::vector<Eigen::Vector3d> &vpts, 
-  //                 std::vector<std::vector<unsigned int>> &velts,
-  //                 std::vector<Eigen::Vector3d> &u);
-
-
   // Legacy fea
 
   void EncastreBackLayer();
@@ -119,9 +111,7 @@ public:
 
   void ComputeDisplacements();
 
-  void ComputeStrainEnergy();
-  double ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
-                             std::vector<Eigen::Vector3d> &u1);
+
 
   // Reports
 
