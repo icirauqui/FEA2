@@ -6,17 +6,14 @@
 #include "eigen3/Eigen/Dense"
 
 
-
-// template a function to print std::vector
 template <typename T>
-void printVectorA(std::string title, std::vector<T> &v) {
+void printVector(std::string title, std::vector<T> &v) {
   std::cout << title << ":";
   for (auto i : v) {
     std::cout << " " << i;
   }
   std::cout << std::endl;
 }
-
 
 
 class AbaqusC3D8_1 {
@@ -193,7 +190,7 @@ public:
             n+(int(_y0)+1)+offset     //10
             */
 
-          printVectorA("ElementA " + std::to_string(n), element);
+          printVector("Element " + std::to_string(n), element);
 
           _elements.push_back(element);
         }

@@ -32,7 +32,9 @@ add_library(fea
     elts/element.hpp
     elts/element.cpp
     elts/element2d.hpp
+    elts/element2d.cpp
     elts/element3d.hpp
+    elts/element3d.cpp
     elts/c2d4.hpp
     elts/c2d4.cpp
     elts/c3d6.hpp

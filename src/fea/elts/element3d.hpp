@@ -13,15 +13,20 @@ public:
     computeElasticityMatrix();
   }
 
-  void computeElasticityMatrix() override {
-    double lambda = _E * _nu / ((1 + _nu) * (1 - 2 * _nu));
-    double mu = _E / (2 * (1 + _nu));
+  void computeElasticityMatrix() override;
 
-    _D = Eigen::MatrixXd::Zero(6, 6);
-    _D(0, 0) = _D(1, 1) = _D(2, 2) = lambda + 2 * mu;
-    _D(0, 1) = _D(0, 2) = _D(1, 0) = _D(1, 2) = _D(2, 0) = _D(2, 1) = lambda;
-    _D(3, 3) = _D(4, 4) = _D(5, 5) = mu;
-  }
+  // Function to compute the Jacobian matrix
+  Eigen::MatrixXd computeJacobian(const std::vector<Eigen::Vector3d>& nodes, Eigen::MatrixXd &dN);
+
+  // Function to compute the inverse of the Jacobian matrix and its determinant
+  std::pair<Eigen::MatrixXd, double> computeInverseJacobianAndDet(const Eigen::MatrixXd& J);
+
+  // Function to compute the stiffness matrix
+  Eigen::MatrixXd computeStiffnessMatrix(const std::vector<Eigen::Vector3d>& nodes);
+
+  // Function to assemble the global stiffness matrix
+  Eigen::MatrixXd matAssembly(std::vector<Eigen::Vector3d> &vpts, 
+                              std::vector<std::vector<unsigned int>> &velts);
 };
 
 

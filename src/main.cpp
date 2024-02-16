@@ -229,7 +229,7 @@ void test_c3d8_loads() {
   }
   std::cout << " - u.size(): " << u.size() << std::endl;
   std::cout << " - model._nodes.size(): " << model._nodes.size() << std::endl;
-  double scale = 10.0;
+  double scale = 100.0;
   model.ApplyDisplacements(u, scale);
 
   fea.ExportAll("../data/" + model.Name() + "/KFU.csv");

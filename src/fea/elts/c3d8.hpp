@@ -18,28 +18,8 @@ public:
     // Function to compute the derivative of shape functions for a triangular prism
     Eigen::MatrixXd computeShapeFunctionDerivatives(double xi, double eta, double zeta);
 
-    // Function to compute the Jacobian matrix for a triangular prism
-    Eigen::MatrixXd computeJacobian(const std::vector<Eigen::Vector3d>& nodes, Eigen::MatrixXd &dN);
-
-    // Function to compute the inverse of the Jacobian matrix and its determinant
-    std::pair<Eigen::MatrixXd, double> computeInverseJacobianAndDet(const Eigen::MatrixXd& J);
-
     // Function to compute the Strain-Displacement Matrix (B)
     Eigen::MatrixXd computeStrainDisplacementMatrix(Eigen::MatrixXd &dN, Eigen::MatrixXd &invJ, double &detJ);
-
-    // Function to compute the stiffness matrix for a triangular prism
-    Eigen::MatrixXd computeStiffnessMatrix(const std::vector<Eigen::Vector3d>& nodes);
-
-    // Function to assemble the global stiffness matrix
-    Eigen::MatrixXd matAssembly(std::vector<Eigen::Vector3d> &vpts, 
-                                std::vector<std::vector<unsigned int>> &velts);
-
-    // Function to post-process the results: calculates stress and strain at each node
-    //void postProcess(std::vector<Eigen::Vector3d> &vpts, 
-    //                 std::vector<std::vector<unsigned int>> &velts,
-    //                 Eigen::MatrixXd U,
-    //                 FEAData &data);
-
 }; // class c3d8
 
 #endif // C3D8_HPP
