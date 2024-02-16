@@ -353,3 +353,110 @@ public:
 
 
 
+
+class AbaqusC3D6_1 {
+public:
+  AbaqusC3D6_1(std::string filename) {
+    read_inp_file(filename);
+  }
+
+  // Assuming `local_error` is a function that handles errors. You'll need to define it.
+  void local_error(const std::string &message) {
+      std::cerr << message << std::endl;
+      // Possibly throw an exception or handle the error appropriately
+  }
+
+  void read_inp_file(const std::string& inpFileName) {
+    std::cout << "\n** Read input file" << std::endl;
+
+    std::ifstream inpFile(inpFileName);
+    if (!inpFile.is_open()) {
+        local_error("Unable to open file");
+        return;
+    }
+
+    std::string line;
+
+    while (getline(inpFile, line)) {
+      // Trim leading and trailing whitespace
+      line.erase(0, line.find_first_not_of(" \t"));
+      line.erase(line.find_last_not_of(" \t") + 1);
+
+      if (line.empty()) continue;
+
+      std::istringstream iss(line);
+      std::string token;
+      std::vector<std::string> tokens;
+      while (getline(iss, token, ',')) {
+          tokens.push_back(token);
+      }
+
+      // Read nodes
+      if (tokens.size() != 4) {
+        local_error("A node definition needs 4 values");
+        continue;
+      }
+      int nodeNr = std::stoi(tokens[0]); // zero indexed
+      double xx = std::stod(tokens[1]);
+      double yy = std::stod(tokens[2]);
+      double zz = std::stod(tokens[3]);
+      _nodes.push_back(Eigen::Vector3d(xx, yy, zz)); // assume the nodes are ordered 1, 2, 3...
+    }
+
+    inpFile.close();
+
+    std::cout << "Nodes: " << _nodes.size() << std::endl;
+
+    std::vector<unsigned int> element1 = {1,3,13,0,2,12};
+    std::vector<unsigned int> element2 = {15,13,3,14,12,2};
+    _elements.push_back(element1);
+    _elements.push_back(element2);
+
+
+    for (unsigned int i=2; i<_num_elements; i++) {
+      std::vector<unsigned int> element;
+      for (unsigned int j=0; j<_elements[i-2].size(); j++) {
+        element.push_back(_elements[i-2][j] + 2);
+      }
+      _elements.push_back(element);
+    }
+
+
+
+    std::cout << "Elements: " << _elements.size() << std::endl;
+    for (auto elt: _elements) {
+      std::cout << "Element: ";
+      for (auto n: elt) {
+        std::cout << n << " ";
+      }
+      std::cout << std::endl;
+    }
+  }
+
+
+  void ApplyDisplacements(std::vector<Eigen::Vector3d> &displacements, double scale = 1.0) {
+    _nodes_deformed.clear();
+    for (unsigned int n=0; n<_nodes.size(); n++) {
+      _nodes_deformed.push_back(_nodes[n] + scale * displacements[n]);
+    }
+  }
+    
+  std::vector<Eigen::Vector3d> _nodes, _nodes_deformed;
+  std::vector<std::vector<unsigned int>> _elements;
+
+  int _num_elements = 10;
+  double _x0 = 1.0;
+  double _y0 = 1.0;
+  double _z0 = 5.0;
+  double _w = 1.0;
+
+  std::string Name() { return "c3d6_1"; }
+  double LoadLocation() { return _z0; }
+  std::string LoadDirection() { return "z"; }
+  int LoadDirectionKey() { return 3; }
+  double LoadMagnitude() { return 1.0; }
+  std::string ElementType() { return "C3D6"; }
+};
+
+
+

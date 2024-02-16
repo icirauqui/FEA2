@@ -80,9 +80,20 @@ void PCLViewer::AddEdges(std::vector<std::vector<unsigned int>> &elts, std::stri
       std::make_tuple(0, 1),
       std::make_tuple(1, 2),
       std::make_tuple(2, 3),
-      std::make_tuple(3, 0)
+      //std::make_tuple(3, 0)
     };
-
+  } else if (elt == "C3D6") {
+    edges = {
+      std::make_tuple(0, 1),
+      std::make_tuple(1, 2),
+      std::make_tuple(2, 0),
+      std::make_tuple(3, 4),
+      std::make_tuple(4, 5),
+      std::make_tuple(5, 3),
+      std::make_tuple(0, 3),
+      std::make_tuple(1, 4),
+      std::make_tuple(2, 5)
+    };
   } else if (elt == "C3D8") {
     edges = {
       std::make_tuple(0, 1),

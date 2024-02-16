@@ -180,7 +180,7 @@ void FEA::PostProcess(std::vector<Eigen::Vector3d> &vpts,
 
 
 double FEA::ComputeStrainEnergy() {
-  sE_ = (U_.transpose() * F_)(0,0);
+  sE_ = 0.5 * (U_.transpose() * F_)(0,0);
   return sE_;
 }
 
@@ -204,7 +204,7 @@ double FEA::ComputeStrainEnergy(std::vector<Eigen::Vector3d> &u0,
 
   Eigen::MatrixXd Fi = K_ * U;
 
-  double sE = (U.transpose() * Fi)(0,0);
+  double sE = 0.5 * (U.transpose() * Fi)(0,0);
 
   return sE;
 }

@@ -18,9 +18,22 @@ Eigen::MatrixXd Element3D::computeJacobian(const std::vector<Eigen::Vector3d>& n
 
     // Compute the Jacobian matrix
     for (int i = 0; i < _num_nodes; ++i) {
-        J.col(0) += nodes[i] * dN(i, 0); // Contribution to the first column of J
-        J.col(1) += nodes[i] * dN(i, 1); // Contribution to the second column of J
-        J.col(2) += nodes[i] * dN(i, 2); // Contribution to the third column of J
+        J(0, 0) += nodes[i](0) * dN(i, 0);
+        J(1, 0) += nodes[i](1) * dN(i, 0);
+        J(2, 0) += nodes[i](2) * dN(i, 0);
+
+        J(0, 1) += nodes[i](0) * dN(i, 1);
+        J(1, 1) += nodes[i](1) * dN(i, 1);
+        J(2, 1) += nodes[i](2) * dN(i, 1);
+
+        J(0, 2) += nodes[i](0) * dN(i, 2);
+        J(1, 2) += nodes[i](1) * dN(i, 2);
+        J(2, 2) += nodes[i](2) * dN(i, 2);
+
+
+        //J.col(0) += nodes[i] * dN(i, 0); // Contribution to the first column of J
+        //J.col(1) += nodes[i] * dN(i, 1); // Contribution to the second column of J
+        //J.col(2) += nodes[i] * dN(i, 2); // Contribution to the third column of J
     }
 
     return J;
