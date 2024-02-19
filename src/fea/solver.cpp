@@ -20,7 +20,7 @@ int solver::IsSingularOrIllConditioned2(Eigen::MatrixXd &A) {
     // Check if the matrix is singular by determinant
     double det = A.determinant();
     if (std::fabs(det) < detThreshold) {
-      std::cout << "Matrix is singular or nearly singular, determinant: " << det << std::endl;
+      std::cout << "   ERROR: Matrix is singular or nearly singular, determinant: " << det << std::endl;
       return 1; // Matrix is singular or near-singular
     }
 
@@ -31,8 +31,8 @@ int solver::IsSingularOrIllConditioned2(Eigen::MatrixXd &A) {
     // Check if the solution is significantly different from what is expected
     Eigen::VectorXd b_check = A * x; // Recompute b to check solution
     if ((b - b_check).norm() / b.norm() > solutionThreshold) {
-      std::cout << "Significant solution instability detected, indicating ill-conditioning." << std::endl;
-      std::cout << "Relative error: " << (b - b_check).norm() / b.norm() << std::endl;
+      std::cout << "   WARNING: Significant solution instability detected, indicating ill-conditioning." << std::endl;
+      std::cout << "            Relative error: " << (b - b_check).norm() / b.norm() << std::endl;
       return 2; // Solution instability suggests ill-conditioning
     }
 

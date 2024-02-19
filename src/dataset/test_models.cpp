@@ -460,3 +460,147 @@ public:
 
 
 
+
+
+
+
+
+class AbaqusC3D6_2 {
+public:
+  AbaqusC3D6_2(std::string filename) {
+    read_inp_file(filename);
+  }
+
+  // Assuming `local_error` is a function that handles errors. You'll need to define it.
+  void local_error(const std::string &message) {
+      std::cerr << message << std::endl;
+      // Possibly throw an exception or handle the error appropriately
+  }
+
+  void read_inp_file(const std::string& inpFileName) {
+    std::cout << "\n** Read input file" << std::endl;
+
+    std::ifstream inpFile(inpFileName);
+    if (!inpFile.is_open()) {
+        local_error("Unable to open file");
+        return;
+    }
+
+    std::string line;
+    int state = 0;
+    while (getline(inpFile, line)) {
+      // Trim leading and trailing whitespace
+      line.erase(0, line.find_first_not_of(" \t"));
+      line.erase(line.find_last_not_of(" \t") + 1);
+
+      if (line.empty()) continue;
+      if (line[0] == '*') {
+        state = 0;
+      }
+      if (line.length() >= 5 && line.substr(0, 5).compare("*Node") == 0) {
+          state = 1;
+          continue;
+      }
+      if (line.length() >= 8 && line.substr(0, 8).compare("*Element") == 0) {
+          state = 2;
+          continue;
+      }
+      if (line.length() >= 9 && line.substr(0, 9).compare("*Boundary") == 0) {
+          state = 3;
+          continue;
+      }
+
+      //std::cout << "state: " << state << " : " << line << std::endl;
+
+      if (state == 0) {
+          continue;
+      }
+
+      std::istringstream iss(line);
+      std::string token;
+      std::vector<std::string> tokens;
+      while (getline(iss, token, ',')) {
+          tokens.push_back(token);
+      }
+
+      if (state == 1) {
+        // Read nodes
+        if (tokens.size() != 4) {
+          local_error("A node definition needs 4 values");
+          continue;
+        }
+        int nodeNr = std::stoi(tokens[0]) - 1; // zero indexed
+        double xx = std::stod(tokens[1]) - 4.0;
+        double yy = std::stod(tokens[2]) - 4.0;
+        double zz = std::stod(tokens[3]);
+        _nodes.push_back(Eigen::Vector3d(xx, yy, zz)); // assume the nodes are ordered 1, 2, 3...
+      } else if (state == 2) {
+        // Read elements
+        if (tokens.size() != 7) {
+          local_error("An element definition needs 7 values");
+          continue;
+        }
+        int elemNr = std::stoi(tokens[0]); // not used in this context
+        std::vector<unsigned int> element;
+        for (int i = 1; i <= 6; ++i) {
+          element.push_back(std::stoi(tokens[i]) - 1); // zero indexed
+        }
+        // Assuming the order needs to be adjusted from the Python code
+        _elements.push_back({element[0], element[1], element[2], element[3], element[4], element[5]});
+        //_elements.push_back({element[0], element[3], element[2], element[1]});
+      } else if (state == 3) {
+        std::cout << "BCs not implemented in file read" << std::endl;
+        // Read displacement boundary conditions
+        //if (tokens.size() != 4) {
+        //  local_error("A displacement boundary condition needs 4 values");
+        //  continue;
+        //}
+        //int nodeNr = std::stoi(tokens[0]) - 1; // zero indexed
+        //int dof1 = std::stoi(tokens[1]);
+        //int dof2 = std::stoi(tokens[2]);
+        //double val = std::stod(tokens[3]);
+        //if (dof1 == 1) {
+        //  boundary.push_back({static_cast<double>(nodeNr), 1.0, val});
+        //}
+        //if (dof2 == 2) {
+        //  boundary.push_back({static_cast<double>(nodeNr), 2.0, val});
+        //}
+      }
+    }
+
+    inpFile.close();
+
+    std::cout << "Nodes: " << _nodes.size() << std::endl;
+    std::cout << "Elements: " << _elements.size() << std::endl;
+    //std::cout << "Boundary: " << boundary.size() << std::endl;
+
+  }
+
+
+  void ApplyDisplacements(std::vector<Eigen::Vector3d> &displacements, double scale = 1.0) {
+    _nodes_deformed.clear();
+    for (unsigned int n=0; n<_nodes.size(); n++) {
+      _nodes_deformed.push_back(_nodes[n] + scale * displacements[n]);
+      std::cout << "Node " << n << ": " << _nodes[n].transpose() << " -> " << _nodes_deformed[n].transpose() << std::endl;
+    }
+  }
+    
+  std::vector<Eigen::Vector3d> _nodes, _nodes_deformed;
+  std::vector<std::vector<unsigned int>> _elements;
+
+  int _num_elements = 10;
+  double _x0 = 1.0;
+  double _y0 = 1.0;
+  double _z0 = 5.0;
+  double _w = 1.0;
+
+  std::string Name() { return "c3d6_2"; }
+  double LoadLocation() { return _z0; }
+  std::string LoadDirection() { return "z"; }
+  int LoadDirectionKey() { return 3; }
+  double LoadMagnitude() { return 1.0; }
+  std::string ElementType() { return "C3D6"; }
+};
+
+
+

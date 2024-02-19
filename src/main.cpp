@@ -8,7 +8,7 @@
 
 // Parameters
 double E = 10000.0;
-double nu = 0.495;
+double nu = 0.480;
 
 
 void test_c3d6_displacements() {
@@ -68,7 +68,7 @@ void test_c3d6_displacements() {
 
 
 void test_c3d6_loads() {
-  AbaqusC3D6_1 model("../data/c3d6_1/a.input");
+  AbaqusC3D6_2 model("../data/c3d6_2/a.input");
 
   std::cout << "\nBuild FEA" << std::endl;
   FEA fea("C3D6", E, nu, true);
@@ -95,7 +95,7 @@ void test_c3d6_loads() {
   fea.ExportF("../data/" + model.Name() + "/F.csv");
 
   std::cout << "\nSolve" << std::endl;
-  fea.Solve("CG");
+  fea.Solve("LU");
   fea.ExportU("../data/" + model.Name() + "/U.csv");
 
   std::cout << "\nPostProcess" << std::endl;
