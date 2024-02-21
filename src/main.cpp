@@ -8,21 +8,22 @@
 
 // Parameters
 double E = 10000.0;
-double nu = 0.480;
+double nu = 0.3;
 
 
 void test_c3d6_displacements() {
-  AbaqusC3D8_2 model;
+  AbaqusC3D6_1 model("../data/c3d6_1/a.input");
   std::cout << "num nodes = " << model._nodes.size() << "\n";
 
   std::cout << "\nBuild FEA" << std::endl;
-  FEA fea("C3D8", E, nu, true);
+  FEA fea("C3D6", E, nu, true);
 
   std::cout << "\nBuild BoundaryConditions" << std::endl;
   BoundaryConditions3d bc(fea.NumDof(), &model._nodes);
   std::cout << " - Encastre in z = 0" << std::endl;
   bc.EncastreInCoordZ(0.0);
-  std::cout << " - Displacement of magnitude 1 in direction x on nodes in x = 5.0" << std::endl;
+  std::cout << " - Force of magnitude " << model.LoadMagnitude() << " in direction of " << model.LoadDirection() 
+            << " on nodes in " << model.LoadDirection() << " = " << model.LoadLocation() << std::endl;
   bc.AddNodalDisplacementByCoordZ(model.LoadLocation(), {0, 0, 0.5});
 
   std::cout << "\nMatAssembly" << std::endl;
@@ -50,8 +51,8 @@ void test_c3d6_displacements() {
   }
   std::cout << " - u.size(): " << u.size() << std::endl;
   std::cout << " - model._nodes.size(): " << model._nodes.size() << std::endl;
-  double scale = 1.0;
-  model.ApplyDisplacements(u, scale);
+  double scale = 100000000000000.0;
+  model.ApplyDisplacements(u, {scale, scale, 1.0});
 
   fea.ExportAll("../data/" + model.Name() + "/KFU.csv");
   fea.ReportNodes("../data/" + model.Name() + "/nodes.csv");
@@ -68,7 +69,7 @@ void test_c3d6_displacements() {
 
 
 void test_c3d6_loads() {
-  AbaqusC3D6_2 model("../data/c3d6_2/a.input");
+  AbaqusC3D6_1 model("../data/c3d6_1/a.input");
 
   std::cout << "\nBuild FEA" << std::endl;
   FEA fea("C3D6", E, nu, true);
@@ -80,8 +81,9 @@ void test_c3d6_loads() {
 
   std::cout << "\nBuild Loads" << std::endl;
   Loads3d loads(fea.NumDof(), &model._nodes);
-  std::cout << " - Force of magnitude " << model.LoadMagnitude() << " in direction of " << model.LoadDirection() << " on nodes in " << model.LoadDirection() << " = " << model.LoadLocation() << std::endl;
-  loads.AddNodalZ(model.LoadLocation(), {0.0, 0.0, model.LoadMagnitude()});
+  std::cout << " - Force of magnitude " << model.LoadMagnitude() << " in direction of " << model.LoadDirection() 
+            << " on nodes in " << model.LoadDirection() << " = " << model.LoadLocation() << std::endl;
+  loads.AddNodalZ(model.LoadLocation(), {0.0, 0.0, -model.LoadMagnitude()});
 
 
   std::cout << "\nMatAssembly" << std::endl;
@@ -114,6 +116,7 @@ void test_c3d6_loads() {
   model.ApplyDisplacements(u, scale);
 
   fea.ExportAll("../data/" + model.Name() + "/KFU.csv");
+  fea.ExportSystem("../data/" + model.Name() + "/K_U_F.csv");
   fea.ReportNodes("../data/" + model.Name() + "/nodes.csv");
 
   std::cout << "\nVisualization" << std::endl;
@@ -376,8 +379,8 @@ void test_c2d4_loads() {
 
 
 int main(int argc, char** argv) {
-  //test_c3d6_displacements();
-  test_c3d6_loads();
+  test_c3d6_displacements();
+  //test_c3d6_loads();
 
   //test_c3d8_displacements();
   //test_c3d8_loads();

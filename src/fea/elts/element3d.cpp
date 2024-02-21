@@ -4,12 +4,12 @@
 
 void Element3D::computeElasticityMatrix() {
   double lambda = _E * _nu / ((1 + _nu) * (1 - 2 * _nu));
-  double mu = _E / (2 * (1 + _nu));
+  double G = _E / (2 * (1 + _nu));
 
   _D = Eigen::MatrixXd::Zero(6, 6);
-  _D(0, 0) = _D(1, 1) = _D(2, 2) = lambda + 2 * mu;
+  _D(0, 0) = _D(1, 1) = _D(2, 2) = lambda + 2 * G;
   _D(0, 1) = _D(0, 2) = _D(1, 0) = _D(1, 2) = _D(2, 0) = _D(2, 1) = lambda;
-  _D(3, 3) = _D(4, 4) = _D(5, 5) = mu;
+  _D(3, 3) = _D(4, 4) = _D(5, 5) = G;
 }
 
 Eigen::MatrixXd Element3D::computeJacobian(const std::vector<Eigen::Vector3d>& nodes, Eigen::MatrixXd &dN) {
@@ -21,11 +21,9 @@ Eigen::MatrixXd Element3D::computeJacobian(const std::vector<Eigen::Vector3d>& n
         J(0, 0) += nodes[i](0) * dN(i, 0);
         J(1, 0) += nodes[i](1) * dN(i, 0);
         J(2, 0) += nodes[i](2) * dN(i, 0);
-
         J(0, 1) += nodes[i](0) * dN(i, 1);
         J(1, 1) += nodes[i](1) * dN(i, 1);
         J(2, 1) += nodes[i](2) * dN(i, 1);
-
         J(0, 2) += nodes[i](0) * dN(i, 2);
         J(1, 2) += nodes[i](1) * dN(i, 2);
         J(2, 2) += nodes[i](2) * dN(i, 2);
@@ -66,6 +64,8 @@ Eigen::MatrixXd Element3D::computeStiffnessMatrix(const std::vector<Eigen::Vecto
                 Eigen::MatrixXd J = computeJacobian(nodes, dN);
                 auto [invJ, detJ] = computeInverseJacobianAndDet(J);
                 Eigen::MatrixXd B = computeStrainDisplacementMatrix(dN, invJ, detJ);
+
+                std::cout << std::endl << std::endl;
 
                 // Weight calculation considering different weights
                 double weight = gaussWeights[i] * gaussWeights[j] * gaussWeights[k];

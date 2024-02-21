@@ -117,6 +117,7 @@ public:
 
   void ReportNodes(std::string filename);
   void ExportAll(std::string filename);
+  void ExportSystem(std::string filename);
   void ExportK(std::string filename);
   void ExportF(std::string filename);
   void ExportU(std::string filename);

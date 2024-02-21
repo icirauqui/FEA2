@@ -14,6 +14,8 @@ public:
   std::vector<double> emax;
   std::vector<double> smin;
   std::vector<double> smax;
+  std::vector<double> umin;
+  std::vector<double> umax;
   double strain_energy;
   int number_of_nodes;
   int number_of_elements;

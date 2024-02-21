@@ -173,6 +173,9 @@ void FEA::PostProcess(std::vector<Eigen::Vector2d> &vpts,
 
 void FEA::PostProcess(std::vector<Eigen::Vector3d> &vpts, 
                       std::vector<std::vector<unsigned int>> &velts) {
+  fea_data_->number_of_nodes = vpts.size();
+  fea_data_->number_of_elements = velts.size();
+  
   element_->postProcess(vpts, velts, U_, *fea_data_);
   fea_data_->strain_energy = ComputeStrainEnergy();
 }
@@ -367,6 +370,33 @@ void FEA::ExportAll(std::string filename) {
   std::cout << "ExportAll [K,F,U]: " << filename << std::endl;
 }
 
+void FEA::ExportSystem(std::string filename) {
+  
+  Eigen::MatrixXd KUF = Eigen::MatrixXd::Zero(K_.rows(), K_.cols() + 2);
+  KUF.block(0, 0, K_.rows(), K_.cols()) = K_;
+  KUF.block(0, K_.cols(), K_.rows(), 1) = U_;
+  KUF.block(0, K_.cols()+1, K_.rows(), 1) = F_;
+  std::cout << "KUF" << std::endl << KUF << std::endl;
+  
+  std::ofstream file;
+
+  file.open(filename);
+
+  for (unsigned int i = 0; i < K_.rows(); i++) {
+    for (unsigned int j = 0; j < K_.cols(); j++) {
+      file << K_(i,j) << " ";
+    }
+    file << U_(i,0) << " ";
+    file << F_(i,0) << " ";
+    file << std::endl;
+  }
+
+
+  file.close();
+
+  std::cout << "ExportSystem KU=F: " << filename << std::endl;
+}
+
 void FEA::ExportK(std::string filename) {
   std::ofstream file;
   file.open(filename);
@@ -442,13 +472,39 @@ void FEA::ReportFEAData(std::string filename) {
   for (auto s : fea_data_->smax) {
     file << s << " ";
   }
+  file << "\nU min: ";
+  for (auto u : fea_data_->umin) {
+    file << u << " ";
+  }
+  file << "\nU max: ";
+  for (auto u : fea_data_->umax) {
+    file << u << " ";
+  }
   file << std::endl << std::endl;
+
+  
+
+  file << "\nNode Dislacements: " << std::endl;
+  file << "-----------------" << std::endl;
+  file << "n, u, u.x, u.y, u.z" << std::endl;
+  for (unsigned int n=0; n<fea_data_->number_of_nodes; n++) {
+    file << n << ", ";
+    file << sqrt(U_(n*3, 0)*U_(n*3, 0) + U_(n*3+1, 0)*U_(n*3+1, 0) + U_(n*3+2, 0)*U_(n*3+2, 0)) << ", ";
+    for (unsigned int i=0; i<3; i++) {
+      file << U_(n*3+i, 0) << ", ";
+    }
+    file << std::endl;
+  }
+
 
   file << "\nNode Strain: " << std::endl;
   file << "-----------------" << std::endl;
-  file << "n, e.x, e.y, e.z" << std::endl;
+  file << "n, e, e.x, e.y, e.z" << std::endl;
   for (unsigned int n=0; n<fea_data_->node_strain.size(); n++) {
     file << n << ", ";
+    file << sqrt(fea_data_->node_strain[n][0]*fea_data_->node_strain[n][0] + 
+                 fea_data_->node_strain[n][1]*fea_data_->node_strain[n][1] + 
+                 fea_data_->node_strain[n][2]*fea_data_->node_strain[n][2]) << ", ";
     for (auto n : fea_data_->node_strain[n]) {
       file << n << ", ";
     }
@@ -457,9 +513,12 @@ void FEA::ReportFEAData(std::string filename) {
 
   file << "\nNode Stress: " << std::endl;
   file << "-----------------" << std::endl;
-  file << "n, s.x, s.y, s.z" << std::endl;
+  file << "n, s, s.x, s.y, s.z" << std::endl;
   for (unsigned int n=0; n<fea_data_->node_stress.size(); n++) {
     file << n << ", ";
+    file << sqrt(fea_data_->node_stress[n][0]*fea_data_->node_stress[n][0] + 
+                 fea_data_->node_stress[n][1]*fea_data_->node_stress[n][1] + 
+                 fea_data_->node_stress[n][2]*fea_data_->node_stress[n][2]) << ", ";
     for (auto n : fea_data_->node_stress[n]) {
       file << n << ", ";
     }

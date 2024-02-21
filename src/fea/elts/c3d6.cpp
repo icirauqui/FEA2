@@ -61,6 +61,8 @@ Eigen::MatrixXd C3D6::computeStrainDisplacementMatrix(Eigen::MatrixXd &dN, Eigen
     // Compute the derivatives of shape functions w.r.t. global coordinates
     Eigen::MatrixXd dNdXYZ = invJ * dN.transpose();
 
+    std::cout << " dNdXYZ " << std::endl << dNdXYZ << std::endl;
+
     // Initialize the B matrix
     Eigen::MatrixXd B = Eigen::MatrixXd::Zero(6, 18); // 6 strain components, 18 displacement components (3 per node)
 
@@ -70,14 +72,23 @@ Eigen::MatrixXd C3D6::computeStrainDisplacementMatrix(Eigen::MatrixXd &dN, Eigen
         B(1, i * 3 + 1) = dNdXYZ(1, i); // Strain εyy
         B(2, i * 3 + 2) = dNdXYZ(2, i); // Strain εzz
 
-        B(3, i * 3)     = dNdXYZ(1, i); // Shear γyx
+        //B(3, i * 3 + 0) = dNdXYZ(1, i); // Shear γyx
+        //B(3, i * 3 + 1) = dNdXYZ(0, i);
+        //
+        //B(4, i * 3 + 1) = dNdXYZ(2, i); // Shear γzy
+        //B(4, i * 3 + 2) = dNdXYZ(1, i);
+        //
+        //B(5, i * 3 + 0) = dNdXYZ(2, i); // Shear γzx
+        //B(5, i * 3 + 2) = dNdXYZ(0, i);
+
+        B(3, i * 3 + 0) = dNdXYZ(1, i); // Shear γyx
         B(3, i * 3 + 1) = dNdXYZ(0, i);
-
-        B(4, i * 3 + 1) = dNdXYZ(2, i); // Shear γzy
-        B(4, i * 3 + 2) = dNdXYZ(1, i);
-
-        B(5, i * 3)     = dNdXYZ(2, i); // Shear γzx
-        B(5, i * 3 + 2) = dNdXYZ(0, i);
+        
+        B(4, i * 3 + 0) = dNdXYZ(2, i); // Shear γzx
+        B(4, i * 3 + 2) = dNdXYZ(0, i);
+        
+        B(5, i * 3 + 1) = dNdXYZ(2, i); // Shear γzy
+        B(5, i * 3 + 2) = dNdXYZ(1, i);
     }
 
     return B;

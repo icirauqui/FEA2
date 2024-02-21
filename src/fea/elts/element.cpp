@@ -11,6 +11,8 @@ void Element::postProcess(std::vector<Eigen::Vector3d> &vpts,
   data.emax = std::vector<double>(_D.rows(), 0.0);
   data.smin = std::vector<double>(_D.rows(), 0.0);
   data.smax = std::vector<double>(_D.rows(), 0.0);
+  data.umin = std::vector<double>(_dof_per_node, 0.0);
+  data.umax = std::vector<double>(_dof_per_node, 0.0);
 
   // Gauss quadrature points and weights (2-point quadrature)
   std::array<double, 2> gaussPoints = {-1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0)};
@@ -58,6 +60,13 @@ void Element::postProcess(std::vector<Eigen::Vector3d> &vpts,
           data.smax[m] = std::max(data.smax[m], stress(m, 0));
         }
       }
+    }
+  }
+
+  for (unsigned int i = 0; i < vpts.size(); i++) {
+    for (unsigned int j = 0; j < _dof_per_node; j++) {
+      data.umin[j] = std::min(data.umin[j], U(i*_dof_per_node+j, 0));
+      data.umax[j] = std::max(data.umax[j], U(i*_dof_per_node+j, 0));
     }
   }
 
